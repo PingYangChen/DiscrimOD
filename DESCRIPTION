@@ -1,0 +1,25 @@
+Package: DiscrimOD
+Type: Package
+Title: Optimal Discrimination Design for Nonlinear Models
+Version: 0.1.0
+Date: 2017-04-30
+Authors@R: person("Ping-Yang", "Chen", , "pychen.ping@gmail.com", c("aut", "cre"))
+Author: Ping-Yang Chen [aut, cre]
+Maintainer: Ping-Yang Chen <pychen.ping@gmail.com>
+Description: Optimal Exact Design for Nonlinear Models
+    Use four spaces when indenting paragraphs within the Description.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends:
+    R (>= 3.3.2)
+Imports:
+    Rcpp (>= 0.12.7),
+    RcppArmadillo,
+    assertthat,
+    inline,
+    utils
+LinkingTo: Rcpp,
+    RcppArmadillo,
+    inline
+RoxygenNote: 5.0.1
