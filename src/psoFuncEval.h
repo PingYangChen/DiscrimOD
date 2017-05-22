@@ -3,7 +3,7 @@
 
 // BODY
 void psoFuncEval(const bool &IF_PARALLEL, const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, const PSO_DYN &PSO_DYN, 
-								 const MODEL_SET MODELS[], const rowvec &FIXEDVALUE, const mat &swarm, vec &fSwarm)
+								 const MODEL_SET MODELS[], Rcpp::EvalBase* distFunc, const rowvec &FIXEDVALUE, const mat &swarm, vec &fSwarm)
 {	
   // SET PSO PARAMETERS
   int nSwarm = (int)swarm.n_rows;
@@ -25,7 +25,7 @@ void psoFuncEval(const bool &IF_PARALLEL, const int &LOOPID, const PSO_OPTIONS P
 			rowvec PARTICLE = conv_to<rowvec>::from(swarm.row(iSwarm));
 			// Optimal Design Criteria
 			arma::rowvec R_PARA;
-			fSwarm(iSwarm) = DesignCriterion(LOOPID, PSO_OPTS, OBJ, MODELS, FIXEDVALUE, PARTICLE, R_PARA);
+			fSwarm(iSwarm) = DesignCriterion(LOOPID, PSO_OPTS, OBJ, MODELS, distFunc, FIXEDVALUE, PARTICLE, R_PARA);
 		}
   //}
 }

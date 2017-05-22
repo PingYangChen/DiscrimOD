@@ -14,16 +14,17 @@ namespace Rcpp {
     public:
         EvalBase() : neval(0) {};
         virtual double eval(SEXP x, SEXP p) = 0;
-        unsigned long getNbEvals() { return neval; }
+        //unsigned long getNbEvals() { return neval; }
     protected:
-        unsigned long int neval;
+        //unsigned long int neval;
+        int neval;
   };
 
   class EvalStandard : public EvalBase {
     public:
         EvalStandard(SEXP fcall_, SEXP env_) : fcall(fcall_), env(env_) {}
         double eval(SEXP x, SEXP p) {
-          neval++;
+          //neval++;
           return defaultfun(x, p);
         }
     private:
@@ -50,7 +51,7 @@ namespace Rcpp {
           env = __env;
         };
         double eval(SEXP x, SEXP p) {
-          neval++;
+          //neval++;
           double f_result = funptr(x, p, env);
           return f_result;
         }
@@ -71,7 +72,6 @@ using namespace Rcpp;
 typedef struct {
   // Optimal Design Problems
   int crit_type; // 0
-  Rcpp::EvalBase* dist_func;
   int d_type; // 0
   //int nSubj; // 1
   int dSupp; // 1
@@ -87,10 +87,9 @@ typedef struct {
   arma::rowvec std_vals;
 } OBJ_INFO, *Ptr_OBJ_INFO;
 
-#define N_MODEL_MAX 20
 
 struct MODEL_SET {
-  Rcpp::EvalBase* model_func;
+  Rcpp::EvalBase* modelFunc;
 };
 
 #define N_PSO_OPTS 100
@@ -173,9 +172,9 @@ typedef struct {
 void matrixPrintf(const mat &m);
 void rvecPrintf(const rowvec &v);
 void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST);
-void getModelFunc(MODEL_SET MODELS[], const Rcpp::List MODEL_LIST, SEXP env, const int N_model);
-void getInfoStruct(OBJ_INFO &OBJ, const Rcpp::List OBJ_INFO_LIST, SEXP env);
-void PSO_MAIN(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, const MODEL_SET MODELS[],
+//void getModelFunc(MODEL_SET MODELS[], const Rcpp::List MODEL_LIST, SEXP env, const int N_model);
+void getInfoStruct(OBJ_INFO &OBJ, const Rcpp::List OBJ_INFO_LIST);
+void PSO_MAIN(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, const MODEL_SET MODELS[], Rcpp::EvalBase* distFunc, 
               const rowvec &FIXEDVALUE, const bool &IF_PARALLEL, const bool COUNTER_ON, Ptr_PSO_Result Ptr_PSO_Result);
 void psoUpdateParticle(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const PSO_DYN &PSO_DYN,
                        const arma::mat &PBest, const arma::rowvec &GBest,
@@ -187,7 +186,7 @@ void psoUpdateDynPara(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const int
                       const arma::mat &swarm, const arma::mat &PBest, const arma::rowvec &GBest,
                       const arma::vec &fSwarm, const arma::vec &fPBest, const double &fGBest);
 void psoFuncEval(const bool &IF_PARALLEL, const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, const PSO_DYN &PSO_DYN, 
-                 const MODEL_SET MODELS[], const rowvec &FIXEDVALUE, const mat &swarm, vec &fSwarm);
+                 const MODEL_SET MODELS[], Rcpp::EvalBase* distFunc, const rowvec &FIXEDVALUE, const mat &swarm, vec &fSwarm);
 
 #include "psoFuncEval.h"
 #include "psoCheckParticle.h"
@@ -211,32 +210,9 @@ void rvecPrintf(const rowvec &v)
   Rprintf("\n\n");
 }
 
-void getModelFunc(MODEL_SET MODELS[], const Rcpp::List MODEL_LIST, SEXP env, const int N_model) 
-{
-  for (int i = 0; i < N_model; i++) {
-    Rcpp::EvalBase *model_func = NULL;
-    SEXP tmp = as<SEXP>(MODEL_LIST[i]);
-    if (TYPEOF(tmp) == EXTPTRSXP) {   
-      model_func = new Rcpp::EvalCompiled(tmp, env);
-    } else {                                                
-      model_func = new Rcpp::EvalStandard(tmp, env);
-    }  
-    MODELS[i].model_func = model_func;
-  }
-}
-
-void getInfoStruct(OBJ_INFO &OBJ, const Rcpp::List OBJ_INFO_LIST, SEXP env)
+void getInfoStruct(OBJ_INFO &OBJ, const Rcpp::List OBJ_INFO_LIST)
 {
   OBJ.crit_type = as<int>(OBJ_INFO_LIST["CRIT_TYPE_NUM"]);
-
-  Rcpp::EvalBase *dist_func = NULL;
-  SEXP tmp = as<SEXP>(OBJ_INFO_LIST["dist_func"]);
-  if (TYPEOF(tmp) == EXTPTRSXP) {   
-    dist_func = new Rcpp::EvalCompiled(tmp, env);                
-  } else {
-    dist_func = new Rcpp::EvalStandard(tmp, env);
-  } 
-  OBJ.dist_func = dist_func;
 
   OBJ.d_type = as<int>(OBJ_INFO_LIST["D_TYPE_NUM"]);
   //OBJ_INFO->nSubj     = as<int>(OBJ_INFO_LIST["nSubj"]);

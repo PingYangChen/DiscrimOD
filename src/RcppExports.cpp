@@ -7,7 +7,7 @@
 using namespace Rcpp;
 
 // cppPSO
-Rcpp::List cppPSO(const int LOOPID, Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, arma::rowvec FIXEDVALUE, SEXP env, const bool IF_PARALLEL, const bool VERBOSE);
+Rcpp::List cppPSO(const int LOOPID, Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, arma::rowvec FIXEDVALUE, const SEXP env, const bool IF_PARALLEL, const bool VERBOSE);
 RcppExport SEXP DiscrimOD_cppPSO(SEXP LOOPIDSEXP, SEXP ALG_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP FIXEDVALUESEXP, SEXP envSEXP, SEXP IF_PARALLELSEXP, SEXP VERBOSESEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -17,7 +17,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type OBJ_INFO_LIST(OBJ_INFO_LISTSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type MODEL_INFO_LIST(MODEL_INFO_LISTSEXP);
     Rcpp::traits::input_parameter< arma::rowvec >::type FIXEDVALUE(FIXEDVALUESEXP);
-    Rcpp::traits::input_parameter< SEXP >::type env(envSEXP);
+    Rcpp::traits::input_parameter< const SEXP >::type env(envSEXP);
     Rcpp::traits::input_parameter< const bool >::type IF_PARALLEL(IF_PARALLELSEXP);
     Rcpp::traits::input_parameter< const bool >::type VERBOSE(VERBOSESEXP);
     rcpp_result_gen = Rcpp::wrap(cppPSO(LOOPID, ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, FIXEDVALUE, env, IF_PARALLEL, VERBOSE));
