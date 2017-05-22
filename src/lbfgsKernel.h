@@ -171,14 +171,20 @@ double f_fn(const int dPara, const arma::rowvec &R_PARA_EX, const arma::rowvec &
 	for (int q = 0; q < dPara; q++) { R_PARA(q) = paraTransform(1, R_PARA_EX(q), R_NBD(q), R_UPPER(q), R_LOWER(q)); }  // (-Inf, Inf) -> Original
 	int nSupp = DESIGN.n_rows;
   double fvalTmp = 0;
-  double eta_T, eta_R, DIV;
-  for (int i = 0; i < nSupp; i++) {
+  arma::rowvec eta_T, eta_R, DIV;
+
+  eta_T = (arma::rowvec) m1_func->eval(Rcpp::wrap(DESIGN), Rcpp::wrap(T_PARA)); 
+  eta_R = (arma::rowvec) m2_func->eval(Rcpp::wrap(DESIGN), Rcpp::wrap(R_PARA)); 
+  DIV = (arma::rowvec) dist_func->eval(Rcpp::wrap(eta_T), Rcpp::wrap(eta_R));  
+ 
+  fvalTmp = arma::accu(WT % DIV);
+  /*for (int i = 0; i < nSupp; i++) {
   	arma::rowvec x = DESIGN.row(i);
 		eta_T = (double) m1_func->eval(Rcpp::wrap(x), Rcpp::wrap(T_PARA)); 
   	eta_R = (double) m2_func->eval(Rcpp::wrap(x), Rcpp::wrap(R_PARA)); 
   	DIV = (double) dist_func->eval(Rcpp::wrap(eta_T), Rcpp::wrap(eta_R));  
     fvalTmp += WT(i)*DIV;
-  }
+  }*/
   if (std::isnan(fvalTmp)) { fvalTmp = 1e20; }
   if (!(arma::is_finite(fvalTmp))) { fvalTmp = 1e20; }
   return fvalTmp;

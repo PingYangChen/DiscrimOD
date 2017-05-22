@@ -13,7 +13,7 @@ namespace Rcpp {
   class EvalBase {
     public:
         EvalBase() : neval(0) {};
-        virtual double eval(SEXP x, SEXP p) = 0;
+        virtual arma::rowvec eval(SEXP x, SEXP p) = 0;
         //unsigned long getNbEvals() { return neval; }
     protected:
         //unsigned long int neval;
@@ -23,21 +23,22 @@ namespace Rcpp {
   class EvalStandard : public EvalBase {
     public:
         EvalStandard(SEXP fcall_, SEXP env_) : fcall(fcall_), env(env_) {}
-        double eval(SEXP x, SEXP p) {
+        arma::rowvec eval(SEXP x, SEXP p) {
           //neval++;
           return defaultfun(x, p);
         }
     private:
         SEXP fcall, env;
-        double defaultfun(SEXP x, SEXP p) {
+        arma::rowvec defaultfun(SEXP x, SEXP p) {
           SEXP fn = ::Rf_lang4(fcall, x, p, R_DotsSymbol);
           SEXP sexp_fvec = ::Rf_eval(fn, env);
-          double f_result = (double) Rcpp::as<double>(sexp_fvec);
+          Rcpp::NumericVector f_result_tmp = (Rcpp::NumericVector) Rcpp::as<Rcpp::NumericVector>(sexp_fvec);
+          arma::rowvec f_result(f_result_tmp.begin(), f_result_tmp.size(), false);
           return f_result;
         }
     };
 
-  typedef double (*funcPtr)(SEXP, SEXP, SEXP);
+  typedef arma::rowvec (*funcPtr)(SEXP, SEXP, SEXP);
 
   class EvalCompiled : public EvalBase {
     public:
@@ -50,9 +51,9 @@ namespace Rcpp {
           funptr = *(xptr);
           env = __env;
         };
-        double eval(SEXP x, SEXP p) {
+        arma::rowvec eval(SEXP x, SEXP p) {
           //neval++;
-          double f_result = funptr(x, p, env);
+          arma::rowvec f_result = funptr(x, p, env);
           return f_result;
         }
     private:

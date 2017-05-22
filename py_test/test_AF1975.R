@@ -14,18 +14,20 @@ DISTANCE <- function(xt, xr) (xt - xr)^2
 
 
 # C++ Funciton
-TM_CppCode <- 'double TM_Cpp(SEXP xx, SEXP pp)
+TM_CppCode <- 'Rcpp::NumericVector TM_Cpp(SEXP xx, SEXP pp)
 {
   // Re-define variable types
   Rcpp::NumericVector x(xx); Rcpp::NumericVector p(pp);
-  double val = p(0) + p(1)*std::exp(x(0)) + p(2)*std::exp(-x(0));
+  Rcpp::NumericVector val(x.size());
+  for (int i = 0; i < x.size(); i++) val(i) = p(0) + p(1)*std::exp(x(i)) + p(2)*std::exp(-x(i));
   return val;
 }'
-RM_CppCode <- 'double RM_Cpp(SEXP xx, SEXP pp)
+RM_CppCode <- 'Rcpp::NumericVector RM_Cpp(SEXP xx, SEXP pp)
 {
   // Re-define variable types
   Rcpp::NumericVector x(xx); Rcpp::NumericVector p(pp);
-  double val = p(0) + p(1)*x(0) + p(2)*x(0)*x(0);
+  Rcpp::NumericVector val(x.size());
+  for (int i = 0; i < x.size(); i++) val(i) = p(0) + p(1)*x(i) + p(2)*(x(i)*x(i));
   return val;
 }'
 MODEL_INFO_Cpp <- list(
@@ -36,20 +38,20 @@ MODEL_INFO_Cpp <- list(
        paraInit = AF_para_m1)
 )
 
-DISTANCE_CppCode <- '
-double DISTANCE_Cpp(SEXP xt, SEXP xr)
+DISTANCE_CppCode <- 'Rcpp::NumericVector DISTANCE_Cpp(SEXP xt, SEXP xr)
 {
   // Re-define variable types
-  double val_t = Rcpp::as<double>(xt);
-  double val_r = Rcpp::as<double>(xr);
-  double val = (val_t - val_r)*(val_t - val_r);
+  Rcpp::NumericVector val_t(xt);
+  Rcpp::NumericVector val_r(xr);
+  Rcpp::NumericVector val(val_t.size());
+  for (int i = 0; i < val.size(); i++) val(i) = (val_t(i) - val_r(i))*(val_t(i) - val_r(i));
   return val;
 }
 '
 DISTANCE_Cpp <- cppFunction(DISTANCE_CppCode)
 
 #
-ALG_INFO <- getAlgInfo(nSwarm = 32, maxIter = 100, typePSO = 2)
+ALG_INFO <- getAlgInfo(nSwarm = 64, maxIter = 300, typePSO = 0)
 
 nSupp <- 4
 dsLower <- -1
