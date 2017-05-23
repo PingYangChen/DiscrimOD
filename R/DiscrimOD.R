@@ -106,7 +106,7 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, MaxMinStdVa
 
 	BESTDESIGN <- designM2V(psoOut$GBest, D_INFO)
 
-	list(BESTDESIGN = BESTDESIGN, BESTVAL = psoOut$fGBest, GBESTHIST = psoOut$fGBestHist,
+	list(BESTDESIGN = BESTDESIGN, BESTVAL = -psoOut$fGBest, GBESTHIST = -psoOut$fGBestHist, 
 	     CPUTIME = cputime)
 }
 
@@ -153,12 +153,53 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, Max
 
 	cri_1 <- cppDesignCriterion(ALG_INFO, D_INFO, MODEL_LIST, 0, environment, DESIGN1_M)
 
-  return(list(cri_name = "", cri_val = cri_1$val, theta2 = cri_1$theta2))
+  return(list(cri_val = -cri_1$val, theta2 = cri_1$theta2))
 }
 
+#' Equivalence Theorem
+#' @name equivalence
+#' @rdname equivalence
+#' @export
+equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = FALSE,
+												MODEL_INFO, DISTANCE, dsLower, dsUpper, MaxMinStdVals = NULL, ALG_INFO = NULL, ...) {
 
-equivalence <- function(DESIGN = NULL, object = NULL) {
+	if (is.null(DESIGN)) DESIGN <- PSO_RESULT$BESTDESIGN
 
+	assert_that(all(is.finite(dsLower)), all(is.finite(dsUpper)),
+              length(dsLower) == length(dsUpper), all(dsUpper > dsLower))
+
+	nSupp <- nrow(DESIGN)
+	MODEL_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
+
+	if (is.null(MaxMinStdVals)) MaxMinStdVals <- 0
+	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE, 
+                          crit_type = 0, MaxMinStdVals = MaxMinStdVals,
+                          dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
+
+	if (is.null(ALG_INFO)) {
+		ALG_INFO <- getAlgInfo()
+		if (verbose) cat(paste0("Use the default settings for PSO. See 'getAlgInfo()'.\n"))
+	}
+
+	if (!hasArg(environment)) environment <- new.env()
+
+
+	# Adjust ALG_INFO according to D_INFO
+	swarmSetting <- algInfoUpdate(D_INFO)
+	ALG_INFO$varUpper <- swarmSetting$UB
+	ALG_INFO$varLower <- swarmSetting$LB
+	ALG_INFO$dSwarm	<- ncol(swarmSetting$UB)
+
+	DESIGN_M <- designV2M(DESIGN, D_INFO)
+
+	CRIT_VAL <- cppDesignCriterion(ALG_INFO, D_INFO, MODEL_LIST, 0, environment, DESIGN_M)
+
+	PARA_SET <- D_INFO$parasInit
+	PARA_SET[2, 1:D_INFO$dParas[2]] <- CRIT_VAL$theta2
+
+	equiv <- cppEquivalence(ALG_INFO, D_INFO, MODEL_LIST, CRIT_VAL$cri_val, PARA_SET, environment, ngrid)
+
+	return(equiv)
 }
 
 #' Create An Empty Model List

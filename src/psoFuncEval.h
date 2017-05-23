@@ -24,7 +24,7 @@ void psoFuncEval(const bool &IF_PARALLEL, const int &LOOPID, const PSO_OPTIONS P
 		for (int iSwarm = 0; iSwarm < nSwarm; iSwarm++) {
 			rowvec PARTICLE = conv_to<rowvec>::from(swarm.row(iSwarm));
 			// Optimal Design Criteria
-			arma::rowvec R_PARA;
+			arma::mat R_PARA;
 			fSwarm(iSwarm) = DesignCriterion(LOOPID, PSO_OPTS, OBJ, MODELS, distFunc, FIXEDVALUE, PARTICLE, R_PARA);
 		}
   //}

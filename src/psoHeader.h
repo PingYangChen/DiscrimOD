@@ -136,6 +136,20 @@ struct PSO_OPTIONS {
 	double Q_a_var; // 0.8
   // LcRiPSO
   double LcRi_L; // 0.01
+  // LBFGS OPTIONS
+  int LBFGS_RETRY; // 3
+  int LBFGS_MAXIT; // 100
+  // -- CORRECTION SETTINGS
+  int LBFGS_LM; // 6
+  // -- STOPPING CRITERION SETTING
+  double FVAL_EPS; // 0.0   (1e-8)
+  double GRAD_EPS; // 1e-5  (1e-6)
+  // -- LINE SEARCH PARAMETERS
+  int LINESEARCH_MAXTRIAL; // 50
+  double LINESEARCH_MAX; // 1e6
+  double LINESEARCH_MIN; // 1e-6
+  double LINESEARCH_C; // 0.5
+  double LINESEARCH_TAU; // 0.5
 };
 
 // DEFINE STUCTURES OF PSO PARAMETERS WHICH WILL CHANGE ITERATIVELY
@@ -290,6 +304,18 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST)
   Rcpp::NumericVector Q_a_var_Tmp    = as<NumericVector>(ALG_INFO_LIST["Q_a_var"]);
   Rcpp::NumericVector LcRi_L_Tmp     = as<NumericVector>(ALG_INFO_LIST["LcRi_L"]);
 
+  // LBFGS OPTIONS
+  Rcpp::IntegerVector LBFGS_RETRY_Tmp         = as<IntegerVector>(ALG_INFO_LIST["LBFGS_RETRY"]);
+  Rcpp::IntegerVector LBFGS_MAXIT_Tmp         = as<IntegerVector>(ALG_INFO_LIST["LBFGS_MAXIT"]);
+  Rcpp::IntegerVector LBFGS_LM_Tmp            = as<IntegerVector>(ALG_INFO_LIST["LBFGS_LM"]);
+  Rcpp::NumericVector FVAL_EPS_Tmp            = as<NumericVector>(ALG_INFO_LIST["FVAL_EPS"]);
+  Rcpp::NumericVector GRAD_EPS_Tmp            = as<NumericVector>(ALG_INFO_LIST["GRAD_EPS"]);
+  Rcpp::IntegerVector LINESEARCH_MAXTRIAL_Tmp = as<IntegerVector>(ALG_INFO_LIST["LINESEARCH_MAXTRIAL"]);
+  Rcpp::NumericVector LINESEARCH_MAX_Tmp      = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_MAX"]);
+  Rcpp::NumericVector LINESEARCH_MIN_Tmp      = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_MIN"]);
+  Rcpp::NumericVector LINESEARCH_C_Tmp        = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_C"]);
+  Rcpp::NumericVector LINESEARCH_TAU_Tmp      = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_TAU"]);
+
   int N_OPTS = nSwarm_Tmp.size();
 
   for (int i = 0; i < N_OPTS; i++) {
@@ -319,6 +345,17 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST)
     PSO_OPT[i].Q_a1       = Q_a1_Tmp[i];
     PSO_OPT[i].Q_a_var    = Q_a_var_Tmp[i];
     PSO_OPT[i].LcRi_L     = LcRi_L_Tmp[i];
+    // LBFGS OPTIONS
+    PSO_OPT[i].LBFGS_RETRY          = LBFGS_RETRY_Tmp[i]; 
+    PSO_OPT[i].LBFGS_MAXIT          = LBFGS_MAXIT_Tmp[i]; 
+    PSO_OPT[i].LBFGS_LM             = LBFGS_LM_Tmp[i]; 
+    PSO_OPT[i].FVAL_EPS             = FVAL_EPS_Tmp[i]; 
+    PSO_OPT[i].GRAD_EPS             = GRAD_EPS_Tmp[i]; 
+    PSO_OPT[i].LINESEARCH_MAXTRIAL  = LINESEARCH_MAXTRIAL_Tmp[i]; 
+    PSO_OPT[i].LINESEARCH_MAX       = LINESEARCH_MAX_Tmp[i]; 
+    PSO_OPT[i].LINESEARCH_MIN       = LINESEARCH_MIN_Tmp[i]; 
+    PSO_OPT[i].LINESEARCH_C         = LINESEARCH_C_Tmp[i]; 
+    PSO_OPT[i].LINESEARCH_TAU       = LINESEARCH_TAU_Tmp[i]; 
   }
 }
 

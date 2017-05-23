@@ -9,7 +9,10 @@ getAlgInfo(nSwarm = 64, typePSO = NULL, maxIter = NULL,
   w0 = NULL, w1 = NULL, w_var = NULL, chi = NULL, vk = NULL,
   typeTopo = NULL, nGroup = NULL, GC_S_ROOF = NULL, GC_F_ROOF = NULL,
   GC_RHO = NULL, Q_cen_type = NULL, Q_a0 = NULL, Q_a1 = NULL,
-  Q_a_var = NULL, LcRi_L = NULL, PrSc_P = NULL)
+  Q_a_var = NULL, LcRi_L = NULL, LBFGS_RETRY = NULL, LBFGS_MAXIT = NULL,
+  LBFGS_LM = NULL, FVAL_EPS = NULL, GRAD_EPS = NULL,
+  LINESEARCH_MAXTRIAL = NULL, LINESEARCH_MAX = NULL,
+  LINESEARCH_MIN = NULL, LINESEARCH_C = NULL, LINESEARCH_TAU = NULL)
 }
 \arguments{
 \item{nSwarm}{integer. Swarm size.}
@@ -20,7 +23,6 @@ getAlgInfo(nSwarm = 64, typePSO = NULL, maxIter = NULL,
 \item{1}{GCPSO (van den Bergh, F. and    Engelbrecht, A. P., 2002)}
 \item{2}{Quantum PSO (Sun, J., Feng, B. and Xu, W., 2004)}
 \item{3}{LcRiPSO (Bonyadi, M. R., Michalewicz, Z., 2014)}
-\item{4}{PrScPSO (Silva, A.,    Neves, A.    and Goncalves, T., 2012)}
 }}
 
 \item{maxIter}{integer. Maximal number of iterations.}

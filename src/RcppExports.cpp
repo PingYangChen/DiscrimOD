@@ -40,3 +40,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cppEquivalence
+List cppEquivalence(Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, double GBEST_VAL, arma::mat R_PARA_SET, SEXP env, const int nGrid);
+RcppExport SEXP DiscrimOD_cppEquivalence(SEXP ALG_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP GBEST_VALSEXP, SEXP R_PARA_SETSEXP, SEXP envSEXP, SEXP nGridSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type ALG_INFO_LIST(ALG_INFO_LISTSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type OBJ_INFO_LIST(OBJ_INFO_LISTSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type MODEL_INFO_LIST(MODEL_INFO_LISTSEXP);
+    Rcpp::traits::input_parameter< double >::type GBEST_VAL(GBEST_VALSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type R_PARA_SET(R_PARA_SETSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type env(envSEXP);
+    Rcpp::traits::input_parameter< const int >::type nGrid(nGridSEXP);
+    rcpp_result_gen = Rcpp::wrap(cppEquivalence(ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, GBEST_VAL, R_PARA_SET, env, nGrid));
+    return rcpp_result_gen;
+END_RCPP
+}

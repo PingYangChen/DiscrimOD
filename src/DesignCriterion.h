@@ -3,15 +3,17 @@
 #include "lbfgsKernel.h"
 
 // DECLARE FUNCTIONS
-double criterionList(const OBJ_INFO &OBJ, const MODEL_SET MODELS[], Rcpp::EvalBase* distFunc, 
-										 const arma::mat &DESIGN, const arma::rowvec &WT, arma::rowvec &R_PARA);
-double minDistCalc(const int rid, const OBJ_INFO &OBJ, const MODEL_SET MODELS[], Rcpp::EvalBase* distFunc, 
+double criterionList(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[],
+                     const OBJ_INFO &OBJ, const MODEL_SET MODELS[], Rcpp::EvalBase* distFunc, 
+										 const arma::mat &DESIGN, const arma::rowvec &WT, arma::mat &R_PARA);
+double minDistCalc(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[],
+                   const int rid, const OBJ_INFO &OBJ, const MODEL_SET MODELS[], Rcpp::EvalBase* distFunc, 
 									 const arma::mat &DESIGN, const arma::rowvec &WT, arma::rowvec &R_PARA_OUT);
 double paraTransform(const int INV, const double par, const int nbd, const double upper, const double lower);
 
 // BODY
 double DesignCriterion(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, 
-											 const MODEL_SET MODELS[], Rcpp::EvalBase* distFunc, const rowvec &p, const rowvec &x, arma::rowvec &R_PARA)
+											 const MODEL_SET MODELS[], Rcpp::EvalBase* distFunc, const rowvec &p, const rowvec &x, arma::mat &R_PARA)
 {
 	int nSupp = OBJ.nSupp;
 	int dSupp = OBJ.dSupp;
@@ -43,24 +45,27 @@ double DesignCriterion(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OB
 			//break;
 		//}
 	//}
-	double val = criterionList(OBJ, MODELS, distFunc, DESIGN, WT, R_PARA);		
+	double val = criterionList(LOOPID, PSO_OPTS, OBJ, MODELS, distFunc, DESIGN, WT, R_PARA);		
 	//R_PARA.set_size(OBJ.dParas(1));
 	//val = minDistCalc(1, OBJ, MODELS, DESIGN, WT, R_PARA);		
 	return (-1.0)*val;
 }
 
-double criterionList(const OBJ_INFO &OBJ, const MODEL_SET MODELS[], Rcpp::EvalBase* distFunc, 
-										 const arma::mat &DESIGN, const arma::rowvec &WT, arma::rowvec &R_PARA)
+double criterionList(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[],
+                     const OBJ_INFO &OBJ, const MODEL_SET MODELS[], Rcpp::EvalBase* distFunc, 
+										 const arma::mat &DESIGN, const arma::rowvec &WT, arma::mat &R_PARA)
 {
 	int crit_type = OBJ.crit_type;
 	int N_model = OBJ.N_model;
 
+  R_PARA.reset(); R_PARA.set_size(N_model, OBJ.dParas.max());
 	double val = 1e20;
 	switch (crit_type) {
 		case 0: // Fixed True
 		{
-			R_PARA.reset(); R_PARA.set_size(OBJ.dParas(1));
-			val = minDistCalc(1, OBJ, MODELS, distFunc, DESIGN, WT, R_PARA);
+			arma::rowvec R_PARA_tmp(OBJ.dParas(1));
+			val = minDistCalc(LOOPID, PSO_OPTS, 1, OBJ, MODELS, distFunc, DESIGN, WT, R_PARA_tmp);
+      R_PARA.submat(1, 0, 1, OBJ.dParas(1) - 1) = R_PARA_tmp;
 			break;
 		}
 		case 1: // Max-min, Fixed True
@@ -68,8 +73,9 @@ double criterionList(const OBJ_INFO &OBJ, const MODEL_SET MODELS[], Rcpp::EvalBa
 			arma::rowvec std_vals = OBJ.std_vals;
 			arma::rowvec eff_vals(N_model - 1);
 			for (int i = 1; i < N_model; i++) {
-				R_PARA.reset();	R_PARA.set_size(OBJ.dParas(i));
-				eff_vals(i) = minDistCalc(i, OBJ, MODELS, distFunc, DESIGN, WT, R_PARA);	
+				arma::rowvec R_PARA_tmp(OBJ.dParas(i));
+				eff_vals(i) = minDistCalc(LOOPID, PSO_OPTS, i, OBJ, MODELS, distFunc, DESIGN, WT, R_PARA_tmp);	
+        R_PARA.submat(i, 0, i, OBJ.dParas(i) - 1) = R_PARA_tmp;
 			}
 			eff_vals = eff_vals/std_vals;
 			val = eff_vals.min();
@@ -82,7 +88,8 @@ double criterionList(const OBJ_INFO &OBJ, const MODEL_SET MODELS[], Rcpp::EvalBa
 // SUBFUNCTIONS
 
 // Minimal Distance Between Two Models
-double minDistCalc(const int rid, const OBJ_INFO &OBJ, const MODEL_SET MODELS[], Rcpp::EvalBase* distFunc, 
+double minDistCalc(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[],
+                   const int rid, const OBJ_INFO &OBJ, const MODEL_SET MODELS[], Rcpp::EvalBase* distFunc, 
 									 const arma::mat &DESIGN, const arma::rowvec &WT, arma::rowvec &R_PARA_OUT)
 {
 	arma::rowvec T_PARA = OBJ.paras.submat(0, 0, 0, OBJ.dParas(0) - 1);
@@ -102,14 +109,16 @@ double minDistCalc(const int rid, const OBJ_INFO &OBJ, const MODEL_SET MODELS[],
   }
 
   double fx, fx1;
-  fx = lbfgsKernel(R_PARA_EX, T_PARA, DESIGN, WT, m1_func, m2_func, distFunc, R_UPPER, R_LOWER, R_NBD);
+  int CONV_STATUS;
+  CONV_STATUS = lbfgsKernel(LOOPID, PSO_OPTS, fx, R_PARA_EX, T_PARA, DESIGN, WT, m1_func, m2_func, distFunc, R_UPPER, R_LOWER, R_NBD);
 
+  int LBFGS_RETRY = PSO_OPTS[LOOPID].LBFGS_RETRY;
   int count = 0;
-  while ((count < 2)) {
+  while ((count < LBFGS_RETRY)) {
     R_PARA_EX_1 = randu(1, dParas) % (R_UPPER - R_LOWER) + R_LOWER;
     for (int d = 0; d < dParas; d++) { R_PARA_EX_1(d) = paraTransform(0, R_PARA_EX_1(d), R_NBD(d), R_UPPER(d), R_LOWER(d)); }
-    fx1 = lbfgsKernel(R_PARA_EX_1, T_PARA, DESIGN, WT, m1_func, m2_func, distFunc, R_UPPER, R_LOWER, R_NBD);
-    if (fx1 < fx) { count--; fx = fx1; R_PARA_EX = R_PARA_EX_1; }
+    CONV_STATUS = lbfgsKernel(LOOPID, PSO_OPTS, fx1, R_PARA_EX_1, T_PARA, DESIGN, WT, m1_func, m2_func, distFunc, R_UPPER, R_LOWER, R_NBD);
+    if (fx1 < fx) { count--; fx = fx1; R_PARA_EX = R_PARA_EX_1; } else if (CONV_STATUS == 0) { count--; }
     count++;
   }
   for (int d = 0; d < dParas; d++) R_PARA_OUT(d) = paraTransform(1, R_PARA_EX(d), R_NBD(d), R_UPPER(d), R_LOWER(d));

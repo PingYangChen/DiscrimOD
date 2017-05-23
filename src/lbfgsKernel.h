@@ -10,33 +10,34 @@ arma::rowvec f_gr(const int dPara, const arma::rowvec &R_PARA_EX, const arma::ro
 double paraTransform(const int INV, const double par, const int nbd, const double upper, const double lower);
 
 // BODY
-double lbfgsKernel(arma::rowvec &R_PARA_EX, const arma::rowvec &T_PARA, const arma::mat &DESIGN, const arma::rowvec &WT,
-									 Rcpp::EvalBase* m1_func, Rcpp::EvalBase* m2_func, Rcpp::EvalBase* dist_func,
-									 const arma::rowvec &R_UPPER, const arma::rowvec &R_LOWER, const arma::irowvec &R_NBD)
+int lbfgsKernel(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], double &FVAL, arma::rowvec &R_PARA_EX, 
+	 						  const arma::rowvec &T_PARA, const arma::mat &DESIGN, const arma::rowvec &WT,
+								Rcpp::EvalBase* m1_func, Rcpp::EvalBase* m2_func, Rcpp::EvalBase* dist_func,
+								const arma::rowvec &R_UPPER, const arma::rowvec &R_LOWER, const arma::irowvec &R_NBD)
 {
 	// LBFGS SETTINGS (Temporary)
-	int LBFGS_MAXIT = 100;
+	int LBFGS_MAXIT = PSO_OPTS[LOOPID].LBFGS_MAXIT;
 	// CORRECTION SETTINGS
-	int LBFGS_LM = 6;
+	int LBFGS_LM = PSO_OPTS[LOOPID].LBFGS_LM;
 	arma::rowvec ai(LBFGS_LM), bi(LBFGS_LM);
 	// STOPPING CRITERION SETTING
-	double FVAL_EPS =  0.0; // DEFAULT 0.0
-	double GRAD_EPS = 1e-5; // DEFAULT 1e-5
+	double FVAL_EPS = PSO_OPTS[LOOPID].FVAL_EPS; // DEFAULT 0.0
+	double GRAD_EPS = PSO_OPTS[LOOPID].GRAD_EPS; // DEFAULT 1e-5
 
 	// LINE SEARCH PARAMETERS
-	int LINESEARCH_MAXTRIAL = 50;
-	double LINESEARCH_MAX = 1e+6;
-	double LINESEARCH_MIN = 1e-6;
-	double LINESEARCH_C = 0.5;
-	double LINESEARCH_TAU = 0.5;
-	double alpha;
+	int LINESEARCH_MAXTRIAL = PSO_OPTS[LOOPID].LINESEARCH_MAXTRIAL;
+	double LINESEARCH_MAX = PSO_OPTS[LOOPID].LINESEARCH_MAX;
+	double LINESEARCH_MIN = PSO_OPTS[LOOPID].LINESEARCH_MIN;
+	double LINESEARCH_C = PSO_OPTS[LOOPID].LINESEARCH_C;
+	double LINESEARCH_TAU = PSO_OPTS[LOOPID].LINESEARCH_TAU;
+	double alpha = LINESEARCH_MAX;
 
 	// Initialization
 	int dPara = R_PARA_EX.n_elem;
 	// New Position
 	arma::rowvec R_PARA_EX_NEW(dPara);
 	// Objective Function Value
-	double FVAL, FVAL_NEW;
+	double FVAL_NEW;
 	FVAL = f_fn(dPara, R_PARA_EX, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
 	// Gradient
 	arma::rowvec GRAD(dPara), GRAD_NEW(dPara);	
@@ -48,10 +49,10 @@ double lbfgsKernel(arma::rowvec &R_PARA_EX, const arma::rowvec &T_PARA, const ar
 	arma::rowvec DIR(dPara);
 	arma::rowvec S_ONE(dPara), Y_ONE(dPara);
 	arma::mat S_MAT(LBFGS_LM, dPara, fill::zeros), Y_MAT(LBFGS_LM, dPara);
-	double RHO; arma::rowvec RHO_VEC(LBFGS_LM);
+	double RHO = 1.0; arma::rowvec RHO_VEC(LBFGS_LM);
 	// Stopping Criterion
 	double FVAL_TSET = 1e20, GRAD_TEST = 1e20;
-	bool LBFGS_STOP = FALSE; bool DIVERGE = FALSE;
+	bool LBFGS_STOP = FALSE; int CONV = 0;
 	// START L-BFGS LOOP
 	for (int t = 0; t < LBFGS_MAXIT; t++) {
 		// Update Directions
@@ -80,19 +81,15 @@ double lbfgsKernel(arma::rowvec &R_PARA_EX, const arma::rowvec &T_PARA, const ar
 			}
 			DIR *= -1.0;
 		}
-		if (DIR.has_inf() | DIR.has_nan()) { LBFGS_STOP = TRUE; DIVERGE = TRUE; }
 		// Perform the Backtracking Line Search for Suitable Step Size 
-		if (!(LBFGS_STOP)) {
-			double ArmijoGoldstein = (-1.0)*LINESEARCH_C*arma::as_scalar(DIR * GRAD.t());
-			double LS_VAL;
-			int LS_COUNTER = 0;
-			bool FLAG = TRUE;
+		double DIR_VAL = arma::as_scalar(DIR * GRAD.t());
+		if (DIR_VAL < 0) {
 			alpha = LINESEARCH_MAX;
+			double LS_VAL; int LS_COUNTER = 0; bool FLAG = TRUE;
 			while ((LS_COUNTER < LINESEARCH_MAXTRIAL) & FLAG) {
 				arma::rowvec R_PARA_EX_FOR = R_PARA_EX + alpha*DIR;
-				LS_VAL = f_fn(dPara, R_PARA_EX, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
-				LS_VAL = LS_VAL - f_fn(dPara, R_PARA_EX_FOR, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
-				if (LS_VAL < (alpha*ArmijoGoldstein)) {
+				LS_VAL = f_fn(dPara, R_PARA_EX_FOR, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
+				if (LS_VAL > (FVAL + alpha*LINESEARCH_C*DIR_VAL)) {
 					alpha *= LINESEARCH_TAU;
 					if (alpha < LINESEARCH_MIN) { alpha = LINESEARCH_MIN; FLAG = FALSE; }
 				} else {
@@ -100,40 +97,42 @@ double lbfgsKernel(arma::rowvec &R_PARA_EX, const arma::rowvec &T_PARA, const ar
 				}
 				LS_COUNTER++;
 			}
-			if (!arma::is_finite(alpha)) { LBFGS_STOP = TRUE; DIVERGE = TRUE; }
-		}
-		// Update New Position
-		if (!(LBFGS_STOP)) {
-		  R_PARA_EX_NEW = R_PARA_EX + alpha*DIR;
-		  FVAL_NEW = f_fn(dPara, R_PARA_EX_NEW, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
-		  GRAD_NEW = f_gr(dPara, R_PARA_EX_NEW, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
+		} else {
+			LBFGS_STOP = TRUE;
+		} 
+
+		if (LBFGS_STOP) { t = LBFGS_MAXIT + 1; } else {
+			// Update New Position
+			R_PARA_EX_NEW = R_PARA_EX + alpha*DIR;
+			FVAL_NEW = f_fn(dPara, R_PARA_EX_NEW, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
+			GRAD_NEW = f_gr(dPara, R_PARA_EX_NEW, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
 			// Update S and Y
 			S_ONE = R_PARA_EX_NEW - R_PARA_EX;
 			Y_ONE = GRAD_NEW - GRAD;
 			RHO = 1.0/as_scalar(S_ONE*Y_ONE.t());
 			// Update Memory
-		  if (t < LBFGS_LM) {
-		  	S_MAT.row(t) = S_ONE; Y_MAT.row(t) = Y_ONE; RHO_VEC(t) = RHO;
-		  } else {
-		  	arma::mat S_TMP = S_MAT; arma::mat Y_TMP = Y_MAT; arma::rowvec RHO_TMP = RHO_VEC;
-		  	S_MAT.rows(0, LBFGS_LM - 2) = S_TMP.rows(1, LBFGS_LM - 1); S_MAT.row(LBFGS_LM - 1) = S_ONE;
-		  	Y_MAT.rows(0, LBFGS_LM - 2) = Y_TMP.rows(1, LBFGS_LM - 1); Y_MAT.row(LBFGS_LM - 1) = Y_ONE;
-		  	RHO_VEC.subvec(0, LBFGS_LM - 2) = RHO_TMP.subvec(1, LBFGS_LM - 1); RHO_VEC(LBFGS_LM - 1) = RHO;
-		  }
+			if (t < LBFGS_LM) {
+			 	S_MAT.row(t) = S_ONE; Y_MAT.row(t) = Y_ONE; RHO_VEC(t) = RHO;
+			} else {
+			 	arma::mat S_TMP = S_MAT; arma::mat Y_TMP = Y_MAT; arma::rowvec RHO_TMP = RHO_VEC;
+			 	S_MAT.rows(0, LBFGS_LM - 2) = S_TMP.rows(1, LBFGS_LM - 1); S_MAT.row(LBFGS_LM - 1) = S_ONE;
+			 	Y_MAT.rows(0, LBFGS_LM - 2) = Y_TMP.rows(1, LBFGS_LM - 1); Y_MAT.row(LBFGS_LM - 1) = Y_ONE;
+			 	RHO_VEC.subvec(0, LBFGS_LM - 2) = RHO_TMP.subvec(1, LBFGS_LM - 1); RHO_VEC(LBFGS_LM - 1) = RHO;
+			}
 			// Examine Stopping Criterion
 			if (FVAL_EPS > 0) {
 				FVAL_TSET = std::abs(FVAL - FVAL_NEW)/FVAL_NEW;
-				if (FVAL_TSET < FVAL_EPS) { LBFGS_STOP = TRUE; }	
+				if (FVAL_TSET < FVAL_EPS) { LBFGS_STOP = TRUE; CONV = 1; }	
 			}
 			if (GRAD_EPS > 0) {
-				GRAD_TEST = arma::norm(GRAD_NEW, 2);
-				double GRAD_EPS_ADJ = arma::norm(R_PARA_EX_NEW, 2);
-				if (GRAD_EPS_ADJ < 1.0) { GRAD_EPS_ADJ = 1.0; }
-				GRAD_EPS_ADJ *= GRAD_EPS;
-				if (GRAD_TEST < GRAD_EPS_ADJ) { LBFGS_STOP = TRUE; }	
+				GRAD_TEST = arma::as_scalar(GRAD_NEW * GRAD_NEW.t());
+				double XNORM = arma::as_scalar(R_PARA_EX_NEW * R_PARA_EX_NEW.t());
+				if (XNORM < 1.0) { XNORM = 1.0; }
+				GRAD_TEST = GRAD_TEST/XNORM;
+				if (GRAD_TEST < GRAD_EPS) { LBFGS_STOP = TRUE; CONV = 1; }	
 			}
 			// Update Approximated Hessian Matrix
-	  	H_0 = (EYE - RHO*(Y_ONE.t() * S_ONE))	* H_0 * (EYE - RHO*(S_ONE.t() * Y_ONE)) + RHO*(S_ONE.t() * S_ONE);
+		  H_0 = (EYE - RHO*(Y_ONE.t() * S_ONE))	* H_0 * (EYE - RHO*(S_ONE.t() * Y_ONE)) + RHO*(S_ONE.t() * S_ONE);
 			// Replace Current Values
 			R_PARA_EX = R_PARA_EX_NEW;
 			FVAL = FVAL_NEW;
@@ -144,21 +143,20 @@ double lbfgsKernel(arma::rowvec &R_PARA_EX, const arma::rowvec &T_PARA, const ar
 		rowvec CHECK_PARA(dPara);
 		for (int q = 0; q < dPara; q++) { CHECK_PARA(q) = paraTransform(1, R_PARA_EX(q), R_NBD(q), R_UPPER(q), R_LOWER(q)); } 
 		Rprintf("Iteration %d :\n", t);
-		Rprintf("alpha = %4.6f\n", alpha);
-		Rprintf("DIR = "); rvecPrintf(DIR); 
-		Rprintf("P = "); rvecPrintf(CHECK_PARA); // 
-		Rprintf("F = %4.6f\n", FVAL);
-		Rprintf("G = "); rvecPrintf(GRAD); // 
-		Rprintf("RHO = %4.6f\n", RHO);
-		Rprintf("S = "); rvecPrintf(S_ONE); 
-		Rprintf("Y = "); rvecPrintf(Y_ONE); 
+		Rprintf("F = %4.8f\n", FVAL);
+		Rprintf("G = "); for (int q = 0; q < dPara; q++) { Rprintf("%4.4f", GRAD(q)); if (q < (dPara - 1)) Rprintf(", "); else Rprintf("\n"); } 
+		Rprintf("alpha = %4.4f\n", alpha);
+		Rprintf("DIR = "); for (int q = 0; q < dPara; q++) { Rprintf("%4.4f", DIR(q)); if (q < (dPara - 1)) Rprintf(", "); else Rprintf("\n"); } 
+		Rprintf("P = "); for (int q = 0; q < dPara; q++) { Rprintf("%4.4f", CHECK_PARA(q)); if (q < (dPara - 1)) Rprintf(", "); else Rprintf("\n"); } 
+		Rprintf("RHO = %4.4f\n", RHO);
+		Rprintf("S = "); for (int q = 0; q < dPara; q++) { Rprintf("%4.4f", S_ONE(q)); if (q < (dPara - 1)) Rprintf(", "); else Rprintf("\n"); } 
+		Rprintf("Y = "); for (int q = 0; q < dPara; q++) { Rprintf("%4.4f", Y_ONE(q)); if (q < (dPara - 1)) Rprintf(", "); else Rprintf("\n"); } 
+		Rprintf("\n");
 		*/
-		// Check If Terminate the Algorithm
-		if (LBFGS_STOP) { t = LBFGS_MAXIT + 1; }
 	}
 	// END L-BFGS LOOP
-	if (DIVERGE) { FVAL = 1e20; }
-	return FVAL;
+	//Rprintf("\n");
+	return CONV;
 }
 
 // SUBFUNCTIONS
@@ -169,7 +167,7 @@ double f_fn(const int dPara, const arma::rowvec &R_PARA_EX, const arma::rowvec &
 	// Transform to original scale
 	arma::rowvec R_PARA(dPara);
 	for (int q = 0; q < dPara; q++) { R_PARA(q) = paraTransform(1, R_PARA_EX(q), R_NBD(q), R_UPPER(q), R_LOWER(q)); }  // (-Inf, Inf) -> Original
-	int nSupp = DESIGN.n_rows;
+	//int nSupp = DESIGN.n_rows;
   double fvalTmp = 0;
   arma::rowvec eta_T, eta_R, DIV;
 
@@ -195,8 +193,8 @@ arma::rowvec f_gr(const int dPara, const arma::rowvec &R_PARA_EX, const arma::ro
 									const arma::rowvec &R_UPPER, const arma::rowvec &R_LOWER, const arma::irowvec &R_NBD)
 {
 	//central difference method
-	arma::rowvec f_para(dPara), b_para(dPara), gr(dPara);
-  double f_val, b_val;
+	arma::rowvec f_para(dPara), gr(dPara); arma::rowvec b_para(dPara);
+  double f_val; double b_val;
   for (int i = 0; i < dPara; i++) {
   	f_para = R_PARA_EX; b_para = R_PARA_EX;
     f_para(i) += 5e-4; b_para(i) -= 5e-4;
