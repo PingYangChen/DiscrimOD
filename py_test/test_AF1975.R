@@ -66,7 +66,7 @@ round(out$BESTDESIGN, 3)
 
 
 
-nn <- 100
+nn <- 3
 aa <- numeric(nn)
 system.time(
 for (i in 1:nn) {

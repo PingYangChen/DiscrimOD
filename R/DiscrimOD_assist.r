@@ -27,7 +27,7 @@ getAlgInfo <- function(nSwarm = 64, typePSO = NULL, #dSwarm = NULL, varUpper = N
   Q_cen_type = NULL, Q_a0 = NULL, Q_a1 = NULL, Q_a_var = NULL, LcRi_L = NULL,
   LBFGS_RETRY = NULL, LBFGS_MAXIT = NULL, LBFGS_LM = NULL, FVAL_EPS = NULL, GRAD_EPS = NULL, 
   LINESEARCH_MAXTRIAL = NULL, LINESEARCH_MAX = NULL, LINESEARCH_MIN = NULL,
-  LINESEARCH_ARMIJO = NULL, LINESEARCH_WOLFE = NULL) {
+  LINESEARCH_ARMIJO = NULL) {#, LINESEARCH_WOLFE = NULL) {
 
 
   nLoop <- length(nSwarm)
@@ -66,7 +66,7 @@ getAlgInfo <- function(nSwarm = 64, typePSO = NULL, #dSwarm = NULL, varUpper = N
   if(is.null(LINESEARCH_MAX))       LINESEARCH_MAX      <- rep(1e20, nLoop)
   if(is.null(LINESEARCH_MIN))       LINESEARCH_MIN      <- rep(1e-20, nLoop)
   if(is.null(LINESEARCH_ARMIJO))    LINESEARCH_ARMIJO   <- rep(1e-4, nLoop)
-  if(is.null(LINESEARCH_WOLFE))     LINESEARCH_WOLFE    <- rep(0.9 , nLoop)
+  #if(is.null(LINESEARCH_WOLFE))     LINESEARCH_WOLFE    <- rep(0.9 , nLoop)
 
   list(nSwarm = nSwarm, dSwarm = "autogen", varUpper = "autogen", varLower = "autogen", maxIter = maxIter,
     checkConv = checkConv, typePSO = typePSO, freeRun = freeRun, tol = tol, c1 = c1,
@@ -75,7 +75,7 @@ getAlgInfo <- function(nSwarm = 64, typePSO = NULL, #dSwarm = NULL, varUpper = N
     GC_RHO = GC_RHO, Q_cen_type = Q_cen_type, Q_a0 = Q_a0, Q_a1 = Q_a1, Q_a_var = Q_a_var,
     LcRi_L = LcRi_L,  LBFGS_RETRY = LBFGS_RETRY, LBFGS_MAXIT = LBFGS_MAXIT, LBFGS_LM = LBFGS_LM, FVAL_EPS = FVAL_EPS, GRAD_EPS = GRAD_EPS, 
     LINESEARCH_MAXTRIAL = LINESEARCH_MAXTRIAL, LINESEARCH_MAX = LINESEARCH_MAX, LINESEARCH_MIN = LINESEARCH_MIN,
-    LINESEARCH_ARMIJO = LINESEARCH_ARMIJO, LINESEARCH_WOLFE = LINESEARCH_WOLFE)
+    LINESEARCH_ARMIJO = LINESEARCH_ARMIJO)#, LINESEARCH_WOLFE = LINESEARCH_WOLFE)
 }
 
 #' Initialize for information of the optimal design problem

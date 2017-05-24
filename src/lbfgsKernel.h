@@ -29,20 +29,20 @@ int lbfgsKernel(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], double &FVAL, a
 	double LINESEARCH_MAX = PSO_OPTS[LOOPID].LINESEARCH_MAX;
 	double LINESEARCH_MIN = PSO_OPTS[LOOPID].LINESEARCH_MIN;
 	double LINESEARCH_ARMIJO = PSO_OPTS[LOOPID].LINESEARCH_ARMIJO;
-	double LINESEARCH_WOLFE = PSO_OPTS[LOOPID].LINESEARCH_WOLFE;
+	//double LINESEARCH_WOLFE = PSO_OPTS[LOOPID].LINESEARCH_WOLFE;
 	double alpha = LINESEARCH_MAX;
 	int LS_COUNTER = 0; bool FLAG = TRUE; 
-	double ZOOM_DIFF = 1.0; bool ZOOM_FLAG = TRUE;
+	//double ZOOM_DIFF = 1.0; bool ZOOM_FLAG = TRUE;
 
 	// Initialization
 	int dPara = R_PARA_EX.n_elem;
 	// New Position
 	arma::rowvec R_PARA_EX_NEW(dPara);
 	// Objective Function Value
-	double FVAL_NEW;
+	double FVAL_NEW = 1e-20;
 	FVAL = f_fn(dPara, R_PARA_EX, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
 	// Gradient
-	arma::rowvec GRAD(dPara), GRAD_NEW(dPara);	
+	arma::rowvec GRAD(dPara), GRAD_NEW(dPara, fill::zeros);	
 	GRAD = f_gr(dPara, R_PARA_EX, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
 	// Hessian Matrix
 	arma::mat EYE(dPara, dPara); EYE.eye();
@@ -86,81 +86,31 @@ int lbfgsKernel(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], double &FVAL, a
 		// Perform the Backtracking Line Search for Suitable Step Size 
 		double DIR_VAL = arma::as_scalar(DIR * GRAD.t());
 		if (DIR_VAL < 0) {
-			// strong Wolfe conditions.
-			double LS_FVAL_0, LS_FVAL; LS_FVAL_0 = FVAL;
-			arma::rowvec LS_GRAD_0, LS_GRAD; LS_GRAD_0 = GRAD;
-			arma::rowvec LS_X;
-			double alpha_0 = LINESEARCH_MIN; 
-			alpha = alpha_0 + (LINESEARCH_MAX - alpha_0)*as_scalar(arma::randu(1)); //
-			// alpha is alpha_i
-			// alpha_0 is alpha_{i-1}
+			// backtracking
+			alpha = LINESEARCH_MAX;
 			LS_COUNTER = 0; FLAG = TRUE; 
 			while ((LS_COUNTER < LINESEARCH_MAXTRIAL) & FLAG) {
-
-				LS_X = R_PARA_EX + alpha*DIR;
-				LS_FVAL = f_fn(dPara, LS_X, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
-				LS_GRAD = f_gr(dPara, LS_X, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
-				
-				if ((LS_FVAL > (FVAL + alpha*LINESEARCH_ARMIJO*DIR_VAL)) | ((LS_COUNTER > 0) & (LS_FVAL > LS_FVAL_0))) {
-					double aL = alpha_0; double aH = alpha;
-					ZOOM_DIFF = 1.0; ZOOM_FLAG = TRUE;
-					while ((ZOOM_DIFF > 1e-5) & ZOOM_FLAG) {
-						alpha = 0.5*(aL + aH);
-						LS_X = R_PARA_EX + alpha*DIR;
-						LS_FVAL = f_fn(dPara, LS_X, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
-						LS_GRAD = f_gr(dPara, LS_X, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
-						rowvec xL = R_PARA_EX + aL*DIR;
-						double fL = f_fn(dPara, xL, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
-						if ((LS_FVAL > (FVAL + alpha*LINESEARCH_ARMIJO*DIR_VAL)) | (LS_FVAL > fL)) {
-							aH = alpha;
-						} else {
-							if (std::abs(arma::as_scalar(LS_GRAD * DIR.t())) <= ((-1.0)*LINESEARCH_WOLFE*DIR_VAL)) { ZOOM_FLAG = FALSE; } 
-							if (ZOOM_FLAG & ((arma::as_scalar(LS_GRAD * DIR.t())*(aH - aL)) >= 0)) { aH = aL; }
-							if (ZOOM_FLAG) { aL = alpha; }
-						}
-						ZOOM_DIFF = std::abs(aH - aL);
-					}
+				if (alpha < LINESEARCH_MIN) { alpha = LINESEARCH_MIN; FLAG = FALSE; }
+				R_PARA_EX_NEW = R_PARA_EX + alpha*DIR;
+				FVAL_NEW = f_fn(dPara, R_PARA_EX_NEW, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
+				//GRAD_NEW = f_gr(dPara, R_PARA_EX_NEW, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
+				if (FVAL_NEW > (FVAL + alpha*LINESEARCH_ARMIJO*DIR_VAL)) {
+					alpha = 0.5*alpha;
+				} else {
 					FLAG = FALSE;
-				} 
-				if (FLAG & (std::abs(arma::as_scalar(LS_GRAD * DIR.t())) <= ((-1.0)*LINESEARCH_WOLFE*DIR_VAL))) { FLAG = FALSE; }
-				if (FLAG & (arma::as_scalar(LS_GRAD * DIR.t()) >= 0)) {
-					double aL = alpha; double aH = alpha_0;
-					ZOOM_DIFF = 1.0; ZOOM_FLAG = TRUE;
-					while ((ZOOM_DIFF > 1e-5) & ZOOM_FLAG) {
-						alpha = 0.5*(aL + aH);
-						LS_X = R_PARA_EX + alpha*DIR;
-						LS_FVAL = f_fn(dPara, LS_X, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
-						LS_GRAD = f_gr(dPara, LS_X, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
-						rowvec xL = R_PARA_EX + aL*DIR;
-						double fL = f_fn(dPara, xL, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
-						if ((LS_FVAL > (FVAL + alpha*LINESEARCH_ARMIJO*DIR_VAL)) | (LS_FVAL > fL)) {
-							aH = alpha;
-						} else {
-							if (std::abs(arma::as_scalar(LS_GRAD * DIR.t())) <= ((-1.0)*LINESEARCH_WOLFE*DIR_VAL)) { ZOOM_FLAG = FALSE; } 
-							if (ZOOM_FLAG & ((arma::as_scalar(LS_GRAD * DIR.t())*(aH - aL)) >= 0)) { aH = aL; }
-							if (ZOOM_FLAG) { aL = alpha; }
-						}
-						ZOOM_DIFF = std::abs(aH - aL);
-					}
-					FLAG = FALSE;
-				}
-				if (FLAG) {
-					alpha_0 = alpha;
-					LS_FVAL_0 = LS_FVAL;
-					LS_GRAD_0 = LS_GRAD;
-					alpha = alpha_0 + (LINESEARCH_MAX - alpha_0)*as_scalar(arma::randu(1));	
 				}
 				LS_COUNTER++;				
 			}
+			GRAD_NEW = f_gr(dPara, R_PARA_EX_NEW, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
 		} else {
 			LBFGS_STOP = TRUE;
 		} 
 
 		if (LBFGS_STOP) { t = LBFGS_MAXIT + 1; } else {
 			// Update New Position
-			R_PARA_EX_NEW = R_PARA_EX + alpha*DIR;
-			FVAL_NEW = f_fn(dPara, R_PARA_EX_NEW, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
-			GRAD_NEW = f_gr(dPara, R_PARA_EX_NEW, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
+			//R_PARA_EX_NEW = R_PARA_EX + alpha*DIR;
+			//FVAL_NEW = f_fn(dPara, R_PARA_EX_NEW, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
+			//GRAD_NEW = f_gr(dPara, R_PARA_EX_NEW, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
 			// Update S and Y
 			S_ONE = R_PARA_EX_NEW - R_PARA_EX;
 			Y_ONE = GRAD_NEW - GRAD;

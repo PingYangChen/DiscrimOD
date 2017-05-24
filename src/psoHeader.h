@@ -314,7 +314,7 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST)
   Rcpp::NumericVector LINESEARCH_MAX_Tmp      = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_MAX"]);
   Rcpp::NumericVector LINESEARCH_MIN_Tmp      = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_MIN"]);
   Rcpp::NumericVector LINESEARCH_ARMIJO_Tmp   = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_ARMIJO"]);
-  Rcpp::NumericVector LINESEARCH_WOLFE_Tmp    = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_WOLFE"]);
+  //Rcpp::NumericVector LINESEARCH_WOLFE_Tmp    = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_WOLFE"]);
 
   int N_OPTS = nSwarm_Tmp.size();
 
@@ -355,7 +355,7 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST)
     PSO_OPT[i].LINESEARCH_MAX       = LINESEARCH_MAX_Tmp[i]; 
     PSO_OPT[i].LINESEARCH_MIN       = LINESEARCH_MIN_Tmp[i]; 
     PSO_OPT[i].LINESEARCH_ARMIJO    = LINESEARCH_ARMIJO_Tmp[i]; 
-    PSO_OPT[i].LINESEARCH_WOLFE     = LINESEARCH_WOLFE_Tmp[i]; 
+    //PSO_OPT[i].LINESEARCH_WOLFE     = LINESEARCH_WOLFE_Tmp[i]; 
   }
 }
 
