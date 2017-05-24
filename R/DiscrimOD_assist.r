@@ -60,7 +60,7 @@ getAlgInfo <- function(nSwarm = 64, typePSO = NULL, #dSwarm = NULL, varUpper = N
   if(is.null(LBFGS_RETRY))          LBFGS_RETRY         <- rep(3   , nLoop)
   if(is.null(LBFGS_MAXIT))          LBFGS_MAXIT         <- rep(100 , nLoop)
   if(is.null(LBFGS_LM))             LBFGS_LM            <- rep(6   , nLoop)
-  if(is.null(FVAL_EPS))             FVAL_EPS            <- rep(1e-8, nLoop)
+  if(is.null(FVAL_EPS))             FVAL_EPS            <- rep(0   , nLoop)
   if(is.null(GRAD_EPS))             GRAD_EPS            <- rep(1e-5, nLoop)
   if(is.null(LINESEARCH_MAXTRIAL))  LINESEARCH_MAXTRIAL <- rep(50  , nLoop)
   if(is.null(LINESEARCH_MAX))       LINESEARCH_MAX      <- rep(1e20, nLoop)

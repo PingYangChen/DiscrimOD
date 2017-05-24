@@ -118,6 +118,7 @@ double minDistCalc(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[],
     R_PARA_EX_1 = randu(1, dParas) % (R_UPPER - R_LOWER) + R_LOWER;
     for (int d = 0; d < dParas; d++) { R_PARA_EX_1(d) = paraTransform(0, R_PARA_EX_1(d), R_NBD(d), R_UPPER(d), R_LOWER(d)); }
     CONV_STATUS = lbfgsKernel(LOOPID, PSO_OPTS, fx1, R_PARA_EX_1, T_PARA, DESIGN, WT, m1_func, m2_func, distFunc, R_UPPER, R_LOWER, R_NBD);
+    if (std::abs(fx1 - fx) > 0.1) { count--; }
     if (fx1 < fx) { count--; fx = fx1; R_PARA_EX = R_PARA_EX_1; } 
     count++;
   }

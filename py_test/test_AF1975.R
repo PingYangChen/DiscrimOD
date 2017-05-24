@@ -35,7 +35,7 @@ MODEL_INFO_Cpp <- list(
   list(model = cppFunction(RM_CppCode),
        paraLower = rep(-10, 3),
        paraUpper = rep(10, 3),
-       paraInit = runif(3,-10,10))
+       paraInit = c(0,0,0))
 )
 
 DISTANCE_CppCode <- 'Rcpp::NumericVector DISTANCE_Cpp(SEXP xt, SEXP xr)
@@ -52,8 +52,9 @@ DISTANCE_Cpp <- cppFunction(DISTANCE_CppCode)
 
 #
 ALG_INFO <- getAlgInfo(nSwarm = 32, maxIter = 100, typePSO = 0,
-                       LBFGS_RETRY = 3,
-                       FVAL_EPS = 0, GRAD_EPS = 1e-6)
+                       LBFGS_RETRY = 2,
+                       FVAL_EPS = 0, GRAD_EPS = 1e-6,
+                       LINESEARCH_MAX = 1e5)
 
 nSupp <- 4
 dsLower <- -1
@@ -66,17 +67,18 @@ round(out$BESTDESIGN, 3)
 
 
 
-nn <- 3
+nn <- 100
 aa <- numeric(nn)
 system.time(
 for (i in 1:nn) {
-#DESIGN1 <- out$BESTDESIGN
+DESIGN1 <- out$BESTDESIGN
 #uu <- runif(4); DESIGN1 <- cbind(runif(4, -1, 1), uu/sum(uu))
-DESIGN1 <- cbind(c(-1,-.669,.144,.957), c(.253,.428,.247,.072))
-aa[i] <- designCriterion(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper,
+#DESIGN1 <- cbind(c(-1,-.669,.144,.957), c(.253,.428,.247,.072))
+aa[i] <-
+  designCriterion(DESIGN1, MODEL_INFO_Cpp, DISTANCE_Cpp, dsLower, dsUpper,
                          MaxMinStdVals = NULL, ALG_INFO)$cri_val
 })[3]/nn
 
-aa
-sum(aa < -1)
+max(aa)
+sum(aa > 1)
 

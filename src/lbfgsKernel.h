@@ -95,7 +95,7 @@ int lbfgsKernel(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], double &FVAL, a
 				FVAL_NEW = f_fn(dPara, R_PARA_EX_NEW, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
 				//GRAD_NEW = f_gr(dPara, R_PARA_EX_NEW, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
 				if (FVAL_NEW > (FVAL + alpha*LINESEARCH_ARMIJO*DIR_VAL)) {
-					alpha = 0.5*alpha;
+					alpha = 0.6180339887*alpha;
 				} else {
 					FLAG = FALSE;
 				}
@@ -137,7 +137,7 @@ int lbfgsKernel(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], double &FVAL, a
 				if (GRAD_TEST < GRAD_EPS) { LBFGS_STOP = TRUE; CONV = 1; }	
 			}
 			// Update Approximated Hessian Matrix
-		  H_0 = (EYE - RHO*(Y_ONE.t() * S_ONE))	* H_0 * (EYE - RHO*(S_ONE.t() * Y_ONE)) + RHO*(S_ONE.t() * S_ONE);
+			if (!LBFGS_STOP) H_0 = (EYE - RHO*(Y_ONE.t() * S_ONE))	* H_0 * (EYE - RHO*(S_ONE.t() * Y_ONE)) + RHO*(S_ONE.t() * S_ONE);	
 			// Replace Current Values
 			R_PARA_EX = R_PARA_EX_NEW;
 			FVAL = FVAL_NEW;
@@ -174,12 +174,19 @@ double f_fn(const int dPara, const arma::rowvec &R_PARA_EX, const arma::rowvec &
 	for (int q = 0; q < dPara; q++) { R_PARA(q) = paraTransform(1, R_PARA_EX(q), R_NBD(q), R_UPPER(q), R_LOWER(q)); }  // (-Inf, Inf) -> Original
 	//int nSupp = DESIGN.n_rows;
   double fvalTmp = 0;
-  arma::rowvec eta_T, eta_R, DIV;
+  arma::rowvec eta_T(DESIGN.n_rows), eta_R(DESIGN.n_rows), DIV(DESIGN.n_rows);
 
+  // See py_test/test_AF1975.R
+  // About 120 seconds when assigning objective function by pointer
   eta_T = (arma::rowvec) m1_func->eval(Rcpp::wrap(DESIGN), Rcpp::wrap(T_PARA)); 
   eta_R = (arma::rowvec) m2_func->eval(Rcpp::wrap(DESIGN), Rcpp::wrap(R_PARA)); 
   DIV = (arma::rowvec) dist_func->eval(Rcpp::wrap(eta_T), Rcpp::wrap(eta_R));  
- 
+ 	
+  // About 20 seconds when putting objective function here
+  /*for (uword i = 0; i < DESIGN.n_rows; i++) eta_T(i) = T_PARA(0) + T_PARA(1)*std::exp(DESIGN(i,0)) + T_PARA(2)*std::exp(-DESIGN(i,0));
+	for (uword i = 0; i < DESIGN.n_rows; i++) eta_R(i) = R_PARA(0) + R_PARA(1)*DESIGN(i,0) + R_PARA(2)*(DESIGN(i,0)*DESIGN(i,0));
+	for (uword i = 0; i < DESIGN.n_rows; i++) DIV(i) = (eta_T(i) - eta_R(i))*(eta_T(i) - eta_R(i)); */
+
   fvalTmp = arma::accu(WT % DIV);
   /*for (int i = 0; i < nSupp; i++) {
   	arma::rowvec x = DESIGN.row(i);
@@ -213,7 +220,7 @@ arma::rowvec f_gr(const int dPara, const arma::rowvec &R_PARA_EX, const arma::ro
 //
 double paraTransform(const int INV, const double par, const int nbd, const double upper, const double lower)
 {
-  double tmp; double out = par; double PRECISION = 1e-14;
+  double tmp; double out = par; double PRECISION = 1e-12;
   if (INV == 0) {
     switch(nbd) {
       case 1: { tmp = std::log((par - lower)); out = tmp; break; } // Lower
