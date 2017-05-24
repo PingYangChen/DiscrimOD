@@ -28,9 +28,11 @@ int lbfgsKernel(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], double &FVAL, a
 	int LINESEARCH_MAXTRIAL = PSO_OPTS[LOOPID].LINESEARCH_MAXTRIAL;
 	double LINESEARCH_MAX = PSO_OPTS[LOOPID].LINESEARCH_MAX;
 	double LINESEARCH_MIN = PSO_OPTS[LOOPID].LINESEARCH_MIN;
-	double LINESEARCH_C = PSO_OPTS[LOOPID].LINESEARCH_C;
-	double LINESEARCH_TAU = PSO_OPTS[LOOPID].LINESEARCH_TAU;
+	double LINESEARCH_ARMIJO = PSO_OPTS[LOOPID].LINESEARCH_ARMIJO;
+	double LINESEARCH_WOLFE = PSO_OPTS[LOOPID].LINESEARCH_WOLFE;
 	double alpha = LINESEARCH_MAX;
+	int LS_COUNTER = 0; bool FLAG = TRUE; 
+	double ZOOM_DIFF = 1.0; bool ZOOM_FLAG = TRUE;
 
 	// Initialization
 	int dPara = R_PARA_EX.n_elem;
@@ -84,18 +86,71 @@ int lbfgsKernel(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], double &FVAL, a
 		// Perform the Backtracking Line Search for Suitable Step Size 
 		double DIR_VAL = arma::as_scalar(DIR * GRAD.t());
 		if (DIR_VAL < 0) {
-			alpha = LINESEARCH_MAX;
-			double LS_VAL; int LS_COUNTER = 0; bool FLAG = TRUE;
+			// strong Wolfe conditions.
+			double LS_FVAL_0, LS_FVAL; LS_FVAL_0 = FVAL;
+			arma::rowvec LS_GRAD_0, LS_GRAD; LS_GRAD_0 = GRAD;
+			arma::rowvec LS_X;
+			double alpha_0 = LINESEARCH_MIN; 
+			alpha = alpha_0 + (LINESEARCH_MAX - alpha_0)*as_scalar(arma::randu(1)); //
+			// alpha is alpha_i
+			// alpha_0 is alpha_{i-1}
+			LS_COUNTER = 0; FLAG = TRUE; 
 			while ((LS_COUNTER < LINESEARCH_MAXTRIAL) & FLAG) {
-				arma::rowvec R_PARA_EX_FOR = R_PARA_EX + alpha*DIR;
-				LS_VAL = f_fn(dPara, R_PARA_EX_FOR, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
-				if (LS_VAL > (FVAL + alpha*LINESEARCH_C*DIR_VAL)) {
-					alpha *= LINESEARCH_TAU;
-					if (alpha < LINESEARCH_MIN) { alpha = LINESEARCH_MIN; FLAG = FALSE; }
-				} else {
+
+				LS_X = R_PARA_EX + alpha*DIR;
+				LS_FVAL = f_fn(dPara, LS_X, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
+				LS_GRAD = f_gr(dPara, LS_X, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
+				
+				if ((LS_FVAL > (FVAL + alpha*LINESEARCH_ARMIJO*DIR_VAL)) | ((LS_COUNTER > 0) & (LS_FVAL > LS_FVAL_0))) {
+					double aL = alpha_0; double aH = alpha;
+					ZOOM_DIFF = 1.0; ZOOM_FLAG = TRUE;
+					while ((ZOOM_DIFF > 1e-5) & ZOOM_FLAG) {
+						alpha = 0.5*(aL + aH);
+						LS_X = R_PARA_EX + alpha*DIR;
+						LS_FVAL = f_fn(dPara, LS_X, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
+						LS_GRAD = f_gr(dPara, LS_X, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
+						rowvec xL = R_PARA_EX + aL*DIR;
+						double fL = f_fn(dPara, xL, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
+						if ((LS_FVAL > (FVAL + alpha*LINESEARCH_ARMIJO*DIR_VAL)) | (LS_FVAL > fL)) {
+							aH = alpha;
+						} else {
+							if (std::abs(arma::as_scalar(LS_GRAD * DIR.t())) <= ((-1.0)*LINESEARCH_WOLFE*DIR_VAL)) { ZOOM_FLAG = FALSE; } 
+							if (ZOOM_FLAG & ((arma::as_scalar(LS_GRAD * DIR.t())*(aH - aL)) >= 0)) { aH = aL; }
+							if (ZOOM_FLAG) { aL = alpha; }
+						}
+						ZOOM_DIFF = std::abs(aH - aL);
+					}
+					FLAG = FALSE;
+				} 
+				if (FLAG & (std::abs(arma::as_scalar(LS_GRAD * DIR.t())) <= ((-1.0)*LINESEARCH_WOLFE*DIR_VAL))) { FLAG = FALSE; }
+				if (FLAG & (arma::as_scalar(LS_GRAD * DIR.t()) >= 0)) {
+					double aL = alpha; double aH = alpha_0;
+					ZOOM_DIFF = 1.0; ZOOM_FLAG = TRUE;
+					while ((ZOOM_DIFF > 1e-5) & ZOOM_FLAG) {
+						alpha = 0.5*(aL + aH);
+						LS_X = R_PARA_EX + alpha*DIR;
+						LS_FVAL = f_fn(dPara, LS_X, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
+						LS_GRAD = f_gr(dPara, LS_X, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
+						rowvec xL = R_PARA_EX + aL*DIR;
+						double fL = f_fn(dPara, xL, T_PARA, DESIGN, WT, m1_func, m2_func, dist_func, R_UPPER, R_LOWER, R_NBD); 
+						if ((LS_FVAL > (FVAL + alpha*LINESEARCH_ARMIJO*DIR_VAL)) | (LS_FVAL > fL)) {
+							aH = alpha;
+						} else {
+							if (std::abs(arma::as_scalar(LS_GRAD * DIR.t())) <= ((-1.0)*LINESEARCH_WOLFE*DIR_VAL)) { ZOOM_FLAG = FALSE; } 
+							if (ZOOM_FLAG & ((arma::as_scalar(LS_GRAD * DIR.t())*(aH - aL)) >= 0)) { aH = aL; }
+							if (ZOOM_FLAG) { aL = alpha; }
+						}
+						ZOOM_DIFF = std::abs(aH - aL);
+					}
 					FLAG = FALSE;
 				}
-				LS_COUNTER++;
+				if (FLAG) {
+					alpha_0 = alpha;
+					LS_FVAL_0 = LS_FVAL;
+					LS_GRAD_0 = LS_GRAD;
+					alpha = alpha_0 + (LINESEARCH_MAX - alpha_0)*as_scalar(arma::randu(1));	
+				}
+				LS_COUNTER++;				
 			}
 		} else {
 			LBFGS_STOP = TRUE;
@@ -145,7 +200,7 @@ int lbfgsKernel(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], double &FVAL, a
 		Rprintf("Iteration %d :\n", t);
 		Rprintf("F = %4.8f\n", FVAL);
 		Rprintf("G = "); for (int q = 0; q < dPara; q++) { Rprintf("%4.4f", GRAD(q)); if (q < (dPara - 1)) Rprintf(", "); else Rprintf("\n"); } 
-		Rprintf("alpha = %4.4f\n", alpha);
+		Rprintf("alpha = %4.4f by %d iterations of LS\n", alpha, LS_COUNTER);
 		Rprintf("DIR = "); for (int q = 0; q < dPara; q++) { Rprintf("%4.4f", DIR(q)); if (q < (dPara - 1)) Rprintf(", "); else Rprintf("\n"); } 
 		Rprintf("P = "); for (int q = 0; q < dPara; q++) { Rprintf("%4.4f", CHECK_PARA(q)); if (q < (dPara - 1)) Rprintf(", "); else Rprintf("\n"); } 
 		Rprintf("RHO = %4.4f\n", RHO);
@@ -208,17 +263,30 @@ arma::rowvec f_gr(const int dPara, const arma::rowvec &R_PARA_EX, const arma::ro
 //
 double paraTransform(const int INV, const double par, const int nbd, const double upper, const double lower)
 {
-  double tmp; double out = par;
+  double tmp; double out = par; double PRECISION = 1e-14;
   if (INV == 0) {
     switch(nbd) {
       case 1: { tmp = std::log((par - lower)); out = tmp; break; } // Lower
-      case 2: { tmp = (par - lower)/(upper - lower); tmp = std::log((tmp/(1-tmp))); out = tmp; break; } // Both
+      case 2: { 
+      	tmp = (par - lower)/(upper - lower); 
+      	if (tmp < PRECISION) tmp = PRECISION;
+      	if (tmp > (1 - PRECISION)) tmp = 1 - PRECISION;
+      	tmp = std::log((tmp/(1-tmp))); 
+      	out = tmp; 
+      	break; 
+      } // Both
       case 3: { tmp = std::log((upper - par)); out = tmp; break; } // Upper
     }
   } else {
     switch(nbd) {
       case 1: { tmp = std::exp(par) + lower; out = tmp; break; }
-      case 2: { tmp = std::exp(par); tmp = tmp/(1+tmp); tmp = tmp*(upper - lower) + lower; out = tmp; break; }
+      case 2: { 
+      	tmp = std::exp(par); 
+      	if (tmp > 1/PRECISION) tmp = 1/PRECISION;
+      	tmp = tmp/(1+tmp); 
+      	tmp = tmp*(upper - lower) + lower; out = tmp; 
+      	break; 
+     	}
       case 3: { tmp = upper - std::exp(par); out = tmp; break; }
     }
   }

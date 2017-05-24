@@ -112,13 +112,13 @@ double minDistCalc(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[],
   int CONV_STATUS;
   CONV_STATUS = lbfgsKernel(LOOPID, PSO_OPTS, fx, R_PARA_EX, T_PARA, DESIGN, WT, m1_func, m2_func, distFunc, R_UPPER, R_LOWER, R_NBD);
 
-  int LBFGS_RETRY = PSO_OPTS[LOOPID].LBFGS_RETRY;
+  int LBFGS_RETRY = PSO_OPTS[LOOPID].LBFGS_RETRY + (1 - CONV_STATUS);
   int count = 0;
   while ((count < LBFGS_RETRY)) {
     R_PARA_EX_1 = randu(1, dParas) % (R_UPPER - R_LOWER) + R_LOWER;
     for (int d = 0; d < dParas; d++) { R_PARA_EX_1(d) = paraTransform(0, R_PARA_EX_1(d), R_NBD(d), R_UPPER(d), R_LOWER(d)); }
     CONV_STATUS = lbfgsKernel(LOOPID, PSO_OPTS, fx1, R_PARA_EX_1, T_PARA, DESIGN, WT, m1_func, m2_func, distFunc, R_UPPER, R_LOWER, R_NBD);
-    if (fx1 < fx) { count--; fx = fx1; R_PARA_EX = R_PARA_EX_1; } else if (CONV_STATUS == 0) { count--; }
+    if (fx1 < fx) { count--; fx = fx1; R_PARA_EX = R_PARA_EX_1; } 
     count++;
   }
   for (int d = 0; d < dParas; d++) R_PARA_OUT(d) = paraTransform(1, R_PARA_EX(d), R_NBD(d), R_UPPER(d), R_LOWER(d));

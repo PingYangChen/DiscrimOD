@@ -113,6 +113,9 @@ List cppEquivalence(Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::Li
   PSO_OPTIONS PSO_OPT[N_PSO_OPTS]; getAlgStruct(PSO_OPT, ALG_INFO_LIST);
   
   /* REVISE HERE */
+  Rcpp::EvalBase *m1_func = MODELS[0].modelFunc;
+  Rcpp::EvalBase *m2_func = MODELS[1].modelFunc;
+  
   arma::rowvec T_PARA = OBJ.paras.submat(0, 0, 0, OBJ.dParas(0) - 1);
   arma::mat DISPVALS; 
   arma::vec xLine_1 = linspace<vec>(OBJ.dsLower(0), OBJ.dsUpper(0), nGrid); 
@@ -121,8 +124,8 @@ List cppEquivalence(Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::Li
   if (dSupp == 1) {
     DISPVALS.set_size(1, nGrid);
     arma::rowvec eta_T, eta_R, DIV;
-    eta_T = (arma::rowvec) MODELS[0].modelFunc->eval(Rcpp::wrap(xLine_1), Rcpp::wrap(T_PARA)); 
-    eta_R = (arma::rowvec) MODELS[1].modelFunc->eval(Rcpp::wrap(xLine_1), Rcpp::wrap(R_PARA_SET.submat(1, 0, 1, OBJ.dParas(1)))); 
+    eta_T = (arma::rowvec) m1_func->eval(Rcpp::wrap(xLine_1), Rcpp::wrap(T_PARA)); 
+    eta_R = (arma::rowvec) m2_func->eval(Rcpp::wrap(xLine_1), Rcpp::wrap(R_PARA_SET.submat(1, 0, 1, OBJ.dParas(1) - 1))); 
     DIV = (arma::rowvec) distFunc->eval(Rcpp::wrap(eta_T), Rcpp::wrap(eta_R)); 
     DISPVALS.row(0) = DIV - GBEST_VAL;
   } else if (dSupp == 2) {
@@ -132,8 +135,8 @@ List cppEquivalence(Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::Li
     for (int i = 0; i < nGrid; i++) {
       for (int j = 0; j < nGrid; j++) {
         arma::rowvec pt(2); pt << xLine_1(i) << xLine_2(j) << endr;
-        eta_T = (arma::rowvec) MODELS[0].modelFunc->eval(Rcpp::wrap(pt), Rcpp::wrap(T_PARA)); 
-        eta_R = (arma::rowvec) MODELS[1].modelFunc->eval(Rcpp::wrap(pt), Rcpp::wrap(R_PARA_SET.submat(1, 0, 1, OBJ.dParas(1)))); 
+        eta_T = (arma::rowvec) m1_func->eval(Rcpp::wrap(pt), Rcpp::wrap(T_PARA)); 
+        eta_R = (arma::rowvec) m2_func->eval(Rcpp::wrap(pt), Rcpp::wrap(R_PARA_SET.submat(1, 0, 1, OBJ.dParas(1) - 1))); 
         DIV = (arma::rowvec) distFunc->eval(Rcpp::wrap(eta_T), Rcpp::wrap(eta_R)); 
         DISPVALS(i, j) = DIV(0) - GBEST_VAL;
       }
@@ -144,7 +147,7 @@ List cppEquivalence(Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::Li
   
   /* OUTPUT */  
   return List::create(Named("Grid_1") = wrap(xLine_1),
-                      Named("Grid_1") = wrap(xLine_2),
+                      Named("Grid_2") = wrap(xLine_2),
                       Named("DirDeriv") = wrap(DISPVALS),
                       Named("MAX_DD") = wrap(MAX_DISP));                       
 }

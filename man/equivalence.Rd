@@ -4,8 +4,9 @@
 \alias{equivalence}
 \title{Equivalence Theorem}
 \usage{
-equivalence(DESIGN = NULL, PSO_RESULT = NULL, IFPLOT = FALSE, MODEL_INFO,
-  DISTANCE, dsLower, dsUpper, MaxMinStdVals = NULL, ALG_INFO = NULL, ...)
+equivalence(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100,
+  IFPLOT = FALSE, MODEL_INFO, DISTANCE, dsLower, dsUpper,
+  MaxMinStdVals = NULL, ALG_INFO = NULL, ...)
 }
 \description{
 Equivalence Theorem

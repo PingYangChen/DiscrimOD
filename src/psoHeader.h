@@ -148,8 +148,8 @@ struct PSO_OPTIONS {
   int LINESEARCH_MAXTRIAL; // 50
   double LINESEARCH_MAX; // 1e6
   double LINESEARCH_MIN; // 1e-6
-  double LINESEARCH_C; // 0.5
-  double LINESEARCH_TAU; // 0.5
+  double LINESEARCH_ARMIJO; // 1e-4
+  double LINESEARCH_WOLFE; // 0.9
 };
 
 // DEFINE STUCTURES OF PSO PARAMETERS WHICH WILL CHANGE ITERATIVELY
@@ -313,8 +313,8 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST)
   Rcpp::IntegerVector LINESEARCH_MAXTRIAL_Tmp = as<IntegerVector>(ALG_INFO_LIST["LINESEARCH_MAXTRIAL"]);
   Rcpp::NumericVector LINESEARCH_MAX_Tmp      = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_MAX"]);
   Rcpp::NumericVector LINESEARCH_MIN_Tmp      = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_MIN"]);
-  Rcpp::NumericVector LINESEARCH_C_Tmp        = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_C"]);
-  Rcpp::NumericVector LINESEARCH_TAU_Tmp      = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_TAU"]);
+  Rcpp::NumericVector LINESEARCH_ARMIJO_Tmp   = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_ARMIJO"]);
+  Rcpp::NumericVector LINESEARCH_WOLFE_Tmp    = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_WOLFE"]);
 
   int N_OPTS = nSwarm_Tmp.size();
 
@@ -354,8 +354,8 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST)
     PSO_OPT[i].LINESEARCH_MAXTRIAL  = LINESEARCH_MAXTRIAL_Tmp[i]; 
     PSO_OPT[i].LINESEARCH_MAX       = LINESEARCH_MAX_Tmp[i]; 
     PSO_OPT[i].LINESEARCH_MIN       = LINESEARCH_MIN_Tmp[i]; 
-    PSO_OPT[i].LINESEARCH_C         = LINESEARCH_C_Tmp[i]; 
-    PSO_OPT[i].LINESEARCH_TAU       = LINESEARCH_TAU_Tmp[i]; 
+    PSO_OPT[i].LINESEARCH_ARMIJO    = LINESEARCH_ARMIJO_Tmp[i]; 
+    PSO_OPT[i].LINESEARCH_WOLFE     = LINESEARCH_WOLFE_Tmp[i]; 
   }
 }
 

@@ -53,7 +53,7 @@ DISTANCE_Cpp <- cppFunction(DISTANCE_CppCode)
 #
 ALG_INFO <- getAlgInfo(nSwarm = 32, maxIter = 100, typePSO = 0,
                        LBFGS_RETRY = 3,
-                       FVAL_EPS = 1e-6, GRAD_EPS = 1e-9, LINESEARCH_C = 1e-4)
+                       FVAL_EPS = 0, GRAD_EPS = 1e-6)
 
 nSupp <- 4
 dsLower <- -1
@@ -70,11 +70,11 @@ nn <- 100
 aa <- numeric(nn)
 system.time(
 for (i in 1:nn) {
-DESIGN1 <- out$BESTDESIGN
+#DESIGN1 <- out$BESTDESIGN
 #uu <- runif(4); DESIGN1 <- cbind(runif(4, -1, 1), uu/sum(uu))
-#DESIGN1 <- cbind(c(-1,-.669,.144,.957), c(.253,.428,.247,.072))
-aa[i] <- designCriterion(DESIGN1, MODEL_INFO_Cpp, DISTANCE_Cpp, dsLower, dsUpper,
-                         MaxMinStdVals, ALG_INFO)$cri_val
+DESIGN1 <- cbind(c(-1,-.669,.144,.957), c(.253,.428,.247,.072))
+aa[i] <- designCriterion(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper,
+                         MaxMinStdVals = NULL, ALG_INFO)$cri_val
 })[3]/nn
 
 aa

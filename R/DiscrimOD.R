@@ -153,7 +153,7 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, Max
 
 	cri_1 <- cppDesignCriterion(ALG_INFO, D_INFO, MODEL_LIST, 0, environment, DESIGN1_M)
 
-  return(list(cri_val = -cri_1$val, theta2 = cri_1$theta2))
+  return(list(cri_val = -cri_1$val, theta2 = cri_1$theta2[-1,]))
 }
 
 #' Equivalence Theorem
@@ -183,7 +183,6 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 
 	if (!hasArg(environment)) environment <- new.env()
 
-
 	# Adjust ALG_INFO according to D_INFO
 	swarmSetting <- algInfoUpdate(D_INFO)
 	ALG_INFO$varUpper <- swarmSetting$UB
@@ -191,13 +190,13 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	ALG_INFO$dSwarm	<- ncol(swarmSetting$UB)
 
 	DESIGN_M <- designV2M(DESIGN, D_INFO)
-
+	
 	CRIT_VAL <- cppDesignCriterion(ALG_INFO, D_INFO, MODEL_LIST, 0, environment, DESIGN_M)
-
+	
 	PARA_SET <- D_INFO$parasInit
-	PARA_SET[2, 1:D_INFO$dParas[2]] <- CRIT_VAL$theta2
-
-	equiv <- cppEquivalence(ALG_INFO, D_INFO, MODEL_LIST, CRIT_VAL$cri_val, PARA_SET, environment, ngrid)
+	PARA_SET[2,] <- CRIT_VAL$theta2[2,]
+	
+	equiv <- cppEquivalence(ALG_INFO, D_INFO, MODEL_LIST, -CRIT_VAL$val, PARA_SET, environment, ngrid)
 
 	return(equiv)
 }
