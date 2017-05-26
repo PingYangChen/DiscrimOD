@@ -3,7 +3,7 @@
 
 // BODY
 void psoFuncEval(const bool &IF_PARALLEL, const int LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, const PSO_DYN &PSO_DYN, 
-								 const Rcpp::List MODEL_INFO_LIST, const SEXP DIST_FUNC_SEXP, const SEXP env, const rowvec &FIXEDVALUE, const mat &swarm, vec &fSwarm)
+								 model_diff_func *MODEL_COLLECTOR[], const rowvec &FIXEDVALUE, const mat &swarm, vec &fSwarm)
 {	
   int nSwarm = (int)swarm.n_rows;
  /* if (IF_PARALLEL) { 
@@ -26,7 +26,7 @@ void psoFuncEval(const bool &IF_PARALLEL, const int LOOPID, const PSO_OPTIONS PS
 			rowvec PARTICLE = conv_to<rowvec>::from(swarm.row(iSwarm));
 			// Optimal Design Criteria
 			arma::mat R_PARA;
-			fSwarm(iSwarm) = DesignCriterion(LOOPID, PSO_OPTS, OBJ, MODEL_INFO_LIST, DIST_FUNC_SEXP, env, FIXEDVALUE, PARTICLE, R_PARA);
+			fSwarm(iSwarm) = DesignCriterion(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, FIXEDVALUE, PARTICLE, R_PARA);
 		}
   //}
 }

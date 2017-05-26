@@ -3,20 +3,18 @@
 #include "lbfgsKernel.h"
 
 // DECLARE FUNCTIONS
-double criterionList(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[],
-                     const OBJ_INFO &OBJ, const Rcpp::List MODEL_INFO_LIST, const SEXP DIST_FUNC_SEXP, const SEXP env, 
-										 const arma::mat &DESIGN, const arma::rowvec &WT, arma::mat &R_PARA);
-double minDistCalc(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[],
-                   const int &tid, const int &rid, const OBJ_INFO &OBJ, const Rcpp::List MODEL_INFO_LIST, const SEXP DIST_FUNC_SEXP, const SEXP env, 
-									 const arma::mat &DESIGN, const arma::rowvec &WT, arma::rowvec &R_PARA_OUT);
+double criterionList(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],  
+                     const arma::mat &DESIGN, const arma::rowvec &WT, arma::mat &R_PARA);
+double minDistCalc(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID, 
+                   const arma::mat &DESIGN, const arma::rowvec &WT, arma::rowvec &R_PARA_OUT);
 arma::rowvec directionalDerivative(const OBJ_INFO &OBJ, const arma::mat &dsGrid, const arma::mat &PARA_SET, const arma::rowvec &alpha, 
-                                   const Rcpp::List MODEL_INFO_LIST, const SEXP DIST_FUNC_SEXP, const SEXP env);
-arma::rowvec distCalc(const OBJ_INFO &OBJ, const arma::mat &x, const int &tid, const int &rid, const arma::mat &PARA_SET, 
-                      const Rcpp::List MODEL_INFO_LIST, const SEXP DIST_FUNC_SEXP, const SEXP env);
+                                   model_diff_func *MODEL_COLLECTOR[]);
+arma::rowvec distCalc(const OBJ_INFO &OBJ, const arma::mat &x, const arma::mat &PARA_SET, 
+                      model_diff_func *MODEL_COLLECTOR[], const int &PAIRID);
 
 // BODY
-double DesignCriterion(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, const Rcpp::List MODEL_INFO_LIST, const SEXP DIST_FUNC_SEXP, 
-											 const SEXP env, const arma::rowvec &FIXEDVALUE, const rowvec &x, arma::mat &R_PARA)
+double DesignCriterion(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], 
+                       const arma::rowvec &FIXEDVALUE, const rowvec &x, arma::mat &R_PARA)
 {
 	int nSupp = OBJ.nSupp;
 	int dSupp = OBJ.dSupp;
@@ -32,7 +30,7 @@ double DesignCriterion(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OB
       for (int i = 0; i < nSupp; i++) { DESIGN.row(i) = x.subvec(i*dSupp, (i+1)*dSupp - 1); }
       arma::rowvec WT(nSupp);
 			WT.fill(1.0/(double)nSupp);
-      val = criterionList(LOOPID, PSO_OPTS, OBJ, MODEL_INFO_LIST, DIST_FUNC_SEXP, env, DESIGN, WT, R_PARA);  
+      val = criterionList(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, DESIGN, WT, R_PARA);  
       val *= -1.0;  
 			break;
 		}
@@ -51,7 +49,7 @@ double DesignCriterion(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OB
 			wcos(nSupp - 1) = 1.0; wcos.subvec(0, nSupp - 2) = arma::cos(ang);
 			WT = wcumsin % wcos;
 			WT = WT % WT;
-      val = criterionList(LOOPID, PSO_OPTS, OBJ, MODEL_INFO_LIST, DIST_FUNC_SEXP, env, DESIGN, WT, R_PARA);  
+      val = criterionList(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, DESIGN, WT, R_PARA);  
       val *= -1.0;  
 			break;
 		}
@@ -71,7 +69,7 @@ double DesignCriterion(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OB
       wcos(n_model) = 1.0; wcos.subvec(0, n_model - 1) = arma::cos(ang);
       alpha = wcumsin % wcos;
       alpha = alpha % alpha;
-      arma::rowvec DIV = directionalDerivative(OBJ, DESIGN, OBJ.paras, alpha, MODEL_INFO_LIST, DIST_FUNC_SEXP, env);
+      arma::rowvec DIV = directionalDerivative(OBJ, DESIGN, OBJ.paras, alpha, MODEL_COLLECTOR);
       DIV -= CRIT_VAL;
       val = arma::accu(DIV % DIV);
       break;
@@ -80,21 +78,20 @@ double DesignCriterion(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OB
 	return val;
 }
 
-double criterionList(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[],
-                     const OBJ_INFO &OBJ, const Rcpp::List MODEL_INFO_LIST, const SEXP DIST_FUNC_SEXP, const SEXP env, 
+double criterionList(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],  
 										 const arma::mat &DESIGN, const arma::rowvec &WT, arma::mat &R_PARA)
 {
 	int crit_type = OBJ.crit_type;
-	int N_model = OBJ.N_model;
+	int N_PAIR = OBJ.N_PAIR;
 
-  R_PARA.reset(); R_PARA.set_size(N_model, OBJ.dParas.max());
+  R_PARA.reset(); R_PARA.set_size(OBJ.dParas.n_elem, OBJ.dParas.max());
 	double val = 1e20;
 	switch (crit_type) {
 		case 0: // Fixed True
 		{
       R_PARA.submat(0, 0, 0, OBJ.dParas(0) - 1) = OBJ.paras.submat(0, 0, 0, OBJ.dParas(0) - 1);
 			arma::rowvec R_PARA_tmp(OBJ.dParas(1));
-			val = minDistCalc(LOOPID, PSO_OPTS, 0, 1, OBJ, MODEL_INFO_LIST, DIST_FUNC_SEXP, env, DESIGN, WT, R_PARA_tmp);
+			val = minDistCalc(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, 0, DESIGN, WT, R_PARA_tmp);
       R_PARA.submat(1, 0, 1, OBJ.dParas(1) - 1) = R_PARA_tmp;
 			break;
 		}
@@ -102,11 +99,11 @@ double criterionList(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[],
 		{
       R_PARA.submat(0, 0, 0, OBJ.dParas(0) - 1) = OBJ.paras.submat(0, 0, 0, OBJ.dParas(0) - 1);
 			arma::rowvec std_vals = OBJ.std_vals;
-			arma::rowvec eff_vals(N_model - 1);
-			for (int i = 1; i < N_model; i++) {
-				arma::rowvec R_PARA_tmp(OBJ.dParas(i));
-				eff_vals(i-1) = minDistCalc(LOOPID, PSO_OPTS, 0, i, OBJ, MODEL_INFO_LIST, DIST_FUNC_SEXP, env, DESIGN, WT, R_PARA_tmp);	
-        R_PARA.submat(i, 0, i, OBJ.dParas(i) - 1) = R_PARA_tmp;
+			arma::rowvec eff_vals(N_PAIR);
+			for (int i = 0; i < N_PAIR; i++) {
+				arma::rowvec R_PARA_tmp(OBJ.dParas(i+1));
+				eff_vals(i) = minDistCalc(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, i, DESIGN, WT, R_PARA_tmp);	
+        R_PARA.submat(i+1, 0, i+1, OBJ.dParas(i+1) - 1) = R_PARA_tmp;
 			}
 			eff_vals = eff_vals/std_vals;
 			val = eff_vals.min();
@@ -119,31 +116,36 @@ double criterionList(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[],
 // SUBFUNCTIONS
 
 // Minimal Distance Between Two Models
-double minDistCalc(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const int &tid, const int &rid, const OBJ_INFO &OBJ, 
-                   const Rcpp::List MODEL_INFO_LIST, const SEXP DIST_FUNC_SEXP, const SEXP env, 
+double minDistCalc(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID, 
 									 const arma::mat &DESIGN, const arma::rowvec &WT, arma::rowvec &R_PARA_OUT)
 {
-	arma::rowvec T_PARA = OBJ.paras.submat(tid, 0, tid, OBJ.dParas(tid) - 1);
+  model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
 
-	int dParas = OBJ.dParas(rid);
-  arma::rowvec R_PARA_INI = OBJ.parasInit.submat(rid, 0, rid, dParas - 1);
-  arma::rowvec R_UPPER = OBJ.parasUpper.submat(rid, 0, rid, dParas - 1);
-  arma::rowvec R_LOWER = OBJ.parasLower.submat(rid, 0, rid, dParas - 1);
+  arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
+  int tmID = MODEL_PAIR(PAIRID, 0);
+  int rmID = MODEL_PAIR(PAIRID, 1);
+
+	arma::rowvec T_PARA = OBJ.paras.submat(tmID, 0, tmID, OBJ.dParas(tmID) - 1);
+
+	int dParas = OBJ.dParas(rmID);
+  arma::rowvec R_PARA_INI = OBJ.parasInit.submat(rmID, 0, rmID, dParas - 1);
+  arma::rowvec R_UPPER = OBJ.parasUpper.submat(rmID, 0, rmID, dParas - 1);
+  arma::rowvec R_LOWER = OBJ.parasLower.submat(rmID, 0, rmID, dParas - 1);
 
   arma::irowvec R_NBD(dParas); 
   arma::rowvec R_PARA_EX = R_PARA_INI;
   arma::rowvec R_PARA_EX_1 = R_PARA_INI;
-  for (int d = 0; d < dParas; d++) { R_NBD(d) = (int)OBJ.parasBdd(rid, d); }
+  for (int d = 0; d < dParas; d++) { R_NBD(d) = (int)OBJ.parasBdd(rmID, d); }
 
   double fx, fx1;
   int CONV_STATUS;
-  CONV_STATUS = lbfgsKernel(LOOPID, PSO_OPTS, fx, R_PARA_EX, T_PARA, DESIGN, WT, tid, rid, MODEL_INFO_LIST, DIST_FUNC_SEXP, env, R_UPPER, R_LOWER, R_NBD);
+  CONV_STATUS = lbfgsKernel(LOOPID, PSO_OPTS, fx, R_PARA_EX, T_PARA, DESIGN, WT, func_input, R_UPPER, R_LOWER, R_NBD);
 
   int LBFGS_RETRY = PSO_OPTS[LOOPID].LBFGS_RETRY + (1 - CONV_STATUS);
   int count = 0;
   while ((count < LBFGS_RETRY)) {
     R_PARA_EX_1 = randu(1, dParas) % (R_UPPER - R_LOWER) + R_LOWER;
-    CONV_STATUS = lbfgsKernel(LOOPID, PSO_OPTS, fx1, R_PARA_EX_1, T_PARA, DESIGN, WT, tid, rid, MODEL_INFO_LIST, DIST_FUNC_SEXP, env, R_UPPER, R_LOWER, R_NBD);
+    CONV_STATUS = lbfgsKernel(LOOPID, PSO_OPTS, fx1, R_PARA_EX_1, T_PARA, DESIGN, WT, func_input, R_UPPER, R_LOWER, R_NBD);
     if (std::abs(fx1 - fx) > 0.1) { count--; }
     if (fx1 < fx) { count--; fx = fx1; R_PARA_EX = R_PARA_EX_1; } 
     count++;
@@ -154,21 +156,21 @@ double minDistCalc(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const int &t
 
 // Equivalence Theorem
 arma::rowvec directionalDerivative(const OBJ_INFO &OBJ, const arma::mat &dsGrid, const arma::mat &PARA_SET, const arma::rowvec &alpha, 
-                                   const Rcpp::List MODEL_INFO_LIST, const SEXP DIST_FUNC_SEXP, const SEXP env)
+                                   model_diff_func *MODEL_COLLECTOR[])
 {
   int crit_type = OBJ.crit_type;
   arma::rowvec dirDer(dsGrid.n_rows, fill::zeros);
   switch (crit_type) {
     case 0: // Fixed True
     {
-      dirDer = distCalc(OBJ, dsGrid, 0, 1, PARA_SET, MODEL_INFO_LIST, DIST_FUNC_SEXP, env);
+      dirDer = distCalc(OBJ, dsGrid, PARA_SET, MODEL_COLLECTOR, 0);
       break;
     }
     case 1: // Max-min, Fixed True
     {
       arma::rowvec std_vals = OBJ.std_vals;
-      for (int i = 1; i < OBJ.N_model; i++) {
-        arma::rowvec DIV = distCalc(OBJ, dsGrid, 0, i, PARA_SET, MODEL_INFO_LIST, DIST_FUNC_SEXP, env);
+      for (int i = 1; i < OBJ.N_PAIR; i++) {
+        arma::rowvec DIV = distCalc(OBJ, dsGrid, PARA_SET, MODEL_COLLECTOR, i);
         dirDer += (alpha(i-1)/std_vals(i-1))*DIV;
       }
       break;
@@ -177,37 +179,22 @@ arma::rowvec directionalDerivative(const OBJ_INFO &OBJ, const arma::mat &dsGrid,
   return dirDer;
 }
 
-arma::rowvec distCalc(const OBJ_INFO &OBJ, const arma::mat &x, const int &tid, const int &rid, const arma::mat &PARA_SET, 
-                      const Rcpp::List MODEL_INFO_LIST, const SEXP DIST_FUNC_SEXP, const SEXP env)
+arma::rowvec distCalc(const OBJ_INFO &OBJ, const arma::mat &x, const arma::mat &PARA_SET, 
+                      model_diff_func *MODEL_COLLECTOR[], const int &PAIRID)
 {
-  Rcpp::EvalBase *distFunc = NULL;
-  if (TYPEOF(DIST_FUNC_SEXP) == EXTPTRSXP) {   
-    distFunc = new Rcpp::EvalCompiled(DIST_FUNC_SEXP, env); 
-  } else {
-    distFunc = new Rcpp::EvalStandard(DIST_FUNC_SEXP, env);  
-  } 
+  model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
+  Rcpp::EvalBase *m1_func = (Rcpp::EvalBase *) func_input->M1_FUNC;
+  Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC;
+  Rcpp::EvalBase *distFunc = (Rcpp::EvalBase *) func_input->DISTFUNC;
 
-  Rcpp::EvalBase *m1_func = NULL;
-  SEXP tmp1 = as<SEXP>(MODEL_INFO_LIST[tid]);
-  if (TYPEOF(tmp1) == EXTPTRSXP) {   
-    m1_func = new Rcpp::EvalCompiled(tmp1, env);
-  } else {                                                
-    m1_func = new Rcpp::EvalStandard(tmp1, env);
-  }  
-  
-  Rcpp::EvalBase *m2_func = NULL;
-  SEXP tmp2 = as<SEXP>(MODEL_INFO_LIST[rid]);
-  if (TYPEOF(tmp2) == EXTPTRSXP) {   
-    m2_func = new Rcpp::EvalCompiled(tmp2, env);
-  } else {                                                
-    m2_func = new Rcpp::EvalStandard(tmp2, env);
-  } 
+  arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
+  int tmID = MODEL_PAIR(PAIRID, 0);
+  int rmID = MODEL_PAIR(PAIRID, 1);
 
   arma::rowvec eta_T(x.n_rows), eta_R(x.n_rows), DIV(x.n_rows);
-  eta_T = (arma::rowvec) m1_func->eval(Rcpp::wrap(x), Rcpp::wrap(PARA_SET.submat(tid, 0, tid, OBJ.dParas(tid) - 1))); 
-  eta_R = (arma::rowvec) m2_func->eval(Rcpp::wrap(x), Rcpp::wrap(PARA_SET.submat(rid, 0, rid, OBJ.dParas(rid) - 1))); 
+  eta_T = (arma::rowvec) m1_func->eval(Rcpp::wrap(x), Rcpp::wrap(PARA_SET.submat(tmID, 0, tmID, OBJ.dParas(tmID) - 1))); 
+  eta_R = (arma::rowvec) m2_func->eval(Rcpp::wrap(x), Rcpp::wrap(PARA_SET.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1))); 
   DIV = (arma::rowvec) distFunc->eval(Rcpp::wrap(eta_T), Rcpp::wrap(eta_R)); 
-  delete m1_func; delete m2_func; delete distFunc; m1_func = NULL; m2_func = NULL; distFunc = NULL;
-  
+    
   return DIV;
 }

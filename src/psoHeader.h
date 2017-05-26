@@ -86,17 +86,23 @@ typedef struct {
   arma::rowvec dsLower; // rep(0,1)
   arma::rowvec dsUpper; // rep(1,1)
   // Competing Models
-  int N_model;
+  int N_PAIR;
+  arma::imat MODEL_PAIR;
   arma::irowvec dParas;
   arma::mat paras, parasInit, parasUpper, parasLower, parasBdd;
   // Max-min Discrimination Design
   arma::rowvec std_vals;
 } OBJ_INFO, *Ptr_OBJ_INFO;
 
+typedef struct model_diff_func{
+  Rcpp::EvalBase* M1_FUNC;
+  Rcpp::EvalBase* M2_FUNC;
+  Rcpp::EvalBase* DISTFUNC;
+public:
+    model_diff_func() : M1_FUNC(0), M2_FUNC(0), DISTFUNC(0) {}
+    model_diff_func(Rcpp::EvalBase* m1, Rcpp::EvalBase* m2, Rcpp::EvalBase* d) : M1_FUNC(m1), M2_FUNC(m2), DISTFUNC(d) {}
+} model_diff_func;
 
-struct MODEL_SET {
-  Rcpp::EvalBase* modelFunc;
-};
 
 #define N_PSO_OPTS 100
 
@@ -194,7 +200,7 @@ void rvecPrintf(const rowvec &v);
 void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST);
 //void getModelFunc(MODEL_SET MODELS[], const Rcpp::List MODEL_LIST, SEXP env, const int N_model);
 void getInfoStruct(OBJ_INFO &OBJ, const Rcpp::List OBJ_INFO_LIST);
-void PSO_MAIN(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, Rcpp::List MODEL_INFO_LIST, SEXP DIST_FUNC_SEXP, SEXP env,
+void PSO_MAIN(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],
               const rowvec &FIXEDVALUE, const bool &IF_PARALLEL, const bool COUNTER_ON, Ptr_PSO_Result Ptr_PSO_Result);
 void psoUpdateParticle(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const PSO_DYN &PSO_DYN,
                        const arma::mat &PBest, const arma::rowvec &GBest,
@@ -206,7 +212,7 @@ void psoUpdateDynPara(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const int
                       const arma::mat &swarm, const arma::mat &PBest, const arma::rowvec &GBest,
                       const arma::vec &fSwarm, const arma::vec &fPBest, const double &fGBest);
 void psoFuncEval(const bool &IF_PARALLEL, const int LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, const PSO_DYN &PSO_DYN, 
-                 const Rcpp::List MODEL_INFO_LIST, const SEXP DIST_FUNC_SEXP, const SEXP env, const rowvec &FIXEDVALUE, const mat &swarm, vec &fSwarm);
+                 model_diff_func *MODEL_COLLECTOR[], const rowvec &FIXEDVALUE, const mat &swarm, vec &fSwarm);
 
 #include "psoFuncEval.h"
 #include "psoCheckParticle.h"
@@ -246,7 +252,11 @@ void getInfoStruct(OBJ_INFO &OBJ, const Rcpp::List OBJ_INFO_LIST)
   arma::rowvec dsUpper(dsUpper_Tmp.begin(), dsUpper_Tmp.size(), false);
   OBJ.dsUpper = dsUpper;
 
-  OBJ.N_model = as<int>(OBJ_INFO_LIST["N_model"]);
+  OBJ.N_PAIR = as<int>(OBJ_INFO_LIST["N_PAIR"]);
+
+  Rcpp::IntegerMatrix MODEL_PAIR_Tmp   = as<IntegerMatrix>(OBJ_INFO_LIST["MODEL_PAIR"]);
+  arma::imat MODEL_PAIR(MODEL_PAIR_Tmp.begin(), MODEL_PAIR_Tmp.nrow(), MODEL_PAIR_Tmp.ncol(), false);
+  OBJ.MODEL_PAIR  = MODEL_PAIR;
 
   Rcpp::IntegerVector dParas_Tmp  = as<IntegerVector>(OBJ_INFO_LIST["dParas"]);
   arma::irowvec dParas(dParas_Tmp.begin(), dParas_Tmp.size(), false);

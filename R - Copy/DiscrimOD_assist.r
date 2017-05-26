@@ -113,13 +113,12 @@ getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL
 
   if (D_TYPE == "maxmin_eqv_wt") { D_TYPE_NUM <- 1001 } else { D_TYPE_NUM <- 1 }
 
-  N_PAIR <- length(MODEL_INFO) - 1
-  MODEL_PAIR <- cbind(0, 1:N_PAIR)
+  N_model <- length(MODEL_INFO)
   
   return(list(D_TYPE = D_TYPE, D_TYPE_NUM = D_TYPE_NUM, dist_func = dist_func,
               CRIT_TYPE_NUM = CRIT_TYPE_NUM,
               dSupp = dSupp, nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper,
-              N_PAIR = N_PAIR, MODEL_PAIR = MODEL_PAIR, dParas = dParas, paras = paras, parasInit = parasInit, 
+              N_model = N_model, dParas = dParas, paras = paras, parasInit = parasInit, 
               parasUpper = parasUpper, parasLower = parasLower, parasBdd = parasBdd, 
               MaxMinStdVals = MaxMinStdVals))
 }

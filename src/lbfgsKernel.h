@@ -1,52 +1,17 @@
 
-// DEFINE STRUCTURE
-typedef struct model_diff_func{
-  Rcpp::EvalBase* M1_FUNC;
-  Rcpp::EvalBase* M2_FUNC;
-  Rcpp::EvalBase* DISTFUNC;
-public:
-    model_diff_func() : M1_FUNC(0), M2_FUNC(0), DISTFUNC(0) {}
-    model_diff_func(Rcpp::EvalBase* m1, Rcpp::EvalBase* m2, Rcpp::EvalBase* d) : M1_FUNC(m1), M2_FUNC(m2), DISTFUNC(d) {}
-    ~model_diff_func() {};
-} model_diff_func;
 
 // DECLARE FUNCTIONS
-double f_fn(const arma::rowvec &R_PARA_EX, const arma::rowvec &T_PARA, const arma::mat &DESIGN, const arma::rowvec &WT, void *func_input);
-arma::rowvec f_gr(const double &FVAL, const arma::rowvec &R_PARA_EX, const arma::rowvec &T_PARA, const arma::mat &DESIGN, const arma::rowvec &WT, void *func_input);
+double f_fn(const arma::rowvec &R_PARA_EX, const arma::rowvec &T_PARA, const arma::mat &DESIGN, const arma::rowvec &WT, model_diff_func *func_input);
+arma::rowvec f_gr(const double &FVAL, const arma::rowvec &R_PARA_EX, const arma::rowvec &T_PARA, const arma::mat &DESIGN, const arma::rowvec &WT, 
+									model_diff_func *func_input);
 void boxCheck(arma::rowvec &R_PARA_EX, const arma::rowvec &R_UPPER, const arma::rowvec &R_LOWER, const arma::irowvec &R_NBD);
 
 // BODY
 int lbfgsKernel(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], double &FVAL, arma::rowvec &R_PARA_EX, 
 	 						  const arma::rowvec &T_PARA, const arma::mat &DESIGN, const arma::rowvec &WT,
-								const int &tid, const int &rid, const Rcpp::List MODEL_INFO_LIST, const SEXP DIST_FUNC_SEXP, const SEXP env,
+								model_diff_func *func_input, 
 								const arma::rowvec &R_UPPER, const arma::rowvec &R_LOWER, const arma::irowvec &R_NBD)
 {
-	// WRAP FUNCTIONS (INSPIRED BY R PACKAGE 'lbfgs')
-	Rcpp::EvalBase *dfnc = NULL;
-  if (TYPEOF(DIST_FUNC_SEXP) == EXTPTRSXP) {   
-    dfnc = new Rcpp::EvalCompiled(DIST_FUNC_SEXP, env); 
-  } else {
-    dfnc = new Rcpp::EvalStandard(DIST_FUNC_SEXP, env);  
-  } 
-
-  Rcpp::EvalBase *m1 = NULL;
-  SEXP tmp1 = as<SEXP>(MODEL_INFO_LIST[tid]);
-  if (TYPEOF(tmp1) == EXTPTRSXP) {   
-    m1 = new Rcpp::EvalCompiled(tmp1, env);
-  } else {                                                
-    m1 = new Rcpp::EvalStandard(tmp1, env);
-  }  
-  
-  Rcpp::EvalBase *m2 = NULL;
-  SEXP tmp2 = as<SEXP>(MODEL_INFO_LIST[rid]);
-  if (TYPEOF(tmp2) == EXTPTRSXP) {   
-    m2 = new Rcpp::EvalCompiled(tmp2, env);
-  } else {                                                
-    m2 = new Rcpp::EvalStandard(tmp2, env);
-  }  
-  model_diff_func func_collect = model_diff_func(m1, m2, dfnc);
-  model_diff_func* func_input = &func_collect;
-
 	// LBFGS SETTINGS (Temporary)
 	int LBFGS_MAXIT = PSO_OPTS[LOOPID].LBFGS_MAXIT;
 	// CORRECTION SETTINGS
@@ -187,22 +152,18 @@ int lbfgsKernel(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], double &FVAL, a
 		Rprintf("\n");
 		*/
 	}
-	delete func_input->M1_FUNC; delete func_input->M2_FUNC; delete func_input->DISTFUNC; 
-	func_input->M1_FUNC = NULL; func_input->M2_FUNC = NULL; func_input->DISTFUNC = NULL;
-
 	// END L-BFGS LOOP
 	//Rprintf("\n");
 	return CONV;
 }
 
 // SUBFUNCTIONS
-double f_fn(const arma::rowvec &R_PARA_EX, const arma::rowvec &T_PARA, const arma::mat &DESIGN, const arma::rowvec &WT, void *func_input)
+double f_fn(const arma::rowvec &R_PARA_EX, const arma::rowvec &T_PARA, const arma::mat &DESIGN, const arma::rowvec &WT, model_diff_func *func_input)
 {
 	
-	model_diff_func* diff_pointer = (model_diff_func*) func_input;
-  Rcpp::EvalBase *m1_func = (Rcpp::EvalBase *) diff_pointer->M1_FUNC;
-  Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) diff_pointer->M2_FUNC;
-  Rcpp::EvalBase *distFunc = (Rcpp::EvalBase *) diff_pointer->DISTFUNC;
+  Rcpp::EvalBase *m1_func = (Rcpp::EvalBase *) func_input->M1_FUNC;
+  Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC;
+  Rcpp::EvalBase *distFunc = (Rcpp::EvalBase *) func_input->DISTFUNC;
 
 	arma::rowvec R_PARA = R_PARA_EX;
 	//int nSupp = DESIGN.n_rows;
@@ -229,7 +190,8 @@ double f_fn(const arma::rowvec &R_PARA_EX, const arma::rowvec &T_PARA, const arm
   return fvalTmp;
 }
 
-arma::rowvec f_gr(const double &FVAL, const arma::rowvec &R_PARA_EX, const arma::rowvec &T_PARA, const arma::mat &DESIGN, const arma::rowvec &WT, void *func_input)
+arma::rowvec f_gr(const double &FVAL, const arma::rowvec &R_PARA_EX, const arma::rowvec &T_PARA, const arma::mat &DESIGN, const arma::rowvec &WT, 
+									model_diff_func *func_input)
 {
 	//forward difference method
 	arma::rowvec gr(R_PARA_EX.n_elem);
@@ -243,7 +205,7 @@ arma::rowvec f_gr(const double &FVAL, const arma::rowvec &R_PARA_EX, const arma:
     //fr_para(i) += 5e-4; bk_para(i) -= 5e-4;
     fr_para(i) += 1e-4;
     fr_val = f_fn(fr_para, T_PARA, DESIGN, WT, func_input); 
-    //bk_val = f_fn(bk_para, T_PARA, DESIGN, WT, tid, rid, MODEL_INFO_LIST, DIST_FUNC_SEXP, env);
+    //bk_val = f_fn(bk_para, T_PARA, DESIGN, WT, func_input); 
     gr(i) = fr_val*1e4 - FVAL*1e4;
   }
   return gr;

@@ -1,7 +1,16 @@
 library(DiscrimOD)
-library(Rcpp); library(RcppArmadillo); library(inline)
+library(Rcpp); library(RcppArmadillo); library(inline); #library(assertthat)
 
-AF_para_m1 <-c (4.5, -1.5, -2)
+#path <- "D:/Ping_Yang/Google Drive/PYChen_Statistics_NCKU/Researches/2015 min-max optimal discriminating designs/DiscrimOD"
+#cppPath <- file.path(path, "src")
+#rPath <- file.path(path, "R")
+#sourceCpp(file.path(cppPath, "cppPSO.cpp"))
+#source(file.path(rPath, "DiscrimOD_assist.R"))
+#source(file.path(rPath, "DiscrimOD_tools.R"))
+#source(file.path(rPath, "DiscrimOD.R"))
+
+
+AF_para_m1 <- c(4.5, -1.5, -2)
 # R Function
 MODEL_INFO <- list(
   list(model = function(x, p) p[1] + p[2]*exp(x) + p[3]*exp(-x), para = AF_para_m1),
@@ -103,6 +112,8 @@ TWO_M_INFO_Cpp <- list(
 
 outALL <- vector("list", length(TWO_M_INFO_Cpp))
 for (CaseID in 1:length(TWO_M_INFO_Cpp)) {
+
+  #sourceCpp(file.path(cppPath, "cppPSO.cpp"))
   #CaseID <- 1
   out <- DiscrimOD(TWO_M_INFO_Cpp[[CaseID]]$TWO_M, DISTANCE_Cpp(),
                    TWO_M_INFO_Cpp[[CaseID]]$nSupp, dsLower, dsUpper,
@@ -124,20 +135,21 @@ for (CaseID in 1:length(TWO_M_INFO_Cpp)) {
 }
 
 
-CaseID <- 2
+CaseID <- 1
 outALL[[CaseID]]$res
 plot(outALL[[CaseID]]$eqv$Grid_1, outALL[[CaseID]]$eqv$DirDeriv, type = "l", col = "blue"); abline(h = 0);
 points(outALL[[CaseID]]$res$BESTDESIGN[,1], rep(0, nrow(outALL[[CaseID]]$res$BESTDESIGN)), pch = 19)
 
 
 vals_MM <- sapply(1:length(outALL), function(i) outALL[[i]]$res$BESTVAL)
+#vals_MM <- c(0.1,0.1)
 nSupp_MM <- 5
 out_MM <- DiscrimOD(MODEL_INFO_Cpp, DISTANCE_Cpp(),
                     nSupp_MM, dsLower, dsUpper, crit_type = "maxmin_fixed_true",
                     MaxMinStdVals = vals_MM, ALG_INFO, seed = NULL, verbose = TRUE)
 round(out_MM$BESTDESIGN, 3)
 
-PARA_SET <-designCriterion(out_MM$BESTDESIGN, MODEL_INFO_Cpp, DISTANCE_Cpp(), dsLower, dsUpper,
+PARA_SET <- designCriterion(out_MM$BESTDESIGN, MODEL_INFO_Cpp, DISTANCE_Cpp(), dsLower, dsUpper,
                 crit_type = "maxmin_fixed_true", MaxMinStdVals = vals_MM, ALG_INFO)$theta2
 
 eqv <- equivalence(PSO_RESULT = out_MM, MODEL_INFO = MODEL_INFO_Cpp, DISTANCE = DISTANCE_Cpp(),

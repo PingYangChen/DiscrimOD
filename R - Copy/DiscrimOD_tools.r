@@ -73,8 +73,8 @@ algInfoUpdate <- function(D_INFO) {
 					 LB = matrix(c(rep(D_INFO$dsLower[1], D_INFO$nGrid1), rep(D_INFO$dsLower[2], D_INFO$nGrid2)), nrow = 1)
 					),
 		"maxmin_eqv_wt" = 
-			list(UB = matrix(rep(pi/2, D_INFO$N_PAIR - 1), nrow = 1),
-					 LB = matrix(rep(0.0,  D_INFO$N_PAIR - 1), nrow = 1)
+			list(UB = matrix(rep(pi/2, D_INFO$N_model - 2), nrow = 1),
+					 LB = matrix(rep(0.0,  D_INFO$N_model - 2), nrow = 1)
 					)			
 	)
 	D_SWARM
