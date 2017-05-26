@@ -5,8 +5,8 @@
 \title{Initialize for information of the optimal design problem}
 \usage{
 getDesignInfo(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL,
-  crit_type = 0, MaxMinStdVals = NULL, dSupp = 1L, nSupp = 2L,
-  dsLower = NULL, dsUpper = NULL)
+  crit_type = "pair_fixed_true", MaxMinStdVals = NULL, dSupp = 1L,
+  nSupp = 2L, dsLower = NULL, dsUpper = NULL)
 }
 \arguments{
 \item{D_TYPE}{string. "exact"}

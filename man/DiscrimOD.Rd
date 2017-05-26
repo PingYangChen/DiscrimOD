@@ -2,19 +2,32 @@
 % Please edit documentation in R/DiscrimOD.R
 \name{DiscrimOD}
 \alias{DiscrimOD}
-\title{PSO for Optimal Discrimination Design}
+\title{Hybrid Algorithm of PSO and BFGS for Finding Optimal Discrimination Design}
 \usage{
-DiscrimOD(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, MaxMinStdVals = NULL,
-  ALG_INFO = NULL, seed = NULL, verbose = TRUE, ...)
+DiscrimOD(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper,
+  crit_type = "pair_fixed_true", MaxMinStdVals = NULL, ALG_INFO = NULL,
+  seed = NULL, verbose = TRUE, environment, ...)
 }
 \arguments{
-\item{ALG_INFO}{list. PSO options.}
+\item{MODEL_INFO}{list of information of competing models. For details, run \code{emptyModelList()} and see the instruction below.}
+
+\item{DISTANCE}{function.}
+
+\item{nSupp}{integer. The number fo support points (at least 2).}
+
+\item{dsLower}{vector. The finite lower bounds of the design space. Its length should be equal to the dimension of design space.}
+
+\item{dsUpper}{vector. The finite upper bounds of the design space. Its length should be equal to the dimension of design space.}
+
+\item{crit_type}{string. The name of the case of the discrimination design problem. The default is 'pair_fixed_true'.}
+
+\item{MaxMinStdVals}{vector. The values of demoninators in the design efficiency calculation for finding max-min discrimination design.}
+
+\item{ALG_INFO}{list. PSO and BFGS options.}
 
 \item{seed}{numeric. random seed.  The default is \code{NULL}.}
 
 \item{verbose}{logical. If \code{TRUE}, the PSO will reports the updating progress.}
-
-\item{D_INFO}{list. Optimal design problem.}
 }
 \value{
 An List.
@@ -23,63 +36,12 @@ An List.
 Please follow the instruction.
 }
 \examples{
-# Michaelis-Menten (MM) model with i.i.d. observations
-mm_mean <- function(N, x, p) {
-  f <- matrix(0, N, 1)
-  for (i in 1:N) f[i,1] <- p[1]*x[i,1]/(p[2]+x[i,1])
-  return(f)
-}
-iid_cor <- function(N, x, p) {
-  # in fact, for this case, diag(N) would be OK
-  s <- matrix(0, N, N)
-  for (i in 1:N) s[i,i] <- 1.0
-  return(s)
-}
-# This MM model has 1 covariate (x > 0) and 2 parameters (v > 0, km > 0).
-# Thus, 'dSupp = 1' and the lengthes of 'dsLower' and 'dsUpper' should be 1.
-# Consider a 2-point D-optimal design, the setting is
-D_INFO <- getObjInfo(CRIT_TYPE = "D", nSupp = 2,
-                     dSupp = 1, dsLower = 0, dsUpper = 1,
-                     tmPara = c(1., 2.), tmPOI = c(1, 2),
-                     tmParaUpper = c(Inf, Inf), tmParaLower = c(0, 0),
-                     mean_func = mm_mean, corr_func = iid_cor)
+# Atkinson and Fedorov (1975)
+# Two models are given by
 
-# Initialize PSO options
-ALG_INFO <- getAlgInfo(nSwarm = 64, maxIter = 50, typePSO = 0)
+# Initialize PSO and BFGS options
 
-# Run PSO
-RESULT <- rOptimalDesignPSO(D_INFO, ALG_INFO, verbose = TRUE)
-# Check the 2-point D-optimal design
-RESULT$GBEST
+# Run Algorithm
 
-# Michaelis-Menten model with autocorrelated observations
-# Now, the parameter vector consists of parameters in the mean function
-# and the correlation function.
-# That is, tmPara = c(v, km, lambda, sigmaSq),
-# where the last two parameters are correlation parameters.
-atuo_cor <- function(N, x, p) {
-  s <- matrix(0, N, N)
-  for (i in 1:N) {
-    for (j in 1:i) {
-      s[i,j] <- p[4]*(p[3]^abs(x[i,1]-x[j,1]))
-      if (j < i) s[j,i] <- s[i,j]
-    }
-  }
-  return(s)
-}
-# This MM model has 1 covariate (x > 0) and 4 parameters,
-# (0 < v, 0 < km, , 0 < lambda < 1, 0 < sigmaSq).
-# For covariate, 'dSupp = 1' and the lengthes of 'dsLower' and 'dsUpper' should be 1.
-# Consider a 3-point D-optimal design.
-# Let nominal values tmPara = c(1., 1.2, 0.5, 1.0).
-# Suppose the parameters of interest are v and km, the setting is
-D_INFO <- getObjInfo(CRIT_TYPE = "D", nSupp = 3,
-                     dSupp = 1, dsLower = 0, dsUpper = 1,
-                     tmPara = c(1., 1.2, 0.5, 1.), tmPOI = c(1, 2),
-                     tmParaUpper = c(Inf, Inf, 1., Inf), tmParaLower = c(0, 0, 0, 0),
-                     mean_func = mm_mean, corr_func = atuo_cor)
-# Run PSO
-RESULT <- rOptimalDesignPSO(D_INFO, ALG_INFO, verbose = TRUE)
-RESULT$GBEST
 }
 

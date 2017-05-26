@@ -6,9 +6,36 @@
 \usage{
 equivalence(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100,
   IFPLOT = FALSE, MODEL_INFO, DISTANCE, dsLower, dsUpper,
-  MaxMinStdVals = NULL, ALG_INFO = NULL, ...)
+  crit_type = "pair_fixed_true", MaxMinStdVals = NULL, ALG_INFO = NULL,
+  environment, ...)
+}
+\arguments{
+\item{PSO_RESULT}{list.}
+
+\item{ngrid}{integer. The default is 100.}
+
+\item{IFPLOT}{logical.}
+
+\item{MODEL_INFO}{list of information of competing models. For details, run \code{emptyModelList()} and see the instruction below.}
+
+\item{DISTANCE}{function.}
+
+\item{dsLower}{vector. The finite lower bounds of the design space. Its length should be equal to the dimension of design space.}
+
+\item{dsUpper}{vector. The finite upper bounds of the design space. Its length should be equal to the dimension of design space.}
+
+\item{crit_type}{string. The name of the case of the discrimination design problem. The default is 'pair_fixed_true'.}
+
+\item{MaxMinStdVals}{vector. The values of demoninators in the design efficiency calculation for finding max-min discrimination design.}
+
+\item{ALG_INFO}{list. PSO and BFGS options.}
+
+\item{DESIGN1}{matrix.}
+}
+\value{
+An List.
 }
 \description{
-Equivalence Theorem
+Please follow the instruction.
 }
 

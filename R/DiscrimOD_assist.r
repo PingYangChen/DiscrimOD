@@ -61,7 +61,7 @@ getAlgInfo <- function(nSwarm = 64, typePSO = NULL, #dSwarm = NULL, varUpper = N
   if(is.null(LBFGS_MAXIT))          LBFGS_MAXIT         <- rep(100 , nLoop)
   if(is.null(LBFGS_LM))             LBFGS_LM            <- rep(6   , nLoop)
   if(is.null(FVAL_EPS))             FVAL_EPS            <- rep(0   , nLoop)
-  if(is.null(GRAD_EPS))             GRAD_EPS            <- rep(1e-5, nLoop)
+  if(is.null(GRAD_EPS))             GRAD_EPS            <- rep(1e-6, nLoop)
   if(is.null(LINESEARCH_MAXTRIAL))  LINESEARCH_MAXTRIAL <- rep(50  , nLoop)
   if(is.null(LINESEARCH_MAX))       LINESEARCH_MAX      <- rep(1e20, nLoop)
   if(is.null(LINESEARCH_MIN))       LINESEARCH_MIN      <- rep(1e-20, nLoop)
@@ -89,7 +89,7 @@ getAlgInfo <- function(nSwarm = 64, typePSO = NULL, #dSwarm = NULL, varUpper = N
 #' @rdname getDesignInfo
 #' @export
 getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL, 
-                          crit_type = 0, MaxMinStdVals = NULL,
+                          crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
                           dSupp = 1L, nSupp = 2L, dsLower = NULL, dsUpper = NULL) { 
 
   dParas <- sapply(1:length(MODEL_INFO), function(k) if (k == 1) length(MODEL_INFO[[k]]$para) else length(MODEL_INFO[[k]]$paraUpper))
@@ -108,12 +108,15 @@ getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL
     }
   }
 
-  N_model <- length(MODEL_INFO)
-  D_TYPE_NUM <- 1
-  # Fit C++ indexing
+  CRIT_TYPE_NUM <- ifelse(crit_type == "pair_fixed_true", 0, 
+                      ifelse(crit_type == "maxmin_fixed_true", 1, 2))
 
+  if (D_TYPE == "maxmin_eqv_wt") { D_TYPE_NUM <- 1001 } else { D_TYPE_NUM <- 1 }
+
+  N_model <- length(MODEL_INFO)
+  
   return(list(D_TYPE = D_TYPE, D_TYPE_NUM = D_TYPE_NUM, dist_func = dist_func,
-              CRIT_TYPE_NUM = 0,
+              CRIT_TYPE_NUM = CRIT_TYPE_NUM,
               dSupp = dSupp, nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper,
               N_model = N_model, dParas = dParas, paras = paras, parasInit = parasInit, 
               parasUpper = parasUpper, parasLower = parasLower, parasBdd = parasBdd, 

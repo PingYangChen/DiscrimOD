@@ -5,18 +5,25 @@
 \title{Calculate Design Criterion Values}
 \usage{
 designCriterion(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper,
-  MaxMinStdVals = NULL, ALG_INFO = NULL, ...)
+  crit_type = "pair_fixed_true", MaxMinStdVals = NULL, ALG_INFO = NULL,
+  environment, ...)
 }
 \arguments{
-\item{DESIGN1}{string. "exact"}
+\item{DESIGN1}{matrix.}
 
-\item{ALG_INFO}{list. PSO options.}
+\item{MODEL_INFO}{list of information of competing models. For details, run \code{emptyModelList()} and see the instruction below.}
 
-\item{DESIGN2}{integer. Number of support points.}
+\item{DISTANCE}{function.}
 
-\item{CRIT_TYPE}{string.}
+\item{dsLower}{vector. The finite lower bounds of the design space. Its length should be equal to the dimension of design space.}
 
-\item{D_INFO}{list. Optimal design problem.}
+\item{dsUpper}{vector. The finite upper bounds of the design space. Its length should be equal to the dimension of design space.}
+
+\item{crit_type}{string. The name of the case of the discrimination design problem. The default is 'pair_fixed_true'.}
+
+\item{MaxMinStdVals}{vector. The values of demoninators in the design efficiency calculation for finding max-min discrimination design.}
+
+\item{ALG_INFO}{list. PSO and BFGS options.}
 }
 \value{
 An List.

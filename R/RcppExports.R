@@ -9,7 +9,7 @@ cppDesignCriterion <- function(ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, FI
     .Call('DiscrimOD_cppDesignCriterion', PACKAGE = 'DiscrimOD', ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, FIXEDVALUE, env, DESIGN)
 }
 
-cppEquivalence <- function(ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, GBEST_VAL, R_PARA_SET, env, nGrid) {
-    .Call('DiscrimOD_cppEquivalence', PACKAGE = 'DiscrimOD', ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, GBEST_VAL, R_PARA_SET, env, nGrid)
+cppEquivalence <- function(ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, GBEST_VAL, PARA_SET, alpha, env, nGrid) {
+    .Call('DiscrimOD_cppEquivalence', PACKAGE = 'DiscrimOD', ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, GBEST_VAL, PARA_SET, alpha, env, nGrid)
 }
 

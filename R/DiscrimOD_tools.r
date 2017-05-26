@@ -39,6 +39,14 @@ designM2V <- function(m_design, D_INFO) {
 			tmp <- as.matrix(tmp[do.call(order, as.data.frame(round(tmp, 4))),])
 			dimnames(tmp) <- list(paste0("obs_", 1:n), c(paste0("dim_", 1:d), "weight"))
 			tmp
+		},
+		"maxmin_eqv_wt" = {
+			n_model <- length(m_design) + 1
+			ang <- m_design
+			wcumsin <- wcos <- numeric(n_model)
+		 	wcumsin[1] <- 1; wcumsin[2:n_model] <- cumprod(sin(ang))
+		 	wcos[1:(n_model-1)] <- cos(ang); wcos[n_model] <- 1
+			v_design <-	(wcumsin*wcos)^2
 		}
 	)
 	return(v_design)
@@ -63,7 +71,11 @@ algInfoUpdate <- function(D_INFO) {
 		"2Dgrid" = 
 			list(UB = matrix(c(rep(D_INFO$dsUpper[1], D_INFO$nGrid1), rep(D_INFO$dsUpper[2], D_INFO$nGrid2)), nrow = 1),
 					 LB = matrix(c(rep(D_INFO$dsLower[1], D_INFO$nGrid1), rep(D_INFO$dsLower[2], D_INFO$nGrid2)), nrow = 1)
-					)
+					),
+		"maxmin_eqv_wt" = 
+			list(UB = matrix(rep(pi/2, D_INFO$N_model - 2), nrow = 1),
+					 LB = matrix(rep(0.0,  D_INFO$N_model - 2), nrow = 1)
+					)			
 	)
 	D_SWARM
 }

@@ -1,5 +1,5 @@
 library(DiscrimOD)
-library(Rcpp)
+library(Rcpp); library(RcppArmadillo); library(inline)
 
 AF_para_m1 <-c (4.5, -1.5, -2)
 # R Function
@@ -14,41 +14,57 @@ DISTANCE <- function(xt, xr) (xt - xr)^2
 
 
 # C++ Funciton
-TM_CppCode <- 'Rcpp::NumericVector TM_Cpp(SEXP xx, SEXP pp)
-{
-  // Re-define variable types
-  Rcpp::NumericVector x(xx); Rcpp::NumericVector p(pp);
-  Rcpp::NumericVector val(x.size());
-  for (int i = 0; i < x.size(); i++) val(i) = p(0) + p(1)*std::exp(x(i)) + p(2)*std::exp(-x(i));
+TM.inc <- 'arma::rowvec model_true(SEXP xx, SEXP pp){
+  arma::rowvec x = Rcpp::as<arma::rowvec>(xx);
+  arma::rowvec p = Rcpp::as<arma::rowvec>(pp);
+  arma::rowvec val(x.n_elem);
+  val = p(0) + p(1)*arma::exp(x) + p(2)*arma::exp(-x);
   return val;
 }'
-RM_CppCode <- 'Rcpp::NumericVector RM_Cpp(SEXP xx, SEXP pp)
-{
-  // Re-define variable types
-  Rcpp::NumericVector x(xx); Rcpp::NumericVector p(pp);
-  Rcpp::NumericVector val(x.size());
-  for (int i = 0; i < x.size(); i++) val(i) = p(0) + p(1)*x(i) + p(2)*(x(i)*x(i));
+TM.body <- '
+  typedef arma::rowvec (*funcPtr)(SEXP, SEXP);
+  return(XPtr<funcPtr>(new funcPtr(&model_true)));
+'
+
+RM.inc <- 'arma::rowvec model_rival(SEXP xx, SEXP pp){
+  arma::rowvec x = Rcpp::as<arma::rowvec>(xx);
+  arma::rowvec p = Rcpp::as<arma::rowvec>(pp);
+  arma::rowvec val(x.n_elem);
+  val = p(0) + p(1)*x + p(2)*(x%x);
   return val;
 }'
+RM.body <- '
+  typedef arma::rowvec (*funcPtr)(SEXP, SEXP);
+  return(XPtr<funcPtr>(new funcPtr(&model_rival)));
+'
+
+TM_Cpp <- cxxfunction(signature(), body = TM.body, inc = TM.inc,
+                      plugin = "RcppArmadillo")
+RM_Cpp <- cxxfunction(signature(), body = RM.body, inc = RM.inc,
+                      plugin = "RcppArmadillo")
+
 MODEL_INFO_Cpp <- list(
-  list(model = cppFunction(TM_CppCode), para = AF_para_m1),
-  list(model = cppFunction(RM_CppCode),
-       paraLower = rep(-10, 3),
-       paraUpper = rep(10, 3),
-       paraInit = c(0,0,0))
+  list(model = TM_Cpp(), para = AF_para_m1),
+  list(model = RM_Cpp(), paraLower = rep(-10, 3),
+                         paraUpper = rep(10, 3),
+                         paraInit = c(0,0,0))
 )
 
-DISTANCE_CppCode <- 'Rcpp::NumericVector DISTANCE_Cpp(SEXP xt, SEXP xr)
-{
-  // Re-define variable types
-  Rcpp::NumericVector val_t(xt);
-  Rcpp::NumericVector val_r(xr);
-  Rcpp::NumericVector val(val_t.size());
-  for (int i = 0; i < val.size(); i++) val(i) = (val_t(i) - val_r(i))*(val_t(i) - val_r(i));
+dist.inc <- 'arma::rowvec t_optimal(SEXP xt, SEXP xr){
+  arma::rowvec val_t = Rcpp::as<arma::rowvec>(xt);
+  arma::rowvec val_r = Rcpp::as<arma::rowvec>(xr);
+  arma::rowvec val(val_t.n_elem);
+  val = (val_t - val_r)%(val_t - val_r);
   return val;
-}
+}'
+
+dist.body <- '
+  typedef arma::rowvec (*funcPtr)(SEXP, SEXP);
+  return(XPtr<funcPtr>(new funcPtr(&t_optimal)));
 '
-DISTANCE_Cpp <- cppFunction(DISTANCE_CppCode)
+
+DISTANCE_Cpp <- cxxfunction(signature(), body = dist.body, inc = dist.inc,
+                            plugin = "RcppArmadillo")
 
 #
 ALG_INFO <- getAlgInfo(nSwarm = 32, maxIter = 100, typePSO = 0,
@@ -61,22 +77,32 @@ dsLower <- -1
 dsUpper <- 1
 MaxMinStdVals = NULL; seed = NULL; verbose = TRUE
 
-out <- DiscrimOD(MODEL_INFO_Cpp, DISTANCE_Cpp, nSupp, dsLower, dsUpper,
-                 MaxMinStdVals, ALG_INFO, seed, verbose)
+out <- DiscrimOD(MODEL_INFO_Cpp, DISTANCE_Cpp(), nSupp, dsLower, dsUpper,
+                 crit_type = "pair_fixed_true",
+                 MaxMinStdVals, ALG_INFO = ALG_INFO, seed, verbose,
+                 IF_PARALLEL = T)
 round(out$BESTDESIGN, 3)
 
+eqv <- equivalence(PSO_RESULT = out, MODEL_INFO = MODEL_INFO_Cpp, DISTANCE = DISTANCE_Cpp(),
+                   ngrid = 100, crit_type = "pair_fixed_true",
+                   dsLower = dsLower, dsUpper = dsUpper,
+                   MaxMinStdVals = NULL, ALG_INFO = ALG_INFO)
+
+plot(eqv$Grid_1, eqv$DirDeriv, type = "l", col = "blue"); abline(h = 0);
+points(out$BESTDESIGN[,1], rep(0, nrow(out$BESTDESIGN)), pch = 19)
 
 
 nn <- 100
 aa <- numeric(nn)
 system.time(
 for (i in 1:nn) {
-DESIGN1 <- out$BESTDESIGN
+#DESIGN1 <- out$BESTDESIGN
 #uu <- runif(4); DESIGN1 <- cbind(runif(4, -1, 1), uu/sum(uu))
-#DESIGN1 <- cbind(c(-1,-.669,.144,.957), c(.253,.428,.247,.072))
+DESIGN1 <- cbind(c(-1,-.669,.144,.957), c(.253,.428,.247,.072))
 aa[i] <-
-  designCriterion(DESIGN1, MODEL_INFO_Cpp, DISTANCE_Cpp, dsLower, dsUpper,
-                         MaxMinStdVals = NULL, ALG_INFO)$cri_val
+  designCriterion(DESIGN1, MODEL_INFO_Cpp, DISTANCE_Cpp(), dsLower, dsUpper,
+                  crit_type = "pair_fixed_true",
+                  MaxMinStdVals = NULL, ALG_INFO)$cri_val
 })[3]/nn
 
 max(aa)

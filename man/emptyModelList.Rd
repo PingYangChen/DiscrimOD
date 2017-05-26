@@ -13,6 +13,6 @@ emptyModelList(N_model = 2)
 An List.
 }
 \description{
-Please follow the instruction.
+Run \code{emptyModelList()} for instruction of model settings.
 }
 
