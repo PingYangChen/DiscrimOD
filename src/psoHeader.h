@@ -71,7 +71,6 @@ namespace Rcpp {
 using namespace Rcpp;
 
 // [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::plugins(openmp)]]
 // [[Rcpp::plugins(cpp11)]]
 
 // DEFINE STUCTURE OF OBJECTIVE FUNCTION INFORMATION

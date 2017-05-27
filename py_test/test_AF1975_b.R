@@ -97,10 +97,10 @@ DISTANCE_Cpp <- cxxfunction(signature(), body = dist.body, inc = dist.inc,
                             plugin = "RcppArmadillo")
 
 #
-ALG_INFO <- getAlgInfo(nSwarm = 32, maxIter = 200, typePSO = 2,
-                       LBFGS_RETRY = 1,
-                       FVAL_EPS = 0, GRAD_EPS = 1e-6,
-                       LINESEARCH_MAX = 1e6)
+ALG_INFO <- getAlgInfo(nSwarm = 32, maxIter = 200, typePSO = 0,
+                       LBFGS_RETRY = 3,
+                       FVAL_EPS = 0, GRAD_EPS = 1e-5,
+                       LINESEARCH_MAX = 1, LINESEARCH_ARMIJO = 0.1)
 
 dsLower <- -1
 dsUpper <- 1

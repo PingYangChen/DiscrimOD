@@ -34,6 +34,13 @@ equivalence(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100,
 }
 \value{
 An List.
+\itemize{
+\item{Grid_1}{ a vector of grid points on the design space.  For 2-D case, this vector is the grid of the first dimension.}
+\item{Grid_2}{ a vector of grid points on the second dimension of the 2-D design space.  For 1_d case, this output can be ignored.}
+\item{DirDeriv}{ a vector (1-D case) or a matrix (2-D case) of the directional derivative function values on the grid points.}
+\item{MAX_DD}{ the maximal value of the directional derivative function in \code{DirDeriv}.}
+\item{alpha}{ a vector of weights of efficiency values that satisfies the equivalence theorem for max-min optimal discrimination design.}
+}
 }
 \description{
 Please follow the instruction.

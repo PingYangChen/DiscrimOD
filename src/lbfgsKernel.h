@@ -124,8 +124,8 @@ int lbfgsKernel(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], double &FVAL, a
 				if (FVAL_TSET < FVAL_EPS) { LBFGS_STOP = TRUE; CONV = 1; }	
 			}
 			if (GRAD_EPS > 0) {
-				GRAD_TEST = arma::as_scalar(GRAD_NEW * GRAD_NEW.t());
-				double XNORM = arma::as_scalar(R_PARA_EX_NEW * R_PARA_EX_NEW.t());
+				GRAD_TEST = std::sqrt(arma::as_scalar(GRAD_NEW * GRAD_NEW.t()));
+				double XNORM = std::sqrt(arma::as_scalar(R_PARA_EX_NEW * R_PARA_EX_NEW.t()));
 				if (XNORM < 1.0) { XNORM = 1.0; }
 				GRAD_TEST = GRAD_TEST/XNORM;
 				if (GRAD_TEST < GRAD_EPS) { LBFGS_STOP = TRUE; CONV = 1; }	
@@ -196,17 +196,18 @@ arma::rowvec f_gr(const double &FVAL, const arma::rowvec &R_PARA_EX, const arma:
 	//forward difference method
 	arma::rowvec gr(R_PARA_EX.n_elem);
 	arma::rowvec fr_para(R_PARA_EX.n_elem); 
-	//arma::rowvec bk_para(dPara);
+	arma::rowvec bk_para(R_PARA_EX.n_elem);
   double fr_val; 
-  //double bk_val;
+  double bk_val;
   for (uword i = 0; i < R_PARA_EX.n_elem; i++) {
   	fr_para = R_PARA_EX; 
-  	//bk_para = R_PARA_EX;
-    //fr_para(i) += 5e-4; bk_para(i) -= 5e-4;
-    fr_para(i) += 1e-4;
+  	bk_para = R_PARA_EX;
+    fr_para(i) += 5e-4; bk_para(i) -= 5e-4;
+    //fr_para(i) += 1e-4;
     fr_val = f_fn(fr_para, T_PARA, DESIGN, WT, func_input); 
-    //bk_val = f_fn(bk_para, T_PARA, DESIGN, WT, func_input); 
-    gr(i) = fr_val*1e4 - FVAL*1e4;
+    bk_val = f_fn(bk_para, T_PARA, DESIGN, WT, func_input); 
+    //gr(i) = fr_val*1e4 - FVAL*1e4;
+    gr(i) = fr_val*1e3 - bk_val*1e3;
   }
   return gr;
 }

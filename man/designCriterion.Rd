@@ -9,11 +9,11 @@ designCriterion(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper,
   environment, ...)
 }
 \arguments{
-\item{DESIGN1}{matrix.}
+\item{DESIGN1}{matrix. The approximate design.}
 
 \item{MODEL_INFO}{list of information of competing models. For details, run \code{emptyModelList()} and see the instruction below.}
 
-\item{DISTANCE}{function.}
+\item{DISTANCE}{function. The R/C++ function of distance measure.  For T-optimal design, the function is the squared difference of two models means.}
 
 \item{dsLower}{vector. The finite lower bounds of the design space. Its length should be equal to the dimension of design space.}
 
@@ -27,6 +27,10 @@ designCriterion(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper,
 }
 \value{
 An List.
+\itemize{
+\item{cri_val}{ the design criterion value of the resulting design in the PSO result or the given design.}
+\item{theta2}{ a matrix of the parameters of each input model that result the design criterion value.}
+}
 }
 \description{
 Please follow the instruction.

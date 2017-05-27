@@ -21,7 +21,6 @@
 #' @useDynLib DiscrimOD
 #' @import assertthat
 #' @importFrom Rcpp cppFunction sourceCpp
-#' @importFrom lbfgs lbfgs
 #' @importFrom inline cxxfunction
 #' @importFrom utils globalVariables
 #' @importFrom stats optim lm glm

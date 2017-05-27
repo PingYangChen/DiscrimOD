@@ -11,7 +11,7 @@ DiscrimOD(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper,
 \arguments{
 \item{MODEL_INFO}{list of information of competing models. For details, run \code{emptyModelList()} and see the instruction below.}
 
-\item{DISTANCE}{function.}
+\item{DISTANCE}{function. The R/C++ function of distance measure.  For T-optimal design, the function is the squared difference of two models means.}
 
 \item{nSupp}{integer. The number fo support points (at least 2).}
 
@@ -31,17 +31,101 @@ DiscrimOD(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper,
 }
 \value{
 An List.
+\itemize{
+\item{BESTDESIGN}{ the resulting design. Each row is a support point with its weight. The last column is the weights of the support points.}
+\item{BESTVAL}{ the design criterion value of the resulting design.}
+\item{GBESTHIST}{ a vector of design citerion values of the global best particle in the PSO search history.}
+\item{CPUTIME}{ the computational time in seconds.}
+}
 }
 \description{
 Please follow the instruction.
 }
+\details{
+
+}
 \examples{
 # Atkinson and Fedorov (1975)
-# Two models are given by
+# Two R functions of competing models are given by
+m1 <- function(x, p) p[1] + p[2]*exp(x) + p[3]*exp(-x)
+m2 <- function(x, p) p[1] + p[2]*x + p[3]*x^2
+# Set the model information
+# The nominla value in 'm1' is 4.5, -1.5, -2.0
+# For 'm2', we set the parameter space to be [-10, 10]^3 and 
+# the initial guess (for LBFGS) of the rival model parameter is zero vector
+AF_para_m1 <- c(4.5, -1.5, -2.0)
+MODEL_INFO <- list(
+  list(model = m1, para = AF_para_m1),
+  list(model = m2,
+       paraLower = rep(-10, 3),
+       paraUpper = rep(10, 3),
+       paraInit = c(0, 0, 0))
+)
+# Define the R function for the distance measure
+# Here we use T-optimal criterion
+DISTANCE <- function(xt, xr) (xt - xr)^2
 
 # Initialize PSO and BFGS options
+ALG_INFO <- getAlgInfo(nSwarm = 32, maxIter = 100, typePSO = 0,
+                    		LBFGS_RETRY = 2, FVAL_EPS = 0, GRAD_EPS = 1e-6,
+                    		LINESEARCH_MAX = 1e5)
 
 # Run Algorithm
+out <- DiscrimOD(MODEL_INFO, DISTANCE, nSupp = 4, dsLower = -1.0, dsUpper = 1.0, crit_type = "pair_fixed_true",
+                 MaxMinStdVals = NULL, ALG_INFO = ALG_INFO, seed = NULL, verbose = TRUE)
+
+
+# C++ Function Input
+library(inline)
+m1.inc <- 'arma::rowvec m1(SEXP xx, SEXP pp){
+  arma::rowvec x = Rcpp::as<arma::rowvec>(xx);
+  arma::rowvec p = Rcpp::as<arma::rowvec>(pp);
+  return p(0) + p(1)*arma::exp(x) + p(2)*arma::exp(-x);
+}'
+m1.body <- '
+  typedef arma::rowvec (*funcPtr)(SEXP, SEXP);
+  return(XPtr<funcPtr>(new funcPtr(&m1)));
+'
+
+m2.inc <- 'arma::rowvec m2(SEXP xx, SEXP pp){
+  arma::rowvec x = Rcpp::as<arma::rowvec>(xx);
+  arma::rowvec p = Rcpp::as<arma::rowvec>(pp);
+  return p(0) + p(1)*x + p(2)*(x\%x);
+}'
+m2.body <- '
+  typedef arma::rowvec (*funcPtr)(SEXP, SEXP);
+  return(XPtr<funcPtr>(new funcPtr(&m2)));
+'
+
+m1_Cpp <- cxxfunction(signature(), body = m1.body, inc = m1.inc,
+                      plugin = "RcppArmadillo")
+m2_Cpp <- cxxfunction(signature(), body = m2.body, inc = m2.inc,
+                      plugin = "RcppArmadillo")
+
+MODEL_INFO_Cpp <- list(
+  list(model = m1_Cpp(), para = AF_para_m1),
+  list(model = m2_Cpp(), paraLower = rep(-10, 3),
+                         paraUpper = rep(10, 3),
+                         paraInit = c(0,0,0))
+)
+
+dist.inc <- 'arma::rowvec t_optimal(SEXP xt, SEXP xr){
+  arma::rowvec val_t = Rcpp::as<arma::rowvec>(xt);
+  arma::rowvec val_r = Rcpp::as<arma::rowvec>(xr);
+  return (val_t - val_r)\%(val_t - val_r);
+}'
+
+dist.body <- '
+  typedef arma::rowvec (*funcPtr)(SEXP, SEXP);
+  return(XPtr<funcPtr>(new funcPtr(&t_optimal)));
+'
+
+DISTANCE_Cpp <- cxxfunction(signature(), body = dist.body, inc = dist.inc,
+                            plugin = "RcppArmadillo")
+
+# Run Algorithm with C++ functions
+out <- DiscrimOD(MODEL_INFO_Cpp, DISTANCE_Cpp(), nSupp = 4, dsLower = -1.0, dsUpper = 1.0, crit_type = "pair_fixed_true",
+                 MaxMinStdVals = NULL, ALG_INFO = ALG_INFO, seed = NULL, verbose = TRUE)
 
 }
 
