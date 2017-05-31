@@ -8,7 +8,7 @@ void PSO_MAIN(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &O
   // GET PSO PARAMETERS
 	int nSwarm    = PSO_OPTS[LOOPID].nSwarm; 
 	int dSwarm    = PSO_OPTS[LOOPID].dSwarm; 
-  int nGroup    = PSO_OPTS[LOOPID].nGroup;
+  //int nGroup    = PSO_OPTS[LOOPID].nGroup;
 	int maxIter   = PSO_OPTS[LOOPID].maxIter; 
 	int checkConv = PSO_OPTS[LOOPID].checkConv; 
 	double freeRun   = PSO_OPTS[LOOPID].freeRun; 
@@ -17,10 +17,10 @@ void PSO_MAIN(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &O
   rowvec varLower  = PSO_OPTS[LOOPID].varLower;
 
 	// DECLARE VARIABLES
-  arma::mat swarm(nSwarm, dSwarm), vStep(nSwarm, dSwarm), PBest(nSwarm, dSwarm), GrBest(nGroup, dSwarm);
+  arma::mat swarm(nSwarm, dSwarm), vStep(nSwarm, dSwarm), PBest(nSwarm, dSwarm);//, GrBest(nGroup, dSwarm);
   arma::rowvec velMax(dSwarm);
   arma::rowvec GBest(dSwarm);
-  arma::vec fSwarm(nSwarm), fPBest(nSwarm), fGrBest(nGroup);
+  arma::vec fSwarm(nSwarm), fPBest(nSwarm);//, fGrBest(nGroup);
   double fGBest;
   arma::uword GBestIdx;
   arma::rowvec fGBestHist(maxIter + 1, fill::zeros);
@@ -72,7 +72,7 @@ void PSO_MAIN(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &O
       PBest.rows(RowChange) = swarm.rows(RowChange);
     }
     if (min(fPBest) < fGBest) {
-      fGBest = fPBest.min(GBestIdx); GBest = PBest.row(GBestIdx); PSO_DYN.succ_GB = 1;
+      fGBest = fPBest.min(GBestIdx); GBest = PBest.row(GBestIdx); //PSO_DYN.succ_GB = 1;
     }		
     // UPDATE PSO DYNAMIC PARAMETERS
     psoUpdateDynPara(LOOPID, PSO_OPTS, t, PSO_DYN, swarm, PBest, GBest, fSwarm, fPBest, fGBest);

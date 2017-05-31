@@ -6,7 +6,8 @@ void psoUpdateParticle(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const PS
 {
   int dSwarm = (int)swarm.n_cols;
   int nSwarm = (int)swarm.n_rows;
-	int typePSO = PSO_OPTS[LOOPID].typePSO;
+	//int typePSO = PSO_OPTS[LOOPID].typePSO;
+	int typePSO = 0;
 	double c1 = PSO_OPTS[LOOPID].c1;
   double c2 = PSO_OPTS[LOOPID].c2;
   //double chi = PSO_OPTS[LOOPID].chi;
@@ -22,6 +23,7 @@ void psoUpdateParticle(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const PS
 			swarm += vStep;													
 			break;
 		}
+		/*
 		case 1: // GCPSO (van den Bergh, F. and	Engelbrecht, A. P., 2002)
 		{
 			vStep.rows(0, nSwarm - 2) = PSO_DYN.w_cur*vStep.rows(0, nSwarm - 2) + 
@@ -66,7 +68,6 @@ void psoUpdateParticle(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const PS
 			swarm += vStep;
 			break;
 		}
-		/*
 		case 6: // FIPSO (Mendes, R., Kennedy, J. and Neves, J., 2004)
 		{
 

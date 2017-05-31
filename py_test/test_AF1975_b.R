@@ -17,7 +17,7 @@ MODEL_INFO <- list(
   list(model = function(x, p) p[1] + p[2]*x + p[3]*x^2,
        paraLower = rep(-10, 3),
        paraUpper = rep(10, 3),
-       paraInit = runif(3, -10,10)),
+       paraInit = c(0,0,0)),
   list(model = function(x, p) p[1] + p[2]*sin(0.5*pi*x) + p[3]*cos(0.5*pi*x) + p[4]*sin(pi*x),
        paraLower = rep(-10, 4),
        paraUpper = rep(10, 4),
@@ -97,9 +97,9 @@ DISTANCE_Cpp <- cxxfunction(signature(), body = dist.body, inc = dist.inc,
                             plugin = "RcppArmadillo")
 
 #
-ALG_INFO <- getAlgInfo(nSwarm = 32, maxIter = 200, typePSO = 0,
+ALG_INFO <- getAlgInfo(nSwarm = 16, maxIter = 200,
                        LBFGS_RETRY = 3,
-                       FVAL_EPS = 0, GRAD_EPS = 1e-5,
+                       FVAL_EPS = 0, GRAD_EPS = 1e-6,
                        LINESEARCH_MAX = 1, LINESEARCH_ARMIJO = 0.1)
 
 dsLower <- -1
@@ -110,26 +110,40 @@ TWO_M_INFO_Cpp <- list(
   list(TWO_M = list(MODEL_INFO_Cpp[[1]], MODEL_INFO_Cpp[[3]]), nSupp = 5)
 )
 
-outALL <- vector("list", length(TWO_M_INFO_Cpp))
-for (CaseID in 1:length(TWO_M_INFO_Cpp)) {
+TWO_M_INFO <- list(
+  list(TWO_M = list(MODEL_INFO[[1]], MODEL_INFO[[2]]), nSupp = 4),
+  list(TWO_M = list(MODEL_INFO[[1]], MODEL_INFO[[3]]), nSupp = 5)
+)
+
+outALL <- vector("list", 2)
+for (CaseID in 1:2) {
 
   #sourceCpp(file.path(cppPath, "cppPSO.cpp"))
-  #CaseID <- 1
+  #CaseID <- 2
   out <- DiscrimOD(TWO_M_INFO_Cpp[[CaseID]]$TWO_M, DISTANCE_Cpp(),
                    TWO_M_INFO_Cpp[[CaseID]]$nSupp, dsLower, dsUpper,
+                   crit_type = "pair_fixed_true",
+                   MaxMinStdVals = NULL, ALG_INFO, seed = NULL, verbose = F)
+
+  out <- DiscrimOD(TWO_M_INFO[[CaseID]]$TWO_M, DISTANCE,
+                   TWO_M_INFO[[CaseID]]$nSupp, dsLower, dsUpper,
                    crit_type = "pair_fixed_true",
                    MaxMinStdVals = NULL, ALG_INFO, seed = NULL, verbose = TRUE)
   round(out$BESTDESIGN, 3)
 
-  eqv <- equivalence(PSO_RESULT = out, MODEL_INFO = TWO_M_INFO_Cpp[[CaseID]]$TWO_M,
-                     DISTANCE = DISTANCE_Cpp(), ngrid = 100, crit_type = "pair_fixed_true",
+  #eqv <- equivalence(PSO_RESULT = out, MODEL_INFO = TWO_M_INFO_Cpp[[CaseID]]$TWO_M,
+  #                   DISTANCE = DISTANCE_Cpp(), ngrid = 100, crit_type = "pair_fixed_true",
+  #                   dsLower = dsLower, dsUpper = dsUpper, MaxMinStdVals = NULL, ALG_INFO = ALG_INFO)
+
+  eqv <- equivalence(PSO_RESULT = out, MODEL_INFO = TWO_M_INFO[[CaseID]]$TWO_M,
+                     DISTANCE = DISTANCE, ngrid = 100, crit_type = "pair_fixed_true",
                      dsLower = dsLower, dsUpper = dsUpper, MaxMinStdVals = NULL, ALG_INFO = ALG_INFO)
-  plot(eqv$Grid_1, eqv$DirDeriv, type = "l", col = "blue"); abline(h = 0);
-  points(out$BESTDESIGN[,1], rep(0, nrow(out$BESTDESIGN)), pch = 19)
-  DESIGN1 <- out$BESTDESIGN
+  #plot(eqv$Grid_1, eqv$DirDeriv, type = "l", col = "blue"); abline(h = 0);
+  #points(out$BESTDESIGN[,1], rep(0, nrow(out$BESTDESIGN)), pch = 19)
+  #DESIGN1 <- out$BESTDESIGN
   #DESIGN1 <- cbind(c(0, 468.186, 1064.179), c(.249, .498, .253))
-  designCriterion(DESIGN1, TWO_M_INFO_Cpp[[CaseID]]$TWO_M, DISTANCE_Cpp(), dsLower, dsUpper,
-                  crit_type = "pair_fixed_true", MaxMinStdVals = NULL, ALG_INFO)
+  #designCriterion(DESIGN1, TWO_M_INFO_Cpp[[CaseID]]$TWO_M, DISTANCE_Cpp(), dsLower, dsUpper,
+  #                crit_type = "pair_fixed_true", MaxMinStdVals = NULL, ALG_INFO)
 
   outALL[[CaseID]] <- list(res = out, eqv = eqv)
 }

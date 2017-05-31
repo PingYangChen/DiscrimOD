@@ -1,7 +1,7 @@
 // Rcpp Header File
 #include <math.h>
 #include <RcppArmadillo.h>
-#include <omp.h>
+//#include <omp.h>
 
 //using namespace Rcpp;
 using namespace arma;
@@ -14,34 +14,32 @@ namespace Rcpp {
   class EvalBase {
     public:
         EvalBase() : neval(0) {};
-        virtual arma::rowvec eval(SEXP x, SEXP p) = 0;
-        virtual ~EvalBase() {};
+        virtual Rcpp::NumericVector eval(SEXP x, SEXP p) = 0;
+        virtual ~EvalBase() {}; 
         //unsigned long getNbEvals() { return neval; }
     protected:
-        //unsigned long int neval;
-        int neval;
+        unsigned long int neval;
   };
 
   class EvalStandard : public EvalBase {
     public:
         EvalStandard(SEXP fcall_, SEXP env_) : fcall(fcall_), env(env_) {}
-        arma::rowvec eval(SEXP x, SEXP p) {
+        Rcpp::NumericVector eval(SEXP x, SEXP p) {
           //neval++;
           return defaultfun(x, p);
         }
         ~EvalStandard() {};
     private:
         SEXP fcall, env;
-        arma::rowvec defaultfun(SEXP x, SEXP p) {
+        Rcpp::NumericVector defaultfun(SEXP x, SEXP p) {
           SEXP fn = ::Rf_lang4(fcall, x, p, R_DotsSymbol);
           SEXP sexp_fvec = ::Rf_eval(fn, env);
-          Rcpp::NumericVector f_result_tmp = (Rcpp::NumericVector) Rcpp::as<Rcpp::NumericVector>(sexp_fvec);
-          arma::rowvec f_result(f_result_tmp.begin(), f_result_tmp.size(), false);
+          Rcpp::NumericVector f_result = (Rcpp::NumericVector) Rcpp::as<Rcpp::NumericVector>(sexp_fvec);
           return f_result;
         }
     };
 
-  typedef arma::rowvec (*funcPtr)(SEXP, SEXP, SEXP);
+  typedef Rcpp::NumericVector (*funcPtr)(SEXP, SEXP, SEXP);
 
   class EvalCompiled : public EvalBase {
     public:
@@ -54,9 +52,9 @@ namespace Rcpp {
           funptr = *(xptr);
           env = __env;
         };
-        arma::rowvec eval(SEXP x, SEXP p) {
+        Rcpp::NumericVector eval(SEXP x, SEXP p) {
           //neval++;
-          arma::rowvec f_result = funptr(x, p, env);
+          Rcpp::NumericVector f_result = funptr(x, p, env);
           return f_result;
         }
         ~EvalCompiled() {};
@@ -121,7 +119,7 @@ struct PSO_OPTIONS {
   rowvec varLower; // c(0,0)
 	int maxIter; // 100
 	int checkConv; // 0
-	int typePSO; // 0
+	//int typePSO; // 0
   double freeRun; // 0.25
  	double tol; // 1e-6
  	// Basic PSO Parameters
@@ -130,22 +128,22 @@ struct PSO_OPTIONS {
  	double w0; // 1.2
  	double w1; // 0.2
  	double w_var; // 0.8
- 	double chi; // 0.729
+ 	//double chi; // 0.729
  	double vk; // 4
   // Topology
-  int typeTopo; // 0
-  int nGroup; // 1
+  //int typeTopo; // 0
+  //int nGroup; // 1
  	// Guarantee Convergence PSO Parameters
-	int GC_S_ROOF; // 5
-	int GC_F_ROOF; // 15
-	double GC_RHO; // 1
+	//int GC_S_ROOF; // 5
+	//int GC_F_ROOF; // 15
+	//double GC_RHO; // 1
 	// Quantum PSO Parameters
-  int Q_cen_type; // 0
-	double Q_a0; // 1.7
-	double Q_a1; // 0.7
-	double Q_a_var; // 0.8
+  //int Q_cen_type; // 0
+	//double Q_a0; // 1.7
+	//double Q_a1; // 0.7
+	//double Q_a_var; // 0.8
   // LcRiPSO
-  double LcRi_L; // 0.01
+  //double LcRi_L; // 0.01
   // LBFGS OPTIONS
   int LBFGS_RETRY; // 3
   int LBFGS_MAXIT; // 100
@@ -158,29 +156,30 @@ struct PSO_OPTIONS {
   int LINESEARCH_MAXTRIAL; // 50
   double LINESEARCH_MAX; // 1e6
   double LINESEARCH_MIN; // 1e-6
+  double LINESEARCH_RHO;
   double LINESEARCH_ARMIJO; // 1e-4
-  double LINESEARCH_WOLFE; // 0.9
+  //double LINESEARCH_WOLFE; // 0.9
 };
 
 // DEFINE STUCTURES OF PSO PARAMETERS WHICH WILL CHANGE ITERATIVELY
 typedef struct {
-  int succ_GB; // 0
-  mat network; // 0
+  //int succ_GB; // 0
+  //mat network; // 0
   // inertia weight
   int w_varyfor; // (int)(w_var*maxIter);
   double w_cur; // w0;
   double w_dec; // (w0 - w1)/w_varyfor;
   // GCPSO
-  int GC_S_COUNT; // 0;
-  int GC_F_COUNT; // 0;
-  double GC_RHO;
+  //int GC_S_COUNT; // 0;
+  //int GC_F_COUNT; // 0;
+  //double GC_RHO;
   // Quantum PSO
-  int Q_a_varyfor; // (int)(Q_a_var*maxIter);
-  double Q_a_cur; // Q_a0;
-  double Q_a_dec; // (Q_a0 - Q_a1)/Q_a_varyfor;
+  //int Q_a_varyfor; // (int)(Q_a_var*maxIter);
+  //double Q_a_cur; // Q_a0;
+  //double Q_a_dec; // (Q_a0 - Q_a1)/Q_a_varyfor;
   // LcRiPSO
-  vec LcRi_sigP;
-  vec LcRi_sigG;
+  //vec LcRi_sigP;
+  //vec LcRi_sigG;
 } PSO_DYN, *Ptr_PSO_DYN;
 
 // DEFINE PSO RESULTS
@@ -297,7 +296,7 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST)
   arma::mat varLower(varLower_Tmp.begin(), varLower_Tmp.nrow(), varLower_Tmp.ncol(), false);
   Rcpp::IntegerVector maxIter_Tmp    = as<IntegerVector>(ALG_INFO_LIST["maxIter"]);
   Rcpp::IntegerVector checkConv_Tmp  = as<IntegerVector>(ALG_INFO_LIST["checkConv"]);
-  Rcpp::IntegerVector typePSO_Tmp    = as<IntegerVector>(ALG_INFO_LIST["typePSO"]);
+  //Rcpp::IntegerVector typePSO_Tmp    = as<IntegerVector>(ALG_INFO_LIST["typePSO"]);
   Rcpp::NumericVector freeRun_Tmp    = as<NumericVector>(ALG_INFO_LIST["freeRun"]);
   Rcpp::NumericVector tol_Tmp        = as<NumericVector>(ALG_INFO_LIST["tol"]);
   Rcpp::NumericVector c1_Tmp         = as<NumericVector>(ALG_INFO_LIST["c1"]);
@@ -305,18 +304,18 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST)
   Rcpp::NumericVector w0_Tmp         = as<NumericVector>(ALG_INFO_LIST["w0"]);
   Rcpp::NumericVector w1_Tmp         = as<NumericVector>(ALG_INFO_LIST["w1"]);
   Rcpp::NumericVector w_var_Tmp      = as<NumericVector>(ALG_INFO_LIST["w_var"]);
-  Rcpp::NumericVector chi_Tmp        = as<NumericVector>(ALG_INFO_LIST["chi"]);
+  //Rcpp::NumericVector chi_Tmp        = as<NumericVector>(ALG_INFO_LIST["chi"]);
   Rcpp::NumericVector vk_Tmp         = as<NumericVector>(ALG_INFO_LIST["vk"]);
-  Rcpp::IntegerVector typeTopo_Tmp   = as<IntegerVector>(ALG_INFO_LIST["typeTopo"]);
-  Rcpp::IntegerVector nGroup_Tmp     = as<IntegerVector>(ALG_INFO_LIST["nGroup"]);
-  Rcpp::IntegerVector GC_S_ROOF_Tmp  = as<IntegerVector>(ALG_INFO_LIST["GC_S_ROOF"]);
-  Rcpp::IntegerVector GC_F_ROOF_Tmp  = as<IntegerVector>(ALG_INFO_LIST["GC_F_ROOF"]);
-  Rcpp::NumericVector GC_RHO_Tmp     = as<NumericVector>(ALG_INFO_LIST["GC_RHO"]);
-  Rcpp::IntegerVector Q_cen_type_Tmp = as<IntegerVector>(ALG_INFO_LIST["Q_cen_type"]);
-  Rcpp::NumericVector Q_a0_Tmp       = as<NumericVector>(ALG_INFO_LIST["Q_a0"]);
-  Rcpp::NumericVector Q_a1_Tmp       = as<NumericVector>(ALG_INFO_LIST["Q_a1"]);
-  Rcpp::NumericVector Q_a_var_Tmp    = as<NumericVector>(ALG_INFO_LIST["Q_a_var"]);
-  Rcpp::NumericVector LcRi_L_Tmp     = as<NumericVector>(ALG_INFO_LIST["LcRi_L"]);
+  //Rcpp::IntegerVector typeTopo_Tmp   = as<IntegerVector>(ALG_INFO_LIST["typeTopo"]);
+  //Rcpp::IntegerVector nGroup_Tmp     = as<IntegerVector>(ALG_INFO_LIST["nGroup"]);
+  //Rcpp::IntegerVector GC_S_ROOF_Tmp  = as<IntegerVector>(ALG_INFO_LIST["GC_S_ROOF"]);
+  //Rcpp::IntegerVector GC_F_ROOF_Tmp  = as<IntegerVector>(ALG_INFO_LIST["GC_F_ROOF"]);
+  //Rcpp::NumericVector GC_RHO_Tmp     = as<NumericVector>(ALG_INFO_LIST["GC_RHO"]);
+  //Rcpp::IntegerVector Q_cen_type_Tmp = as<IntegerVector>(ALG_INFO_LIST["Q_cen_type"]);
+  //Rcpp::NumericVector Q_a0_Tmp       = as<NumericVector>(ALG_INFO_LIST["Q_a0"]);
+  //Rcpp::NumericVector Q_a1_Tmp       = as<NumericVector>(ALG_INFO_LIST["Q_a1"]);
+  //Rcpp::NumericVector Q_a_var_Tmp    = as<NumericVector>(ALG_INFO_LIST["Q_a_var"]);
+  //Rcpp::NumericVector LcRi_L_Tmp     = as<NumericVector>(ALG_INFO_LIST["LcRi_L"]);
 
   // LBFGS OPTIONS
   Rcpp::IntegerVector LBFGS_RETRY_Tmp         = as<IntegerVector>(ALG_INFO_LIST["LBFGS_RETRY"]);
@@ -327,6 +326,7 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST)
   Rcpp::IntegerVector LINESEARCH_MAXTRIAL_Tmp = as<IntegerVector>(ALG_INFO_LIST["LINESEARCH_MAXTRIAL"]);
   Rcpp::NumericVector LINESEARCH_MAX_Tmp      = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_MAX"]);
   Rcpp::NumericVector LINESEARCH_MIN_Tmp      = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_MIN"]);
+  Rcpp::NumericVector LINESEARCH_RHO_Tmp      = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_RHO"]);
   Rcpp::NumericVector LINESEARCH_ARMIJO_Tmp   = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_ARMIJO"]);
   //Rcpp::NumericVector LINESEARCH_WOLFE_Tmp    = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_WOLFE"]);
 
@@ -339,7 +339,7 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST)
     PSO_OPT[i].varLower   = varLower.submat(i, 0, i, dSwarm_Tmp[i] - 1);
     PSO_OPT[i].maxIter    = maxIter_Tmp[i];
     PSO_OPT[i].checkConv  = checkConv_Tmp[i];
-    PSO_OPT[i].typePSO    = typePSO_Tmp[i];
+    //PSO_OPT[i].typePSO    = typePSO_Tmp[i];
     PSO_OPT[i].freeRun    = freeRun_Tmp[i];
     PSO_OPT[i].tol        = tol_Tmp[i];
     PSO_OPT[i].c1         = c1_Tmp[i];
@@ -347,18 +347,18 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST)
     PSO_OPT[i].w0         = w0_Tmp[i];
     PSO_OPT[i].w1         = w1_Tmp[i];
     PSO_OPT[i].w_var      = w_var_Tmp[i];
-    PSO_OPT[i].chi        = chi_Tmp[i];
+    //PSO_OPT[i].chi        = chi_Tmp[i];
     PSO_OPT[i].vk         = vk_Tmp[i];
-    PSO_OPT[i].typeTopo   = typeTopo_Tmp[i];
-    PSO_OPT[i].nGroup     = nGroup_Tmp[i];
-    PSO_OPT[i].GC_S_ROOF  = GC_S_ROOF_Tmp[i];
-    PSO_OPT[i].GC_F_ROOF  = GC_F_ROOF_Tmp[i];
-    PSO_OPT[i].GC_RHO     = GC_RHO_Tmp[i];
-    PSO_OPT[i].Q_cen_type = Q_cen_type_Tmp[i];
-    PSO_OPT[i].Q_a0       = Q_a0_Tmp[i];
-    PSO_OPT[i].Q_a1       = Q_a1_Tmp[i];
-    PSO_OPT[i].Q_a_var    = Q_a_var_Tmp[i];
-    PSO_OPT[i].LcRi_L     = LcRi_L_Tmp[i];
+    //PSO_OPT[i].typeTopo   = typeTopo_Tmp[i];
+    //PSO_OPT[i].nGroup     = nGroup_Tmp[i];
+    //PSO_OPT[i].GC_S_ROOF  = GC_S_ROOF_Tmp[i];
+    //PSO_OPT[i].GC_F_ROOF  = GC_F_ROOF_Tmp[i];
+    //PSO_OPT[i].GC_RHO     = GC_RHO_Tmp[i];
+    //PSO_OPT[i].Q_cen_type = Q_cen_type_Tmp[i];
+    //PSO_OPT[i].Q_a0       = Q_a0_Tmp[i];
+    //PSO_OPT[i].Q_a1       = Q_a1_Tmp[i];
+    //PSO_OPT[i].Q_a_var    = Q_a_var_Tmp[i];
+    //PSO_OPT[i].LcRi_L     = LcRi_L_Tmp[i];
     // LBFGS OPTIONS
     PSO_OPT[i].LBFGS_RETRY          = LBFGS_RETRY_Tmp[i]; 
     PSO_OPT[i].LBFGS_MAXIT          = LBFGS_MAXIT_Tmp[i]; 
@@ -368,6 +368,7 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST)
     PSO_OPT[i].LINESEARCH_MAXTRIAL  = LINESEARCH_MAXTRIAL_Tmp[i]; 
     PSO_OPT[i].LINESEARCH_MAX       = LINESEARCH_MAX_Tmp[i]; 
     PSO_OPT[i].LINESEARCH_MIN       = LINESEARCH_MIN_Tmp[i]; 
+    PSO_OPT[i].LINESEARCH_RHO       = LINESEARCH_RHO_Tmp[i]; 
     PSO_OPT[i].LINESEARCH_ARMIJO    = LINESEARCH_ARMIJO_Tmp[i]; 
     //PSO_OPT[i].LINESEARCH_WOLFE     = LINESEARCH_WOLFE_Tmp[i]; 
   }

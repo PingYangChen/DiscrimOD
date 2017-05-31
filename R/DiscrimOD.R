@@ -1,26 +1,33 @@
-#' Hybrid Algorithm of PSO and BFGS for Finding Optimal Discrimination Design
+#' Hybrid Algorithm of PSO and L-BFGS for Finding Optimal Discrimination Design
 #'
 #' Please follow the instruction.
 #'
-#' @param MODEL_INFO list of information of competing models. For details, run \code{emptyModelList()} and see the instruction below.
-#' @param DISTANCE function. The R/C++ function of distance measure.  For T-optimal design, the function is the squared difference of two models means.
+#' @param MODEL_INFO list of information of competing models.
+#' For details, run \code{emptyModelList()} and see the instruction below.
+#' @param DISTANCE function. The R/C++ function of distance measure.
+#' For T-optimal design, the function is the squared difference of two models means.
 #' @param nSupp integer. The number fo support points (at least 2).
-#' @param dsLower vector. The finite lower bounds of the design space. Its length should be equal to the dimension of design space.
-#' @param dsUpper vector. The finite upper bounds of the design space. Its length should be equal to the dimension of design space.
-#' @param crit_type string. The name of the case of the discrimination design problem. The default is 'pair_fixed_true'.
-#' @param MaxMinStdVals vector. The values of demoninators in the design efficiency calculation for finding max-min discrimination design.
+#' @param dsLower vector. The finite lower bounds of the design space.
+#' Its length should be equal to the dimension of design space.
+#' @param dsUpper vector. The finite upper bounds of the design space.
+#' Its length should be equal to the dimension of design space.
+#' @param crit_type string. The name of the case of the discrimination design problem.
+#' The default is 'pair_fixed_true'.
+#' @param MaxMinStdVals vector. The values of demoninators in the design efficiency
+#' calculation for finding max-min discrimination design.
 #' @param ALG_INFO list. PSO and BFGS options.
 #' @param seed numeric. random seed.  The default is \code{NULL}.
 #' @param verbose logical. If \code{TRUE}, the PSO will reports the updating progress.
 #' @return An List.
 #' \itemize{
-#' \item{BESTDESIGN}{ the resulting design. Each row is a support point with its weight. The last column is the weights of the support points.}
+#' \item{BESTDESIGN}{ the resulting design. Each row is a support point with its weight.
+#' The last column is the weights of the support points.}
 #' \item{BESTVAL}{ the design criterion value of the resulting design.}
 #' \item{GBESTHIST}{ a vector of design citerion values of the global best particle in the PSO search history.}
 #' \item{CPUTIME}{ the computational time in seconds.}
 #' }
 #' @details
-#' 
+#'
 #' @examples
 #' # Atkinson and Fedorov (1975)
 #' # Two R functions of competing models are given by
@@ -28,7 +35,7 @@
 #' m2 <- function(x, p) p[1] + p[2]*x + p[3]*x^2
 #' # Set the model information
 #' # The nominla value in 'm1' is 4.5, -1.5, -2.0
-#' # For 'm2', we set the parameter space to be [-10, 10]^3 and 
+#' # For 'm2', we set the parameter space to be [-10, 10]^3 and
 #' # the initial guess (for LBFGS) of the rival model parameter is zero vector
 #' AF_para_m1 <- c(4.5, -1.5, -2.0)
 #' MODEL_INFO <- list(
@@ -41,17 +48,16 @@
 #' # Define the R function for the distance measure
 #' # Here we use T-optimal criterion
 #' DISTANCE <- function(xt, xr) (xt - xr)^2
-#' 
+#'
 #' # Initialize PSO and BFGS options
-#' ALG_INFO <- getAlgInfo(nSwarm = 32, maxIter = 100, typePSO = 0,
-#'                     		LBFGS_RETRY = 2, FVAL_EPS = 0, GRAD_EPS = 1e-6,
-#'                     		LINESEARCH_MAX = 1e5)
+#' ALG_INFO <- getAlgInfo(nSwarm = 32, maxIter = 100,
+#'                     		LBFGS_RETRY = 3, GRAD_EPS = 1e-6)
 #'
 #' # Run Algorithm
 #' out <- DiscrimOD(MODEL_INFO, DISTANCE, nSupp = 4, dsLower = -1.0, dsUpper = 1.0, crit_type = "pair_fixed_true",
 #'                  MaxMinStdVals = NULL, ALG_INFO = ALG_INFO, seed = NULL, verbose = TRUE)
 #'
-#' 
+#'
 #' # C++ Function Input
 #' library(inline)
 #' m1.inc <- 'arma::rowvec m1(SEXP xx, SEXP pp){
@@ -63,7 +69,7 @@
 #'   typedef arma::rowvec (*funcPtr)(SEXP, SEXP);
 #'   return(XPtr<funcPtr>(new funcPtr(&m1)));
 #' '
-#' 
+#'
 #' m2.inc <- 'arma::rowvec m2(SEXP xx, SEXP pp){
 #'   arma::rowvec x = Rcpp::as<arma::rowvec>(xx);
 #'   arma::rowvec p = Rcpp::as<arma::rowvec>(pp);
@@ -73,33 +79,33 @@
 #'   typedef arma::rowvec (*funcPtr)(SEXP, SEXP);
 #'   return(XPtr<funcPtr>(new funcPtr(&m2)));
 #' '
-#' 
+#'
 #' m1_Cpp <- cxxfunction(signature(), body = m1.body, inc = m1.inc,
 #'                       plugin = "RcppArmadillo")
 #' m2_Cpp <- cxxfunction(signature(), body = m2.body, inc = m2.inc,
 #'                       plugin = "RcppArmadillo")
-#' 
+#'
 #' MODEL_INFO_Cpp <- list(
 #'   list(model = m1_Cpp(), para = AF_para_m1),
 #'   list(model = m2_Cpp(), paraLower = rep(-10, 3),
 #'                          paraUpper = rep(10, 3),
 #'                          paraInit = c(0,0,0))
 #' )
-#' 
+#'
 #' dist.inc <- 'arma::rowvec t_optimal(SEXP xt, SEXP xr){
 #'   arma::rowvec val_t = Rcpp::as<arma::rowvec>(xt);
 #'   arma::rowvec val_r = Rcpp::as<arma::rowvec>(xr);
 #'   return (val_t - val_r)%(val_t - val_r);
 #' }'
-#' 
+#'
 #' dist.body <- '
 #'   typedef arma::rowvec (*funcPtr)(SEXP, SEXP);
 #'   return(XPtr<funcPtr>(new funcPtr(&t_optimal)));
 #' '
-#' 
+#'
 #' DISTANCE_Cpp <- cxxfunction(signature(), body = dist.body, inc = dist.inc,
 #'                             plugin = "RcppArmadillo")
-#' 
+#'
 #' # Run Algorithm with C++ functions
 #' out <- DiscrimOD(MODEL_INFO_Cpp, DISTANCE_Cpp(), nSupp = 4, dsLower = -1.0, dsUpper = 1.0, crit_type = "pair_fixed_true",
 #'                  MaxMinStdVals = NULL, ALG_INFO = ALG_INFO, seed = NULL, verbose = TRUE)
@@ -107,22 +113,37 @@
 #' @name DiscrimOD
 #' @rdname DiscrimOD
 #' @export
-DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, crit_type = "pair_fixed_true", MaxMinStdVals = NULL, 
+DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper,
+											crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
 											ALG_INFO = NULL, seed = NULL, verbose = TRUE, environment, ...) {
 
   assert_that(nSupp >= 2L, all(is.finite(dsLower)), all(is.finite(dsUpper)),
-              length(dsLower) == length(dsUpper), all(dsUpper > dsLower))
+              length(dsLower) == length(dsUpper), all(dsUpper > dsLower),
+              all(names(ALG_INFO) == names(getAlgInfo())),
+              crit_type %in% c("pair_fixed_true", "maxmin_fixed_true"))
 
 	MODEL_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
 
-	if (is.null(MaxMinStdVals)) MaxMinStdVals <- 0
-	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE, 
+  if (crit_type == "maxmin_fixed_true") {
+  	if (is.null(MaxMinStdVals)) {
+  		stop("Need optimal values for pairwise discrimination in efficiency computations.")
+  	}
+  	if (length(MaxMinStdVals) < (length(MODEL_INFO) - 1)) {
+  		stop(paste0("Need ", length(MODEL_INFO) - 1, " values for pairwise discrimination in efficiency computations."))
+  	}
+  } else {
+  	if (is.null(MaxMinStdVals)) MaxMinStdVals <- 0
+  }
+
+  dSupp <- length(dsLower)
+
+	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
                           crit_type = crit_type, MaxMinStdVals = MaxMinStdVals,
                           dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
 
 	if (is.null(ALG_INFO)) {
 		ALG_INFO <- getAlgInfo()
-		if (verbose) cat(paste0("Use the default settings for PSO. See 'getAlgInfo()'.\n"))
+		if (verbose) message(paste0("Use the default settings for PSO. See '?getAlgInfo'."))
 	}
 
 	if (!hasArg(environment)) environment <- new.env()
@@ -139,11 +160,11 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, crit_type =
 		psoOut <- cppPSO(0, ALG_INFO, D_INFO, MODEL_LIST, 0, environment, FALSE, verbose)
 	)[3]
 
-	if (verbose) cat(paste0("CPU time: ", round(cputime, 2), " seconds.\n"))
+	if (verbose) message(paste0("CPU time: ", round(cputime, 2), " seconds."))
 
 	BESTDESIGN <- designM2V(psoOut$GBest, D_INFO)
 
-	list(BESTDESIGN = BESTDESIGN, BESTVAL = -psoOut$fGBest, GBESTHIST = -psoOut$fGBestHist, 
+	list(BESTDESIGN = BESTDESIGN, BESTVAL = -psoOut$fGBest, GBESTHIST = -psoOut$fGBestHist,
 	     CPUTIME = cputime)
 }
 
@@ -151,12 +172,17 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, crit_type =
 #'
 #' Please follow the instruction.
 #'
-#' @param DESIGN1 matrix. The approximate design.  
-#' @param MODEL_INFO list of information of competing models. For details, run \code{emptyModelList()} and see the instruction below.
-#' @param DISTANCE function. The R/C++ function of distance measure.  For T-optimal design, the function is the squared difference of two models means.
-#' @param dsLower vector. The finite lower bounds of the design space. Its length should be equal to the dimension of design space.
-#' @param dsUpper vector. The finite upper bounds of the design space. Its length should be equal to the dimension of design space.
-#' @param crit_type string. The name of the case of the discrimination design problem. The default is 'pair_fixed_true'.
+#' @param DESIGN1 matrix. The approximate design.
+#' @param MODEL_INFO list of information of competing models.
+#' For details, run \code{emptyModelList()} and see the instruction below.
+#' @param DISTANCE function. The R/C++ function of distance measure.
+#' For T-optimal design, the function is the squared difference of two models means.
+#' @param dsLower vector. The finite lower bounds of the design space.
+#' Its length should be equal to the dimension of design space.
+#' @param dsUpper vector. The finite upper bounds of the design space.
+#' Its length should be equal to the dimension of design space.
+#' @param crit_type string. The name of the case of the discrimination design problem.
+#' The default is 'pair_fixed_true'.
 #' @param MaxMinStdVals vector. The values of demoninators in the design efficiency calculation for finding max-min discrimination design.
 #' @param ALG_INFO list. PSO and BFGS options.
 #' @return An List.
@@ -167,7 +193,7 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, crit_type =
 #' @name designCriterion
 #' @rdname designCriterion
 #' @export
-designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, crit_type = "pair_fixed_true", MaxMinStdVals = NULL, 
+designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
 														ALG_INFO = NULL, environment, ...) {
 
 	assert_that(all(is.finite(dsLower)), all(is.finite(dsUpper)),
@@ -177,7 +203,7 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 	MODEL_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
 
 	if (is.null(MaxMinStdVals)) MaxMinStdVals <- 0
-	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE, 
+	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
                           crit_type = crit_type, MaxMinStdVals = MaxMinStdVals,
                           dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
 
@@ -198,7 +224,7 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 	cri_1 <- cppDesignCriterion(ALG_INFO, D_INFO, MODEL_LIST, 0, environment, DESIGN1_M)
 
 	rownames(cri_1$theta2) <- paste0("model_", 1:length(MODEL_INFO))
-	
+
   return(list(cri_val = -cri_1$val, theta2 = cri_1$theta2))
 }
 
@@ -211,7 +237,7 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 #' @param ngrid integer. The default is 100.
 #' @param IFPLOT logical.
 #' @param MODEL_INFO list of information of competing models. For details, run \code{emptyModelList()} and see the instruction below.
-#' @param DISTANCE function. 
+#' @param DISTANCE function.
 #' @param dsLower vector. The finite lower bounds of the design space. Its length should be equal to the dimension of design space.
 #' @param dsUpper vector. The finite upper bounds of the design space. Its length should be equal to the dimension of design space.
 #' @param crit_type string. The name of the case of the discrimination design problem. The default is 'pair_fixed_true'.
@@ -229,7 +255,7 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 #' @rdname equivalence
 #' @export
 equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = FALSE,
-												MODEL_INFO, DISTANCE, dsLower, dsUpper, crit_type = "pair_fixed_true", 
+												MODEL_INFO, DISTANCE, dsLower, dsUpper, crit_type = "pair_fixed_true",
 												MaxMinStdVals = NULL, ALG_INFO = NULL, environment, ...) {
 
 	assert_that(all(is.finite(dsLower)), all(is.finite(dsUpper)),
@@ -241,14 +267,16 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	dSupp <- ncol(DESIGN) - 1
 
 	MODEL_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
-	
+
 	if (!hasArg(environment)) environment <- new.env()
 
 	if (is.null(MaxMinStdVals)) MaxMinStdVals <- 0
-	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE, 
+	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
                           crit_type = crit_type, MaxMinStdVals = MaxMinStdVals,
                           dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
-
+	if (is.null(ALG_INFO)) {
+		ALG_INFO <- getAlgInfo()
+	}
 	# Adjust ALG_INFO according to D_INFO
 	swarmSetting <- algInfoUpdate(D_INFO)
 	ALG_INFO$varUpper <- swarmSetting$UB
@@ -256,7 +284,7 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	ALG_INFO$dSwarm	<- ncol(swarmSetting$UB)
 
 	DESIGN_M <- designV2M(DESIGN, D_INFO)
-	
+
 	CRIT_VAL <- cppDesignCriterion(ALG_INFO, D_INFO, MODEL_LIST, 0, environment, DESIGN_M)
 	PARA_SET <- CRIT_VAL$theta2
 
@@ -264,11 +292,11 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	if (crit_type == "maxmin_fixed_true") {
 		#message("Looking for best weight...")
 		# Find the weight vector first
-		ALPHA_INFO <- getDesignInfo(D_TYPE = "maxmin_eqv_wt", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE, 
+		ALPHA_INFO <- getDesignInfo(D_TYPE = "maxmin_eqv_wt", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
                           	 		crit_type = crit_type, MaxMinStdVals = MaxMinStdVals,
                              		dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
 		ALPHA_INFO$paras <- PARA_SET
-		ALPHA_ALG_INFO <- getAlgInfo(nSwarm = 32, maxIter = 100)
+		ALPHA_ALG_INFO <- getAlgInfo(nSwarm = 64, maxIter = 200)
 		swarmSetting <- algInfoUpdate(ALPHA_INFO)
 		ALPHA_ALG_INFO$varUpper <- swarmSetting$UB
 		ALPHA_ALG_INFO$varLower <- swarmSetting$LB
@@ -279,7 +307,7 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	}
 
 	equiv <- cppEquivalence(ALG_INFO, D_INFO, MODEL_LIST, -CRIT_VAL$val, PARA_SET, ALPHA, environment, ngrid)
-	
+
 	if (crit_type == "maxmin_fixed_true") { equiv$alpha <- ALPHA }
 
 	return(equiv)
@@ -294,15 +322,15 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 #' \itemize{
 #' \item{True}{a list of informaiton of true model.}
 #' \itemize{
-#' \item{model}{the model formula. Input the R function or xPtr function pointer generated by \code{cxxfunction} in the \code{inline} package.}	
-#' \item{para}{the nominal values of parameeters. Input a vector of parameter values.}	
+#' \item{model}{the model formula. Input the R function or xPtr function pointer generated by \code{cxxfunction} in the \code{inline} package.}
+#' \item{para}{the nominal values of parameeters. Input a vector of parameter values.}
 #' }
 #' \item{Rival\code{k}}{a vector of grid points on the second dimension of the 2-D design space.  For 1_d case, this output can be ignored.}
 #' \itemize{
-#' \item{model}{ the model formula. Input the R function or xPtr function pointer generated by \code{cxxfunction} in the \code{inline} package.}	
-#' \item{paraLower}{ the lower bound of teh parameters in the k-th rival model. Input a vector of lower bound values.}	
-#' \item{paraUpper}{ the upper bound of teh parameters in the k-th rival model. Input a vector of upper bound values.}	
-#' \item{paraInit}{ the initial guess of parameters for the LBFGS algorithm. Input a vector of parameter values.}	
+#' \item{model}{ the model formula. Input the R function or xPtr function pointer generated by \code{cxxfunction} in the \code{inline} package.}
+#' \item{paraLower}{ the lower bound of teh parameters in the k-th rival model. Input a vector of lower bound values.}
+#' \item{paraUpper}{ the upper bound of teh parameters in the k-th rival model. Input a vector of upper bound values.}
+#' \item{paraInit}{ the initial guess of parameters for the LBFGS algorithm. Input a vector of parameter values.}
 #' }
 #' }
 #' @examples
@@ -315,8 +343,8 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 emptyModelList <- function(N_model = 2) {
 	out <- lapply(1:N_model, function(k) {
 		if (k == 1) list(model = 'R or C++ Function', para = 'Nominal Values of Parameters in True Model')
-		else list(model = 'R or C++ Function', 
-							paraLower = paste0('Lower Bound of Parameters in Rival', k-1), 
+		else list(model = 'R or C++ Function',
+							paraLower = paste0('Lower Bound of Parameters in Rival', k-1),
 							paraUpper = paste0('Upper Bound of Parameters in Rival', k-1),
 							paraInit = paste0('Initial Guess of Parameters for LBFGS Algorithm in Rival', k-1))
 	})

@@ -4,43 +4,83 @@
 \alias{getAlgInfo}
 \title{Initialize PSO options}
 \usage{
-getAlgInfo(nSwarm = 64, typePSO = NULL, maxIter = NULL,
-  checkConv = NULL, freeRun = NULL, tol = NULL, c1 = NULL, c2 = NULL,
-  w0 = NULL, w1 = NULL, w_var = NULL, chi = NULL, vk = NULL,
-  typeTopo = NULL, nGroup = NULL, GC_S_ROOF = NULL, GC_F_ROOF = NULL,
-  GC_RHO = NULL, Q_cen_type = NULL, Q_a0 = NULL, Q_a1 = NULL,
-  Q_a_var = NULL, LcRi_L = NULL, LBFGS_RETRY = NULL, LBFGS_MAXIT = NULL,
+getAlgInfo(nSwarm = 32, maxIter = 100, checkConv = NULL, freeRun = NULL,
+  tol = NULL, c1 = NULL, c2 = NULL, w0 = NULL, w1 = NULL,
+  w_var = NULL, vk = NULL, LBFGS_RETRY = NULL, LBFGS_MAXIT = NULL,
   LBFGS_LM = NULL, FVAL_EPS = NULL, GRAD_EPS = NULL,
   LINESEARCH_MAXTRIAL = NULL, LINESEARCH_MAX = NULL,
-  LINESEARCH_MIN = NULL, LINESEARCH_ARMIJO = NULL)
+  LINESEARCH_MIN = NULL, LINESEARCH_RHO = NULL, LINESEARCH_ARMIJO = NULL)
 }
 \arguments{
 \item{nSwarm}{integer. Swarm size.}
 
-\item{typePSO}{integer, PSO type.
-\itemize{
-\item{0}{Linearly Decreasing Weight PSO (Shi, Y. H.    and Eberhart, R. C., 1998)}
-\item{1}{GCPSO (van den Bergh, F. and    Engelbrecht, A. P., 2002)}
-\item{2}{Quantum PSO (Sun, J., Feng, B. and Xu, W., 2004)}
-\item{3}{LcRiPSO (Bonyadi, M. R., Michalewicz, Z., 2014)}
-}}
-
 \item{maxIter}{integer. Maximal number of iterations.}
 
-\item{checkConv}{logical. The stopping criterion.}
+\item{checkConv}{logical. Specify \code{TRUE} if one wants PSO to stop when
+satisfyning the stopping criterion \eqn{|f'-f|<\varepsilon}
+where \eqn{f'} and \eqn{f} are the objective function values in the previous and current iterations, respectively.
+The default is \code{FALSE}.}
 
-\item{freeRun}{numeric. The persentage of iterations which is free from examing the stopping criterion.}
+\item{freeRun}{numeric. The persentage of iterations which are free from examing the stopping criterion.
+The default is 0.25.}
 
-\item{tol}{numeric. Convergence test. The default is \code{1e-6}.}
+\item{tol}{numeric. The value of \eqn{\varepsilon} in the stopping criterion, \eqn{|f'-f|<\varepsilon}.
+The default is \code{1e-6}.}
 
-\item{c1}{numeric. Default is 2.}
+\item{c1}{numeric. The cognitive parameter in the PSO update procedure. The default is 2.05.}
 
-\item{c2}{numeric. Default is 2.}
+\item{c2}{numeric. The social parameter in the PSO update procedure. The default is 2.05.}
+
+\item{w0}{numeric. The starting inertia weight in the PSO update procedure. The default is 0.95.}
+
+\item{w1}{numeric. The ending inertia weight in the PSO update procedure. The default is 0.2.}
+
+\item{w_var}{numeric. The persentage of iterations which linearly decrease the inertia weight
+from \code{w0} to \code{w1}. The default is 0.8.}
+
+\item{vk}{numeric. The velocity clamping parameter. The default is 4.}
+
+\item{LBFGS_RETRY}{integer. The total times of trials in calculating the minimal distance
+with randomly generated initial starters. The default is 3.}
+
+\item{LBFGS_MAXIT}{integer. The maximal number of iterations of the L-BFGS algorithm.
+The default is 100.}
+
+\item{LBFGS_LM}{integer. The number of corrections to approximate the inverse hessian matrix.
+The default is 6.}
+
+\item{FVAL_EPS}{numeric. The value of \eqn{\varepsilon_f} in the stopping criterion,
+\eqn{|f'-f|/f<\varepsilon_f} where \eqn{f'} and \eqn{f} are the objective function values
+in the previous and current iterations, respectively.
+The default is 0 which means not using this stopping criteiron.}
+
+\item{GRAD_EPS}{numeric. The value of \eqn{\varepsilon_g} in the stopping criterion,
+\eqn{\|g\|/\|x\|<\varepsilon_g} where \eqn{g} is the gradient vector, \eqn{x} is the current position
+and \eqn{\|a\|=\sqrt{a^\top a}}. The default is 1e-5.}
+
+\item{LINESEARCH_MAXTRIAL}{integer The maximal trial of the backtrackign line search. The default is 50.}
+
+\item{LINESEARCH_MAX}{numeric. The initial step size in the line search. The default is 1.}
+
+\item{LINESEARCH_MIN}{numeric. The minimal step size in the line search. The default is 1e-9.}
+
+\item{LINESEARCH_RHO}{numeric. The persentage of the decreasement on the step size in each
+iteration of the line search. The default is 0.618.}
+
+\item{LINESEARCH_ARMIJO}{numeric. The parameter to
+control the accuracy of the backtracking line search algorithm.
+The default is \code{1e-4}. The value should be positive and smaller than 0.5.}
 }
 \value{
-An List.
+The list of algorithm setting parameters as the input of \code{DiscrimOD}.
 }
 \description{
 Please follow the instruction.
 }
+\examples{
+# Get default settings with specified swarm size and maximal number of iterations.
+algInfo <- getAlgInfo(nSwarm = 32, maxIter = 100)
 
+# Set the L-BFGS algorithm to repeat 4 times.
+algInfo <- getAlgInfo(nSwarm = 32, maxIter = 100, LBFGS_RETRY = 4)
+}

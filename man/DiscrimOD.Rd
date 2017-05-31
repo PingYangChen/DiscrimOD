@@ -2,26 +2,32 @@
 % Please edit documentation in R/DiscrimOD.R
 \name{DiscrimOD}
 \alias{DiscrimOD}
-\title{Hybrid Algorithm of PSO and BFGS for Finding Optimal Discrimination Design}
+\title{Hybrid Algorithm of PSO and L-BFGS for Finding Optimal Discrimination Design}
 \usage{
 DiscrimOD(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper,
   crit_type = "pair_fixed_true", MaxMinStdVals = NULL, ALG_INFO = NULL,
   seed = NULL, verbose = TRUE, environment, ...)
 }
 \arguments{
-\item{MODEL_INFO}{list of information of competing models. For details, run \code{emptyModelList()} and see the instruction below.}
+\item{MODEL_INFO}{list of information of competing models.
+For details, run \code{emptyModelList()} and see the instruction below.}
 
-\item{DISTANCE}{function. The R/C++ function of distance measure.  For T-optimal design, the function is the squared difference of two models means.}
+\item{DISTANCE}{function. The R/C++ function of distance measure.
+For T-optimal design, the function is the squared difference of two models means.}
 
 \item{nSupp}{integer. The number fo support points (at least 2).}
 
-\item{dsLower}{vector. The finite lower bounds of the design space. Its length should be equal to the dimension of design space.}
+\item{dsLower}{vector. The finite lower bounds of the design space.
+Its length should be equal to the dimension of design space.}
 
-\item{dsUpper}{vector. The finite upper bounds of the design space. Its length should be equal to the dimension of design space.}
+\item{dsUpper}{vector. The finite upper bounds of the design space.
+Its length should be equal to the dimension of design space.}
 
-\item{crit_type}{string. The name of the case of the discrimination design problem. The default is 'pair_fixed_true'.}
+\item{crit_type}{string. The name of the case of the discrimination design problem.
+The default is 'pair_fixed_true'.}
 
-\item{MaxMinStdVals}{vector. The values of demoninators in the design efficiency calculation for finding max-min discrimination design.}
+\item{MaxMinStdVals}{vector. The values of demoninators in the design efficiency
+calculation for finding max-min discrimination design.}
 
 \item{ALG_INFO}{list. PSO and BFGS options.}
 
@@ -32,7 +38,8 @@ DiscrimOD(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper,
 \value{
 An List.
 \itemize{
-\item{BESTDESIGN}{ the resulting design. Each row is a support point with its weight. The last column is the weights of the support points.}
+\item{BESTDESIGN}{ the resulting design. Each row is a support point with its weight.
+The last column is the weights of the support points.}
 \item{BESTVAL}{ the design criterion value of the resulting design.}
 \item{GBESTHIST}{ a vector of design citerion values of the global best particle in the PSO search history.}
 \item{CPUTIME}{ the computational time in seconds.}
@@ -51,7 +58,7 @@ m1 <- function(x, p) p[1] + p[2]*exp(x) + p[3]*exp(-x)
 m2 <- function(x, p) p[1] + p[2]*x + p[3]*x^2
 # Set the model information
 # The nominla value in 'm1' is 4.5, -1.5, -2.0
-# For 'm2', we set the parameter space to be [-10, 10]^3 and 
+# For 'm2', we set the parameter space to be [-10, 10]^3 and
 # the initial guess (for LBFGS) of the rival model parameter is zero vector
 AF_para_m1 <- c(4.5, -1.5, -2.0)
 MODEL_INFO <- list(
@@ -66,9 +73,8 @@ MODEL_INFO <- list(
 DISTANCE <- function(xt, xr) (xt - xr)^2
 
 # Initialize PSO and BFGS options
-ALG_INFO <- getAlgInfo(nSwarm = 32, maxIter = 100, typePSO = 0,
-                    		LBFGS_RETRY = 2, FVAL_EPS = 0, GRAD_EPS = 1e-6,
-                    		LINESEARCH_MAX = 1e5)
+ALG_INFO <- getAlgInfo(nSwarm = 32, maxIter = 100,
+                    		LBFGS_RETRY = 3, GRAD_EPS = 1e-6)
 
 # Run Algorithm
 out <- DiscrimOD(MODEL_INFO, DISTANCE, nSupp = 4, dsLower = -1.0, dsUpper = 1.0, crit_type = "pair_fixed_true",
@@ -128,4 +134,3 @@ out <- DiscrimOD(MODEL_INFO_Cpp, DISTANCE_Cpp(), nSupp = 4, dsLower = -1.0, dsUp
                  MaxMinStdVals = NULL, ALG_INFO = ALG_INFO, seed = NULL, verbose = TRUE)
 
 }
-

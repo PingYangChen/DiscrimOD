@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Ping-Yang Chen" />
+
+<meta name="date" content="2017-05-30" />
+
+<title>Finding Optimal Discrimination Designs by Hybirdizing Particle Swarm and L-BFGS Algorithms</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+<style type="text/css">
+  p.abstract{
+    text-align: center;
+    font-weight: bold;
+  }
+  div.abstract{
+    margin: auto;
+    width: 90%;
+  }
+</style>
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Finding Optimal Discrimination Designs by Hybirdizing Particle Swarm and L-BFGS Algorithms</h1>
+<h4 class="author"><em>Ping-Yang Chen</em></h4>
+<h4 class="date"><em>2017-05-30</em></h4>
+<div class="abstract">
+<p class="abstract">Abstract</p>
+<p>This package adopts a hybrid algorithm to search for optimal discrimination designs when there are two or more than two competing models under normal or non-normal error assumption. This hybrid algorithm is chosen to efficiently solve the maximin design criteria in the optimal discrimination design problem which is usually a challenging task. It combines the particle swarm optimization (PSO) algorithm and the L-BFGS algorithm to tackle the outer and inner objectives of the maximin design criterion, respectively. The equivalence theorems for various discriminaiton criteria are also available for verifying the optimal discrimination designs.</p>
+</div>
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+</div>
+<div id="examples" class="section level2">
+<h2>Examples</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(DiscrimOD)</code></pre></div>
+<p>We revisit an example in  but find a new result of optimal design based on max-min <span class="math inline">\(T\)</span>-optimal design criterion which is different from the work in .</p>
+<p>%In , they found a sequential design for discriminating among three competing models.</p>
+Consider three linear and homoscedastic models with mean responses given by
+<span class="math display">\[\begin{align}
+\eta_1(x,\theta_1) &amp; = \theta_{10} + \theta_{11}e^x + \theta_{12}e^{-x},  \label{eq:af1}  \\
+\eta_2(x,\theta_2) &amp; = \theta_{20} + \theta_{21}x + \theta_{22}x^2,       \label{eq:af2}  \\
+\eta_3(x,\theta_3) &amp; = \theta_{30} + \theta_{31}\sin{\left(\frac{\pi x}{2}\right)} + \theta_{32}\cos{\left(\frac{\pi x}{2}\right)} + \theta_{33}\sin{\left(\pi x\right)}. \label{eq:af3}
+\end{align}\]</span>
+<p>In addition to the normal error assumption, they also set the first model, <span class="math inline">\(\eta_1(x,\theta_1)\)</span>, as the true model with parameters <span class="math inline">\(\theta_1=(\theta_{10}, \theta_{11}, \theta_{12}) = (4.5, -1.5, -2)\)</span>.</p>
+<p>Define the R functions for three competing models.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">m1 &lt;-<span class="st"> </span>function(x, p) p[<span class="dv">1</span>] +<span class="st"> </span>p[<span class="dv">2</span>]*<span class="kw">exp</span>(x) +<span class="st"> </span>p[<span class="dv">3</span>]*<span class="kw">exp</span>(-x)
+m2 &lt;-<span class="st"> </span>function(x, p) p[<span class="dv">1</span>] +<span class="st"> </span>p[<span class="dv">2</span>]*x +<span class="st"> </span>p[<span class="dv">3</span>]*x^<span class="dv">2</span>
+m3 &lt;-<span class="st"> </span>function(x, p) p[<span class="dv">1</span>] +<span class="st"> </span>p[<span class="dv">2</span>]*<span class="kw">sin</span>(<span class="fl">0.5</span>*pi*x) +<span class="st"> </span>p[<span class="dv">3</span>]*<span class="kw">cos</span>(<span class="fl">0.5</span>*pi*x) +<span class="st"> </span>p[<span class="dv">4</span>]*<span class="kw">sin</span>(pi*x)</code></pre></div>
+<p>We start with <span class="math inline">\(T\)</span>-optimal design for two competing models. That is, given the true model <span class="math inline">\(\eta_1\)</span> and the nominal values <span class="math inline">\(\theta_1\)</span>, we find the <span class="math inline">\(T\)</span>-optiaml designs for pairwisely discrimination from <span class="math inline">\(\eta_2\)</span> and <span class="math inline">\(\eta_3\)</span>, respectively.</p>
+<p>The first step is to create the model list required by <strong>DiscrimOD</strong> package. The guideline in setting the model list can be found by calling the function</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">emptyModelList</span>(<span class="dt">N_model =</span> <span class="dv">2</span>)</code></pre></div>
+<pre><code>## $True
+## $True$model
+## [1] &quot;R or C++ Function&quot;
+## 
+## $True$para
+## [1] &quot;Nominal Values of Parameters in True Model&quot;
+## 
+## 
+## $Rival1
+## $Rival1$model
+## [1] &quot;R or C++ Function&quot;
+## 
+## $Rival1$paraLower
+## [1] &quot;Lower Bound of Parameters in Rival1&quot;
+## 
+## $Rival1$paraUpper
+## [1] &quot;Upper Bound of Parameters in Rival1&quot;
+## 
+## $Rival1$paraInit
+## [1] &quot;Initial Guess of Parameters for LBFGS Algorithm in Rival1&quot;</code></pre>
+<p>We define the model lists for both cases.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">AF_para_m1 &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="fl">4.5</span>, -<span class="fl">1.5</span>, -<span class="dv">2</span>)
+<span class="co"># The first pair: \eta_1 vs \eta_2</span>
+MODEL_INFO_12 &lt;-<span class="st"> </span><span class="kw">list</span>(
+  <span class="co"># The first list should be the true model</span>
+  <span class="kw">list</span>(<span class="dt">model =</span> m1, <span class="dt">para =</span> AF_para_m1),
+  <span class="co"># Then the rival models are listed accordingly</span>
+  <span class="kw">list</span>(<span class="dt">model =</span> m2, 
+       <span class="dt">paraLower =</span> <span class="kw">rep</span>(-<span class="dv">10</span>, <span class="dv">3</span>), <span class="dt">paraUpper =</span> <span class="kw">rep</span>(<span class="dv">10</span>, <span class="dv">3</span>),
+       <span class="dt">paraInit =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>))
+)
+<span class="co"># The second pair: \eta_1 vs \eta_3</span>
+MODEL_INFO_13 &lt;-<span class="st"> </span><span class="kw">list</span>(
+  <span class="kw">list</span>(<span class="dt">model =</span> m1, <span class="dt">para =</span> AF_para_m1),
+  <span class="kw">list</span>(<span class="dt">model =</span> m3,
+       <span class="dt">paraLower =</span> <span class="kw">rep</span>(-<span class="dv">10</span>, <span class="dv">4</span>), <span class="dt">paraUpper =</span> <span class="kw">rep</span>(<span class="dv">10</span>, <span class="dv">4</span>),
+       <span class="dt">paraInit =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>))
+)</code></pre></div>
+<p>For <span class="math inline">\(T\)</span>-optimal design, we specify the distance measure, squared difference between two models, in R function.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># xt is the mean values of the true model</span>
+<span class="co"># xr is the mean values of the rival model</span>
+DISTANCE &lt;-<span class="st"> </span>function(xt, xr) (xt -<span class="st"> </span>xr)^<span class="dv">2</span></code></pre></div>
+<p>The algorithm settings are defined through <code>getAlgInfo()</code> function.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># getAlgInfo() # Call for seeing the default settings</span>
+ALG_INFO &lt;-<span class="st"> </span><span class="kw">getAlgInfo</span>(<span class="dt">nSwarm =</span> <span class="dv">16</span>, <span class="dt">maxIter =</span> <span class="dv">200</span>,        <span class="co"># PSO basic settings</span>
+                       <span class="dt">LBFGS_RETRY =</span> <span class="dv">3</span>, <span class="dt">GRAD_EPS =</span> <span class="fl">1e-10</span>) <span class="co"># L-BFGS basic settings</span></code></pre></div>
+<p>Use  to run the algorithm.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Run PSO-QN Algorithm for discriminating \eta_1 and \eta_2</span>
+DISC_12 &lt;-<span class="st"> </span><span class="kw">DiscrimOD</span>(<span class="dt">MODEL_INFO =</span> MODEL_INFO_12, <span class="dt">DISTANCE =</span> DISTANCE, 
+                     <span class="dt">crit_type =</span> <span class="st">&quot;pair_fixed_true&quot;</span>,
+                     <span class="dt">nSupp =</span> <span class="dv">4</span>, <span class="dt">dsLower =</span> -<span class="fl">1.0</span>, <span class="dt">dsUpper =</span> <span class="fl">1.0</span>, 
+                     <span class="dt">ALG_INFO =</span> ALG_INFO, <span class="dt">verbose =</span> <span class="ot">FALSE</span>)
+<span class="kw">round</span>(DISC_12$BESTDESIGN, <span class="dv">3</span>)</code></pre></div>
+<pre><code>##        dim_1 weight
+## obs_1 -1.000  0.257
+## obs_2 -0.670  0.432
+## obs_3  0.143  0.243
+## obs_4  1.000  0.068</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">DISC_12$BESTVAL</code></pre></div>
+<pre><code>## [1] 0.001083168</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">DISC_12$CPUTIME</code></pre></div>
+<pre><code>## elapsed 
+##    8.85</code></pre>
+<p>The <strong>DiscrimOD</strong> package also provide the  function for checking the equivalence theorem.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">EQUV_12 &lt;-<span class="st"> </span><span class="kw">equivalence</span>(<span class="dt">PSO_RESULT =</span> DISC_12, <span class="dt">MODEL_INFO =</span> MODEL_INFO_12, 
+                       <span class="dt">DISTANCE =</span> DISTANCE, <span class="dt">crit_type =</span> <span class="st">&quot;pair_fixed_true&quot;</span>,
+                       <span class="dt">dsLower =</span> -<span class="dv">1</span>, <span class="dt">dsUpper =</span> <span class="dv">1</span>, <span class="dt">ngrid =</span> <span class="dv">100</span>)
+<span class="co"># Draw the directional derivative curve</span>
+<span class="kw">plot</span>(EQUV_12$Grid_1, EQUV_12$DirDeriv, <span class="dt">type =</span> <span class="st">&quot;l&quot;</span>, <span class="dt">col =</span> <span class="st">&quot;blue&quot;</span>, 
+     <span class="dt">xlab =</span> <span class="st">&quot;x&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;Directional Derivative&quot;</span>); <span class="kw">abline</span>(<span class="dt">h =</span> <span class="dv">0</span>)
+<span class="kw">points</span>(DISC_12$BESTDESIGN[,<span class="dv">1</span>], <span class="kw">rep</span>(<span class="dv">0</span>, <span class="kw">nrow</span>(DISC_12$BESTDESIGN)), <span class="dt">pch =</span> <span class="dv">19</span>)</code></pre></div>
+<div class="figure" style="text-align: center">
+<img src="data:image/png;base64,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" alt="Directional derivative function of T-optimal design in the case DISC_12." />
+<p class="caption">
+Directional derivative function of T-optimal design in the case DISC_12.
+</p>
+</div>
+<p>For the second case of pair discrimination, the implementation is similar.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Run PSO-QN Algorithm for discriminating \eta_1 and \eta_3</span>
+DISC_13 &lt;-<span class="st"> </span><span class="kw">DiscrimOD</span>(<span class="dt">MODEL_INFO =</span> MODEL_INFO_13, <span class="dt">DISTANCE =</span> DISTANCE, 
+                     <span class="dt">crit_type =</span> <span class="st">&quot;pair_fixed_true&quot;</span>,
+                     <span class="dt">nSupp =</span> <span class="dv">5</span>, <span class="dt">dsLower =</span> -<span class="fl">1.0</span>, <span class="dt">dsUpper =</span> <span class="fl">1.0</span>, 
+                     <span class="dt">ALG_INFO =</span> ALG_INFO, <span class="dt">verbose =</span> <span class="ot">FALSE</span>)
+<span class="kw">round</span>(DISC_13$BESTDESIGN, <span class="dv">3</span>)</code></pre></div>
+<pre><code>##        dim_1 weight
+## obs_1 -1.000  0.192
+## obs_2 -0.741  0.323
+## obs_3 -0.104  0.227
+## obs_4  0.634  0.177
+## obs_5  1.000  0.081</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">DISC_13$BESTVAL</code></pre></div>
+<pre><code>## [1] 0.005715191</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">DISC_13$CPUTIME</code></pre></div>
+<pre><code>## elapsed 
+##    26.2</code></pre>
+<p>The equivalence thoerem shows the resulting design is <span class="math inline">\(T\)</span>-optimal.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">EQUV_13 &lt;-<span class="st"> </span><span class="kw">equivalence</span>(<span class="dt">PSO_RESULT =</span> DISC_13, <span class="dt">MODEL_INFO =</span> MODEL_INFO_13, 
+                       <span class="dt">DISTANCE =</span> DISTANCE, <span class="dt">crit_type =</span> <span class="st">&quot;pair_fixed_true&quot;</span>,
+                       <span class="dt">dsLower =</span> -<span class="dv">1</span>, <span class="dt">dsUpper =</span> <span class="dv">1</span>, <span class="dt">ngrid =</span> <span class="dv">100</span>)
+<span class="co"># Draw the directional derivative curve</span>
+<span class="kw">plot</span>(EQUV_13$Grid_1, EQUV_13$DirDeriv, <span class="dt">type =</span> <span class="st">&quot;l&quot;</span>, <span class="dt">col =</span> <span class="st">&quot;blue&quot;</span>, 
+     <span class="dt">xlab =</span> <span class="st">&quot;x&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;Directional Derivative&quot;</span>); <span class="kw">abline</span>(<span class="dt">h =</span> <span class="dv">0</span>)
+<span class="kw">points</span>(DISC_13$BESTDESIGN[,<span class="dv">1</span>], <span class="kw">rep</span>(<span class="dv">0</span>, <span class="kw">nrow</span>(DISC_13$BESTDESIGN)), <span class="dt">pch =</span> <span class="dv">19</span>)</code></pre></div>
+<div class="figure" style="text-align: center">
+<img src="data:image/png;base64,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" alt="Directional derivative function of T-optimal design in the case DISC_13." />
+<p class="caption">
+Directional derivative function of T-optimal design in the case DISC_13.
+</p>
+</div>
+<p>Now, we concentrate on finding the max-min <span class="math inline">\(T\)</span>-optimal design for models <span class="math inline">\(\eta_1\)</span>, <span class="math inline">\(\eta_2\)</span> and <span class="math inline">\(\eta_3\)</span>. Here, since we have already set the lists of information for these three models, we can directly include them fom previously defined lists to form a new list for max-min approach.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">MODEL_INFO_MAXMIN &lt;-<span class="st"> </span><span class="kw">list</span>(
+  MODEL_INFO_12[[<span class="dv">1</span>]], MODEL_INFO_12[[<span class="dv">2</span>]], MODEL_INFO_13[[<span class="dv">2</span>]]
+)
+<span class="co"># Define the vector of optimal criterion values for efficiency computations</span>
+OPT_VALS_PAIR &lt;-<span class="st"> </span><span class="kw">c</span>(DISC_12$BESTVAL, DISC_13$BESTVAL)</code></pre></div>
+<p>In general, we suggest to use larger swarm size and iterations for searching max-min optimal discrimination design. Here, we use XXX particles and XXX iterations.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ALG_INFO_MAXMIN &lt;-<span class="st"> </span><span class="kw">getAlgInfo</span>(<span class="dt">nSwarm =</span> <span class="dv">16</span>, <span class="dt">maxIter =</span> <span class="dv">400</span>,        <span class="co"># PSO basic settings</span>
+                              <span class="dt">LBFGS_RETRY =</span> <span class="dv">3</span>, <span class="dt">GRAD_EPS =</span> <span class="fl">1e-10</span>)<span class="co"># L-BFGS basic settings</span></code></pre></div>
+<p>To run our algorihtm to search for the max-min optimal discrimination design, we input  and the model list that consist of all three models and necessary parameter information. We also need to specify the vector of <span class="math inline">\(T\)</span>-optimal criterion values in  for the algorihtm to compute the <span class="math inline">\(T\)</span>-efficiencies.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">DISC_MAXMIN &lt;-<span class="st"> </span><span class="kw">DiscrimOD</span>(<span class="dt">MODEL_INFO =</span> MODEL_INFO_MAXMIN, <span class="dt">DISTANCE =</span> DISTANCE, 
+                         <span class="dt">crit_type =</span> <span class="st">&quot;maxmin_fixed_true&quot;</span>,
+                         <span class="dt">nSupp =</span> <span class="dv">5</span>, <span class="dt">dsLower =</span> -<span class="fl">1.0</span>, <span class="dt">dsUpper =</span> <span class="fl">1.0</span>, 
+                         <span class="dt">MaxMinStdVals =</span> OPT_VALS_PAIR,
+                         <span class="dt">ALG_INFO =</span> ALG_INFO_MAXMIN, <span class="dt">verbose =</span> <span class="ot">FALSE</span>)
+<span class="kw">round</span>(DISC_MAXMIN$BESTDESIGN, <span class="dv">3</span>)</code></pre></div>
+<pre><code>##        dim_1 weight
+## obs_1 -1.000  0.228
+## obs_2 -0.705  0.380
+## obs_3 -0.016  0.216
+## obs_4  0.574  0.115
+## obs_5  1.000  0.061</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">DISC_MAXMIN$BESTVAL</code></pre></div>
+<pre><code>## [1] 0.8078924</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">DISC_MAXMIN$CPUTIME</code></pre></div>
+<pre><code>## elapsed 
+##   68.07</code></pre>
+<p>To check whether the resulting design is max-min optimal or not, we use the equivalence theorem.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">EQUV_MAXMIN &lt;-<span class="st"> </span><span class="kw">equivalence</span>(<span class="dt">PSO_RESULT =</span> DISC_MAXMIN, <span class="dt">MODEL_INFO =</span> MODEL_INFO_MAXMIN, 
+                           <span class="dt">DISTANCE =</span> DISTANCE, <span class="dt">crit_type =</span> <span class="st">&quot;maxmin_fixed_true&quot;</span>,
+                           <span class="dt">dsLower =</span> -<span class="dv">1</span>, <span class="dt">dsUpper =</span> <span class="dv">1</span>, <span class="dt">MaxMinStdVals =</span> OPT_VALS_PAIR, 
+                           <span class="dt">ngrid =</span> <span class="dv">100</span>)
+<span class="co"># The weight of efficiency values</span>
+EQUV_MAXMIN$alpha</code></pre></div>
+<pre><code>## [1] 0.6807179 0.3192821</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Draw the directional derivative curve</span>
+<span class="kw">plot</span>(EQUV_MAXMIN$Grid_1, EQUV_MAXMIN$DirDeriv, <span class="dt">type =</span> <span class="st">&quot;l&quot;</span>, <span class="dt">col =</span> <span class="st">&quot;blue&quot;</span>, 
+     <span class="dt">xlab =</span> <span class="st">&quot;x&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;Directional Derivative&quot;</span>); <span class="kw">abline</span>(<span class="dt">h =</span> <span class="dv">0</span>)
+<span class="kw">points</span>(DISC_MAXMIN$BESTDESIGN[,<span class="dv">1</span>], <span class="kw">rep</span>(<span class="dv">0</span>, <span class="kw">nrow</span>(DISC_MAXMIN$BESTDESIGN)), <span class="dt">pch =</span> <span class="dv">19</span>)</code></pre></div>
+<div class="figure" style="text-align: center">
+<img src="data:image/png;base64,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" alt="Directional derivative function of max-min T-optimal design in the case DISC_MAXMIN." />
+<p class="caption">
+Directional derivative function of max-min T-optimal design in the case DISC_MAXMIN.
+</p>
+</div>
+</div>
+<div id="acceleratation-by-c-function-inputs" class="section level2">
+<h2>Acceleratation by C++ Function Inputs</h2>
+<p>Like widely used generic function , our <strong>DiscrimOD</strong> package also accept the C++ function inputs for the models and distance measure. By doing so, the code will be accelerated.</p>
+Here, we use the same example to illustrate how to write the C++ codes through <strong>Rcpp</strong> package. There are two steps to construct the C++ function inputs:
+
+<p>To define a model, we create a C++ function with output type, <code>Rcpp::NumericVector</code>, and two <code>SEXP</code> type inputs. The first input, <code>xx</code>, is the covariate of the model which, in optimal design problems, is the support points. The second input, <code>pp</code>, is the model parameter vector.</p>
+<p>In the C++ function, we need to firstly re-define the <code>SEXP</code> type inputs as Rcpp objects by <code>Rcpp::as&lt;&gt;()</code> function.<br />
+The example here is an one-dimensional design problem, and therefore, all support points form a vector which can be defined by <code>Rcpp::NumericVector</code>. For higher dimensional design, the support points form a <span class="math inline">\(n\times m\)</span> matrix where <span class="math inline">\(n\)</span> is the number of support points and <span class="math inline">\(m\)</span> is the dimension of the design space. In such case, we use <code>Rcpp::NumericMatrix</code> to re-define <code>xx</code>. The model parameter must be a vector, and thus, it has to be of <code>Rcpp::NumericVector</code> type. Then we compute the response values with <strong>for</strong> loop for each support point and return the response vector. Usually the users only need to assign the proper variable type for the support points (<code>Rcpp::NumericVector</code> or <code>Rcpp::NumericMatrix</code>) and change the codes in the <strong>for</strong> loop for their optimal design problems.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(Rcpp)
+<span class="co">#</span>
+m1_cppCode &lt;-<span class="st"> '</span>
+<span class="st">  Rcpp::NumericVector m1_cpp(SEXP xx, SEXP pp) {</span>
+<span class="st">  // Re-define variable types</span>
+<span class="st">  Rcpp::NumericVector x = Rcpp::as&lt;Rcpp::NumericVector&gt;(xx);</span>
+<span class="st">  Rcpp::NumericVector p = Rcpp::as&lt;Rcpp::NumericVector&gt;(pp);</span>
+<span class="st">  Rcpp::NumericVector eta(x.size());</span>
+<span class="st">  for (int i = 0; i &lt; x.size(); i++) {</span>
+<span class="st">    eta[i] = p[0] + p[1]*std::exp(x[i]) + p[2]*std::exp(-x[i]);</span>
+<span class="st">  }</span>
+<span class="st">  return eta;</span>
+<span class="st">}'</span>
+m2_cppCode &lt;-<span class="st"> '</span>
+<span class="st">  Rcpp::NumericVector m2_cpp(SEXP xx, SEXP pp) {</span>
+<span class="st">  // Re-define variable types</span>
+<span class="st">  Rcpp::NumericVector x = Rcpp::as&lt;Rcpp::NumericVector&gt;(xx);</span>
+<span class="st">  Rcpp::NumericVector p = Rcpp::as&lt;Rcpp::NumericVector&gt;(pp);</span>
+<span class="st">  Rcpp::NumericVector eta(x.size());</span>
+<span class="st">  for (int i = 0; i &lt; x.size(); i++) {</span>
+<span class="st">    eta[i] = p[0] + p[1]*x[i] + p(2)*x[i]*x[i];</span>
+<span class="st">  }</span>
+<span class="st">  return eta;</span>
+<span class="st">}'</span>
+m3_cppCode &lt;-<span class="st"> '</span>
+<span class="st">  Rcpp::NumericVector m3_cpp(SEXP xx, SEXP pp) {</span>
+<span class="st">  // Re-define variable types</span>
+<span class="st">  Rcpp::NumericVector x = Rcpp::as&lt;Rcpp::NumericVector&gt;(xx);</span>
+<span class="st">  Rcpp::NumericVector p = Rcpp::as&lt;Rcpp::NumericVector&gt;(pp);</span>
+<span class="st">  Rcpp::NumericVector eta(x.size());</span>
+<span class="st">  for (int i = 0; i &lt; x.size(); i++) {</span>
+<span class="st">    eta[i] = p[0] + p[1]*std::sin(0.5*M_PI*x[i]) + </span>
+<span class="st">      p[2]*std::cos(0.5*M_PI*x[i]) + p[3]*std::sin(M_PI*x[i]);</span>
+<span class="st">  }</span>
+<span class="st">  return eta;</span>
+<span class="st">}'</span> 
+<span class="co"># Compile C++ Codes</span>
+m1_cpp &lt;-<span class="st"> </span><span class="kw">cppFunction</span>(m1_cppCode)
+m2_cpp &lt;-<span class="st"> </span><span class="kw">cppFunction</span>(m2_cppCode)
+m3_cpp &lt;-<span class="st"> </span><span class="kw">cppFunction</span>(m3_cppCode)
+
+dist_cppCode &lt;-<span class="st"> '</span>
+<span class="st">  Rcpp::NumericVector DISTANCE_cpp(SEXP xt, SEXP xr) {</span>
+<span class="st">  // Re-define variable types</span>
+<span class="st">  Rcpp::NumericVector val_t = Rcpp::as&lt;Rcpp::NumericVector&gt;(xt);</span>
+<span class="st">  Rcpp::NumericVector val_r = Rcpp::as&lt;Rcpp::NumericVector&gt;(xr);</span>
+<span class="st">  Rcpp::NumericVector div(val_t.size());</span>
+<span class="st">  for (int i = 0; i &lt; val_t.size(); i++) {</span>
+<span class="st">    div[i] = (val_t[i] - val_r[i])*(val_t[i] - val_r[i]);</span>
+<span class="st">  }</span>
+<span class="st">  return div;</span>
+<span class="st">}'</span>
+<span class="co"># Compile C++ Codes</span>
+DISTANCE_CPP &lt;-<span class="st"> </span><span class="kw">cppFunction</span>(dist_cppCode)</code></pre></div>
+<p>The definiation for the distance measure is simlar except that the two inputs are two response vectors generated by two competing models. Its output is still of <code>Rcpp::NumericVecotr</code> type which represents the vector of distances between two competing models at each support point. To specify the other distance measure such as <span class="math inline">\(KL\)</span>-divergence, the users only need to change the codes in the <strong>for</strong> loop.</p>
+<p>To compile the C++ codes, we simply input the text of C++ codes into the <code>cppFunction</code> function. Then we input those C++ functions into the <code>$model</code> tags in the model list required by the <strong>DiscrimOD</strong> package and input the C++ function for distance measure into the <code>DiscrimOD</code> function.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Run PSO-QN Algorithm for discriminating \eta_1 and \eta_2 by C++ inputs</span>
+MODEL_CPP_12 &lt;-<span class="st"> </span><span class="kw">list</span>(
+  <span class="co"># The first list should be the true model</span>
+  <span class="kw">list</span>(<span class="dt">model =</span> m1_cpp, <span class="dt">para =</span> AF_para_m1),
+  <span class="co"># Then the rival models are listed accordingly</span>
+  <span class="kw">list</span>(<span class="dt">model =</span> m2_cpp, 
+       <span class="dt">paraLower =</span> <span class="kw">rep</span>(-<span class="dv">10</span>, <span class="dv">3</span>), <span class="dt">paraUpper =</span> <span class="kw">rep</span>(<span class="dv">10</span>, <span class="dv">3</span>),
+       <span class="dt">paraInit =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>))
+)
+<span class="co"># Run</span>
+DISC_CPP_12 &lt;-<span class="st"> </span><span class="kw">DiscrimOD</span>(<span class="dt">MODEL_INFO =</span> MODEL_CPP_12, <span class="dt">DISTANCE =</span> DISTANCE_CPP, 
+                         <span class="dt">crit_type =</span> <span class="st">&quot;pair_fixed_true&quot;</span>,
+                         <span class="dt">nSupp =</span> <span class="dv">4</span>, <span class="dt">dsLower =</span> -<span class="fl">1.0</span>, <span class="dt">dsUpper =</span> <span class="fl">1.0</span>, 
+                         <span class="dt">ALG_INFO =</span> ALG_INFO, <span class="dt">verbose =</span> <span class="ot">FALSE</span>)
+<span class="kw">round</span>(DISC_CPP_12$BESTDESIGN, <span class="dv">3</span>)</code></pre></div>
+<pre><code>##        dim_1 weight
+## obs_1 -1.000  0.257
+## obs_2 -0.670  0.432
+## obs_3  0.143  0.243
+## obs_4  1.000  0.068</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">DISC_CPP_12$BESTVAL</code></pre></div>
+<pre><code>## [1] 0.001083168</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">DISC_CPP_12$CPUTIME</code></pre></div>
+<pre><code>## elapsed 
+##    7.49</code></pre>
+<p>One can notice that the computing time is less than using R function inputs. To check an optimal design by the equivalence theorem, we still use the same function, <code>equivalence</code>. The only difference here is the values of directional derivative function are computed via C++.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">EQUV_CPP_12 &lt;-<span class="st"> </span><span class="kw">equivalence</span>(<span class="dt">PSO_RESULT =</span> DISC_CPP_12, <span class="dt">MODEL_INFO =</span> MODEL_CPP_12, 
+                           <span class="dt">DISTANCE =</span> DISTANCE_CPP, <span class="dt">crit_type =</span> <span class="st">&quot;pair_fixed_true&quot;</span>,
+                           <span class="dt">dsLower =</span> -<span class="dv">1</span>, <span class="dt">dsUpper =</span> <span class="dv">1</span>, <span class="dt">ngrid =</span> <span class="dv">100</span>)
+<span class="co"># Draw the directional derivative curve</span>
+<span class="kw">plot</span>(EQUV_CPP_12$Grid_1, EQUV_CPP_12$DirDeriv, <span class="dt">type =</span> <span class="st">&quot;l&quot;</span>, <span class="dt">col =</span> <span class="st">&quot;blue&quot;</span>); <span class="kw">abline</span>(<span class="dt">h =</span> <span class="dv">0</span>)
+<span class="kw">points</span>(DISC_CPP_12$BESTDESIGN[,<span class="dv">1</span>], <span class="kw">rep</span>(<span class="dv">0</span>, <span class="kw">nrow</span>(DISC_CPP_12$BESTDESIGN)), <span class="dt">pch =</span> <span class="dv">19</span>)</code></pre></div>
+<div class="figure" style="text-align: center">
+<img src="data:image/png;base64,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" alt="Directional derivative function of T-optimal design in the case DISC_CPP_12." />
+<p class="caption">
+Directional derivative function of T-optimal design in the case DISC_CPP_12.
+</p>
+</div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Run PSO-QN Algorithm for discriminating \eta_1 and \eta_3 by C++ input</span>
+MODEL_CPP_13 &lt;-<span class="st"> </span><span class="kw">list</span>(
+  <span class="kw">list</span>(<span class="dt">model =</span> m1_cpp, <span class="dt">para =</span> AF_para_m1),
+  <span class="kw">list</span>(<span class="dt">model =</span> m3_cpp,
+       <span class="dt">paraLower =</span> <span class="kw">rep</span>(-<span class="dv">10</span>, <span class="dv">4</span>), <span class="dt">paraUpper =</span> <span class="kw">rep</span>(<span class="dv">10</span>, <span class="dv">4</span>),
+       <span class="dt">paraInit =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>))
+)
+<span class="co"># Run</span>
+DISC_CPP_13 &lt;-<span class="st"> </span><span class="kw">DiscrimOD</span>(<span class="dt">MODEL_INFO =</span> MODEL_CPP_13, <span class="dt">DISTANCE =</span> DISTANCE_CPP, 
+                         <span class="dt">crit_type =</span> <span class="st">&quot;pair_fixed_true&quot;</span>,
+                         <span class="dt">nSupp =</span> <span class="dv">5</span>, <span class="dt">dsLower =</span> -<span class="fl">1.0</span>, <span class="dt">dsUpper =</span> <span class="fl">1.0</span>, 
+                         <span class="dt">ALG_INFO =</span> ALG_INFO, <span class="dt">verbose =</span> <span class="ot">FALSE</span>)
+<span class="kw">round</span>(DISC_CPP_13$BESTDESIGN, <span class="dv">3</span>)</code></pre></div>
+<pre><code>##        dim_1 weight
+## obs_1 -1.000  0.192
+## obs_2 -0.741  0.323
+## obs_3 -0.104  0.227
+## obs_4  0.634  0.177
+## obs_5  1.000  0.081</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">DISC_CPP_13$BESTVAL</code></pre></div>
+<pre><code>## [1] 0.005715191</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">DISC_CPP_13$CPUTIME</code></pre></div>
+<pre><code>## elapsed 
+##   16.09</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">EQUV_CPP_13 &lt;-<span class="st"> </span><span class="kw">equivalence</span>(<span class="dt">PSO_RESULT =</span> DISC_CPP_13, <span class="dt">MODEL_INFO =</span> MODEL_CPP_13, 
+                           <span class="dt">DISTANCE =</span> DISTANCE_CPP, <span class="dt">crit_type =</span> <span class="st">&quot;pair_fixed_true&quot;</span>,
+                           <span class="dt">dsLower =</span> -<span class="dv">1</span>, <span class="dt">dsUpper =</span> <span class="dv">1</span>, <span class="dt">ngrid =</span> <span class="dv">100</span>)
+<span class="co"># Draw the directional derivative curve</span>
+<span class="kw">plot</span>(EQUV_CPP_13$Grid_1, EQUV_CPP_13$DirDeriv, <span class="dt">type =</span> <span class="st">&quot;l&quot;</span>, <span class="dt">col =</span> <span class="st">&quot;blue&quot;</span>); <span class="kw">abline</span>(<span class="dt">h =</span> <span class="dv">0</span>)
+<span class="kw">points</span>(DISC_CPP_13$BESTDESIGN[,<span class="dv">1</span>], <span class="kw">rep</span>(<span class="dv">0</span>, <span class="kw">nrow</span>(DISC_CPP_13$BESTDESIGN)), <span class="dt">pch =</span> <span class="dv">19</span>)</code></pre></div>
+<div class="figure" style="text-align: center">
+<img src="data:image/png;base64,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" alt="Directional derivative function of T-optimal design in the case DISC_CPP_13." />
+<p class="caption">
+Directional derivative function of T-optimal design in the case DISC_CPP_13.
+</p>
+</div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">MODEL_CPP_MAXMIN &lt;-<span class="st"> </span><span class="kw">list</span>(
+  MODEL_CPP_12[[<span class="dv">1</span>]], MODEL_CPP_12[[<span class="dv">2</span>]], MODEL_CPP_13[[<span class="dv">2</span>]]
+)
+<span class="co">#</span>
+OPT_VALS_CPP_PAIR &lt;-<span class="st"> </span><span class="kw">c</span>(DISC_CPP_12$BESTVAL, DISC_CPP_13$BESTVAL)
+<span class="co"># Run</span>
+DISC_CPP_MAXMIN &lt;-<span class="st"> </span><span class="kw">DiscrimOD</span>(<span class="dt">MODEL_INFO =</span> MODEL_CPP_MAXMIN, <span class="dt">DISTANCE =</span> DISTANCE_CPP, 
+                             <span class="dt">crit_type =</span> <span class="st">&quot;maxmin_fixed_true&quot;</span>,
+                             <span class="dt">nSupp =</span> <span class="dv">5</span>, <span class="dt">dsLower =</span> -<span class="fl">1.0</span>, <span class="dt">dsUpper =</span> <span class="fl">1.0</span>, 
+                             <span class="dt">MaxMinStdVals =</span> OPT_VALS_CPP_PAIR,
+                             <span class="dt">ALG_INFO =</span> ALG_INFO_MAXMIN, <span class="dt">verbose =</span> <span class="ot">FALSE</span>)
+<span class="kw">round</span>(DISC_CPP_MAXMIN$BESTDESIGN, <span class="dv">3</span>)</code></pre></div>
+<pre><code>##        dim_1 weight
+## obs_1 -1.000  0.227
+## obs_2 -0.702  0.385
+## obs_3 -0.024  0.216
+## obs_4  0.566  0.113
+## obs_5  1.000  0.059</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">DISC_CPP_MAXMIN$BESTVAL</code></pre></div>
+<pre><code>## [1] 0.8080065</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">DISC_CPP_MAXMIN$CPUTIME</code></pre></div>
+<pre><code>## elapsed 
+##   46.42</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">EQUV_CPP_MAXMIN &lt;-<span class="st"> </span><span class="kw">equivalence</span>(<span class="dt">PSO_RESULT =</span> DISC_CPP_MAXMIN, <span class="dt">MODEL_INFO =</span> MODEL_CPP_MAXMIN, 
+                               <span class="dt">DISTANCE =</span> DISTANCE_CPP, <span class="dt">crit_type =</span> <span class="st">&quot;maxmin_fixed_true&quot;</span>,
+                               <span class="dt">dsLower =</span> -<span class="dv">1</span>, <span class="dt">dsUpper =</span> <span class="dv">1</span>, <span class="dt">MaxMinStdVals =</span> OPT_VALS_CPP_PAIR, 
+                               <span class="dt">ngrid =</span> <span class="dv">100</span>)
+<span class="co"># The weight of efficiency values</span>
+EQUV_CPP_MAXMIN$alpha</code></pre></div>
+<pre><code>## [1] 0.6879528 0.3120472</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Draw the directional derivative curve</span>
+<span class="kw">plot</span>(EQUV_CPP_MAXMIN$Grid_1, EQUV_CPP_MAXMIN$DirDeriv, <span class="dt">type =</span> <span class="st">&quot;l&quot;</span>, <span class="dt">col =</span> <span class="st">&quot;blue&quot;</span>)
+<span class="kw">abline</span>(<span class="dt">h =</span> <span class="dv">0</span>)
+<span class="kw">points</span>(DISC_CPP_MAXMIN$BESTDESIGN[,<span class="dv">1</span>], <span class="kw">rep</span>(<span class="dv">0</span>, <span class="kw">nrow</span>(DISC_CPP_MAXMIN$BESTDESIGN)), <span class="dt">pch =</span> <span class="dv">19</span>)</code></pre></div>
+<div class="figure" style="text-align: center">
+<img src="data:image/png;base64,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" alt="Directional derivative function of max-min T-optimal design in the case DISC_CPP_MAXMIN." />
+<p class="caption">
+Directional derivative function of max-min T-optimal design in the case DISC_CPP_MAXMIN.
+</p>
+</div>
+
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

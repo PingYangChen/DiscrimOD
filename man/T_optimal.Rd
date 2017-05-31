@@ -23,4 +23,3 @@ Distance measurement function for the T-optiaml criterion
 \references{
 Dette, H., Kiss, C., Bevanda, M., & Bretz, F. (2010). Optimal designs for the EMAX, log-linear and exponential models. Biometrika, 97(2), 513-518.
 }
-

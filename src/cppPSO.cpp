@@ -7,9 +7,9 @@ Rcpp::List cppPSO(const int LOOPID, Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INF
                   arma::rowvec FIXEDVALUE, const SEXP env, const bool IF_PARALLEL, const bool VERBOSE)
 {
   //arma_rng::set_seed_random();
-  int NCPU = omp_get_max_threads();
+  /*int NCPU = omp_get_max_threads();
 	if (NCPU < 3) NCPU = 2;
-  omp_set_num_threads(NCPU - 1);
+  omp_set_num_threads(NCPU - 1);*/
 
   SEXP DIST_FUNC_SEXP = as<SEXP>(OBJ_INFO_LIST["dist_func"]);
   OBJ_INFO OBJ = {}; getInfoStruct(OBJ, OBJ_INFO_LIST);

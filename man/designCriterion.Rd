@@ -11,15 +11,20 @@ designCriterion(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper,
 \arguments{
 \item{DESIGN1}{matrix. The approximate design.}
 
-\item{MODEL_INFO}{list of information of competing models. For details, run \code{emptyModelList()} and see the instruction below.}
+\item{MODEL_INFO}{list of information of competing models.
+For details, run \code{emptyModelList()} and see the instruction below.}
 
-\item{DISTANCE}{function. The R/C++ function of distance measure.  For T-optimal design, the function is the squared difference of two models means.}
+\item{DISTANCE}{function. The R/C++ function of distance measure.
+For T-optimal design, the function is the squared difference of two models means.}
 
-\item{dsLower}{vector. The finite lower bounds of the design space. Its length should be equal to the dimension of design space.}
+\item{dsLower}{vector. The finite lower bounds of the design space.
+Its length should be equal to the dimension of design space.}
 
-\item{dsUpper}{vector. The finite upper bounds of the design space. Its length should be equal to the dimension of design space.}
+\item{dsUpper}{vector. The finite upper bounds of the design space.
+Its length should be equal to the dimension of design space.}
 
-\item{crit_type}{string. The name of the case of the discrimination design problem. The default is 'pair_fixed_true'.}
+\item{crit_type}{string. The name of the case of the discrimination design problem.
+The default is 'pair_fixed_true'.}
 
 \item{MaxMinStdVals}{vector. The values of demoninators in the design efficiency calculation for finding max-min discrimination design.}
 
@@ -35,4 +40,3 @@ An List.
 \description{
 Please follow the instruction.
 }
-

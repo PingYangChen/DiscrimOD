@@ -28,7 +28,7 @@ double DesignCriterion(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OB
 		{
       arma::mat DESIGN(nSupp, dSupp, fill::zeros);
       for (int i = 0; i < nSupp; i++) { DESIGN.row(i) = x.subvec(i*dSupp, (i+1)*dSupp - 1); }
-      arma::rowvec WT(nSupp);
+      arma::rowvec WT(nSupp, fill::zeros);
 			WT.fill(1.0/(double)nSupp);
       val = criterionList(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, DESIGN, WT, R_PARA);  
       val *= -1.0;  
@@ -42,7 +42,7 @@ double DesignCriterion(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OB
       arma::rowvec WT(nSupp);
 			// Get Design Weight
 			arma::rowvec ang = x.subvec(nSupp*dSupp, nSupp*dSupp + nSupp - 2);
-			arma::rowvec wcumsin(nSupp), wcos(nSupp);
+			arma::rowvec wcumsin(nSupp, fill::zeros), wcos(nSupp, fill::zeros);
 			arma::rowvec wsin = arma::sin(ang);
 			wcumsin(0) = 1.0; 
 			for (int i = 1; i < nSupp; i++) { wcumsin(i) = wcumsin(i-1)*wsin(i-1); }
@@ -60,9 +60,9 @@ double DesignCriterion(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OB
       for (int i = 0; i < nSupp; i++) { DESIGN.row(i) = FIXEDVALUE.subvec(i*dSupp, (i+1)*dSupp - 1); }
       double CRIT_VAL = FIXEDVALUE(FIXEDVALUE.n_elem - 1);
       int n_model = (int)x.n_elem;
-      arma::rowvec alpha(n_model + 1);
+      arma::rowvec alpha(n_model + 1, fill::zeros);
       arma::rowvec ang = x;
-      arma::rowvec wcumsin(n_model + 1), wcos(n_model + 1);
+      arma::rowvec wcumsin(n_model + 1, fill::zeros), wcos(n_model + 1, fill::zeros);
       arma::rowvec wsin = arma::sin(ang);
       wcumsin(0) = 1.0; 
       for (int i = 1; i < (n_model + 1); i++) { wcumsin(i) = wcumsin(i-1)*wsin(i-1); }
@@ -99,7 +99,7 @@ double criterionList(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_
 		{
       R_PARA.submat(0, 0, 0, OBJ.dParas(0) - 1) = OBJ.paras.submat(0, 0, 0, OBJ.dParas(0) - 1);
 			arma::rowvec std_vals = OBJ.std_vals;
-			arma::rowvec eff_vals(N_PAIR);
+			arma::rowvec eff_vals(N_PAIR, fill::zeros);
 			for (int i = 0; i < N_PAIR; i++) {
 				arma::rowvec R_PARA_tmp(OBJ.dParas(i+1));
 				eff_vals(i) = minDistCalc(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, i, DESIGN, WT, R_PARA_tmp);	
@@ -137,17 +137,24 @@ double minDistCalc(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_IN
   arma::rowvec R_PARA_EX_1 = R_PARA_INI;
   for (int d = 0; d < dParas; d++) { R_NBD(d) = (int)OBJ.parasBdd(rmID, d); }
 
-  double fx, fx1;
+  double fx = 1e20, fx1 = 1e20;
   int CONV_STATUS;
   CONV_STATUS = lbfgsKernel(LOOPID, PSO_OPTS, fx, R_PARA_EX, T_PARA, DESIGN, WT, func_input, R_UPPER, R_LOWER, R_NBD);
 
   int LBFGS_RETRY = PSO_OPTS[LOOPID].LBFGS_RETRY + (1 - CONV_STATUS);
+  if ((!std::isfinite(fx)) | std::isnan(fx)) { LBFGS_RETRY++; }
   int count = 0;
   while ((count < LBFGS_RETRY)) {
     R_PARA_EX_1 = randu(1, dParas) % (R_UPPER - R_LOWER) + R_LOWER;
     CONV_STATUS = lbfgsKernel(LOOPID, PSO_OPTS, fx1, R_PARA_EX_1, T_PARA, DESIGN, WT, func_input, R_UPPER, R_LOWER, R_NBD);
-    if ((std::abs(fx1 - fx) > 0.1) | (CONV_STATUS == 0)) { count--; }
-    if (fx1 < fx) { fx = fx1; R_PARA_EX = R_PARA_EX_1; } 
+    //if ((std::abs(fx1 - fx) > 0.1) | (CONV_STATUS == 0)) { count--; }
+    if (std::isfinite(fx1) & (!std::isnan(fx1))) {
+      if ((!std::isfinite(fx)) | std::isnan(fx)) { 
+        fx = fx1; R_PARA_EX = R_PARA_EX_1; 
+      }  else {
+        if (fx1 < fx) { fx = fx1; R_PARA_EX = R_PARA_EX_1; }     
+      }
+    } 
     count++;
   }
   R_PARA_OUT = R_PARA_EX;
@@ -169,9 +176,9 @@ arma::rowvec directionalDerivative(const OBJ_INFO &OBJ, const arma::mat &dsGrid,
     case 1: // Max-min, Fixed True
     {
       arma::rowvec std_vals = OBJ.std_vals;
-      for (int i = 1; i < OBJ.N_PAIR; i++) {
+      for (int i = 0; i < OBJ.N_PAIR; i++) {
         arma::rowvec DIV = distCalc(OBJ, dsGrid, PARA_SET, MODEL_COLLECTOR, i);
-        dirDer += (alpha(i-1)/std_vals(i-1))*DIV;
+        dirDer += (alpha(i)/std_vals(i))*DIV;
       }
       break;
     }
@@ -191,7 +198,7 @@ arma::rowvec distCalc(const OBJ_INFO &OBJ, const arma::mat &x, const arma::mat &
   int tmID = MODEL_PAIR(PAIRID, 0);
   int rmID = MODEL_PAIR(PAIRID, 1);
 
-  arma::rowvec eta_T(x.n_rows), eta_R(x.n_rows), DIV(x.n_rows);
+  arma::rowvec eta_T(x.n_rows, fill::zeros), eta_R(x.n_rows, fill::zeros), DIV(x.n_rows, fill::zeros);
   eta_T = (arma::rowvec) m1_func->eval(Rcpp::wrap(x), Rcpp::wrap(PARA_SET.submat(tmID, 0, tmID, OBJ.dParas(tmID) - 1))); 
   eta_R = (arma::rowvec) m2_func->eval(Rcpp::wrap(x), Rcpp::wrap(PARA_SET.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1))); 
   DIV = (arma::rowvec) distFunc->eval(Rcpp::wrap(eta_T), Rcpp::wrap(eta_R)); 

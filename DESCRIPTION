@@ -22,4 +22,7 @@ Imports:
 LinkingTo: Rcpp,
     RcppArmadillo,
     inline
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr

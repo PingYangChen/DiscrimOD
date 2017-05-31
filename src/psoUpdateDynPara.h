@@ -4,18 +4,19 @@ void psoUpdateDynPara(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const int
 {
   if (iter < 0) { // INITIALIZE
 
-  	PSO_DYN.succ_GB	= 0;
+  	//PSO_DYN.succ_GB	= 0;
 
   	int w_varyfor = (int)(PSO_OPTS[LOOPID].w_var*PSO_OPTS[LOOPID].maxIter);
   	PSO_DYN.w_varyfor	= w_varyfor;
 	  PSO_DYN.w_cur			= PSO_OPTS[LOOPID].w0;
 	  PSO_DYN.w_dec			= (PSO_OPTS[LOOPID].w0 - PSO_OPTS[LOOPID].w1)/w_varyfor;      // Inertia weight change per iteration step
-	  /* Quantum PSO */
+	  // Quantum PSO 
+	  /*
 	  int Q_a_varyfor = (int)(PSO_OPTS[LOOPID].Q_a_var*PSO_OPTS[LOOPID].maxIter);
   	PSO_DYN.Q_a_varyfor	= Q_a_varyfor;
 		PSO_DYN.Q_a_cur			= PSO_OPTS[LOOPID].Q_a0;
 		PSO_DYN.Q_a_dec			= (PSO_OPTS[LOOPID].Q_a0 - PSO_OPTS[LOOPID].Q_a1)/Q_a_varyfor;
-		/* Guarantee Convergence PSO */
+		// Guarantee Convergence PSO 
 		PSO_DYN.GC_S_COUNT	= 0; 
 		PSO_DYN.GC_F_COUNT	= 0;
 		PSO_DYN.GC_RHO			= PSO_OPTS[LOOPID].GC_RHO; 
@@ -27,10 +28,11 @@ void psoUpdateDynPara(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const int
 		arma::vec LcRi_sigG(PSO_OPTS[LOOPID].nSwarm); LcRi_sigG.fill(EUD_GB.max());
 		PSO_DYN.LcRi_sigP = LcRi_sigP;
 		PSO_DYN.LcRi_sigG = LcRi_sigG;
-
+		*/
   } else { // UPDATE
     
 		if (iter <= PSO_DYN.w_varyfor) 		PSO_DYN.w_cur = PSO_DYN.w_cur - PSO_DYN.w_dec; 
+		/*
 		// QPSO
     if (iter <= PSO_DYN.Q_a_varyfor)	PSO_DYN.Q_a_cur = PSO_DYN.Q_a_cur - PSO_DYN.Q_a_dec; 
 		// GCPSO
@@ -48,18 +50,15 @@ void psoUpdateDynPara(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const int
 		}
 		// LcRiPSO
 		arma::mat GBmat = repmat(GBest, PSO_OPTS[LOOPID].nSwarm, 1);
-
 		arma::vec EUD_PB = arma::sqrt(sum((swarm - PBest) % (swarm - PBest), 1));
 		arma::vec EUD_GB = arma::sqrt(sum((swarm - GBmat) % (swarm - GBmat), 1));
-
 		arma::uvec EUD_ZERO_PB = find(EUD_PB == 0);
 		arma::uvec EUD_ZERO_GB = find(EUD_GB == 0);
-
 		EUD_PB.elem(EUD_ZERO_PB) = PSO_DYN.LcRi_sigP(EUD_ZERO_PB);
 		EUD_GB.elem(EUD_ZERO_GB) = PSO_DYN.LcRi_sigG(EUD_ZERO_GB);
-
 		PSO_DYN.LcRi_sigP = PSO_OPTS[LOOPID].LcRi_L * EUD_PB;
 		PSO_DYN.LcRi_sigG = PSO_OPTS[LOOPID].LcRi_L * EUD_GB;
+		*/
   }
 }
 

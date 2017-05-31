@@ -142,3 +142,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+
+static const R_CallMethodDef CallEntries[] = {
+    {"DiscrimOD_T_optimal", (DL_FUNC) &DiscrimOD_T_optimal, 2},
+    {"DiscrimOD_KL_normal_hetero", (DL_FUNC) &DiscrimOD_KL_normal_hetero, 2},
+    {"DiscrimOD_KL_logistic", (DL_FUNC) &DiscrimOD_KL_logistic, 2},
+    {"DiscrimOD_KL_lognormal_a", (DL_FUNC) &DiscrimOD_KL_lognormal_a, 2},
+    {"DiscrimOD_KL_lognormal_b", (DL_FUNC) &DiscrimOD_KL_lognormal_b, 2},
+    {"DiscrimOD_KL_lognormal_c", (DL_FUNC) &DiscrimOD_KL_lognormal_c, 2},
+    {"DiscrimOD_KL_gamma_b", (DL_FUNC) &DiscrimOD_KL_gamma_b, 2},
+    {"DiscrimOD_cppPSO", (DL_FUNC) &DiscrimOD_cppPSO, 8},
+    {"DiscrimOD_cppDesignCriterion", (DL_FUNC) &DiscrimOD_cppDesignCriterion, 6},
+    {"DiscrimOD_cppEquivalence", (DL_FUNC) &DiscrimOD_cppEquivalence, 8},
+    {NULL, NULL, 0}
+};
+
+RcppExport void R_init_DiscrimOD(DllInfo *dll) {
+    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
+}
