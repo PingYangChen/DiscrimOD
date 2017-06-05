@@ -46,7 +46,6 @@
 #' @docType package
 #' @name DiscrimOD-package
 #' @useDynLib DiscrimOD
-#' @import assertthat
 #' @importFrom Rcpp cppFunction sourceCpp
 #' @importFrom inline cxxfunction
 #' @importFrom utils globalVariables

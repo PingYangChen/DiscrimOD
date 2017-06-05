@@ -1,5 +1,5 @@
 // Rcpp Header File
-#include <math.h>
+#include <cmath>
 #include <RcppArmadillo.h>
 //#include <omp.h>
 
@@ -15,18 +15,18 @@ namespace Rcpp {
     public:
         EvalBase() : neval(0) {};
         virtual Rcpp::NumericVector eval(SEXP x, SEXP p) = 0;
-        virtual ~EvalBase() {}; 
+        virtual ~EvalBase() {};
         //unsigned long getNbEvals() { return neval; }
     protected:
         unsigned long int neval;
   };
 
-  class EvalStandard : public EvalBase {
-    public:
+  class EvalStandard : public EvalBase { 
+    public: 
         EvalStandard(SEXP fcall_, SEXP env_) : fcall(fcall_), env(env_) {}
         Rcpp::NumericVector eval(SEXP x, SEXP p) {
           //neval++;
-          return defaultfun(x, p);
+          return defaultfun(x, p); 
         }
         ~EvalStandard() {};
     private:
@@ -70,12 +70,14 @@ using namespace Rcpp;
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins(cpp11)]]
+// [[Rcpp::plugins(openmp)]]
 
 // DEFINE STUCTURE OF OBJECTIVE FUNCTION INFORMATION
 typedef struct {
   // Optimal Design Problems
   int crit_type; // 0
   int d_type; // 0
+  int IF_INNER_LBFGS; // 1
   //int nSubj; // 1
   int dSupp; // 1
   int nSupp; // 2
@@ -91,7 +93,7 @@ typedef struct {
   arma::rowvec std_vals;
 } OBJ_INFO, *Ptr_OBJ_INFO;
 
-typedef struct model_diff_func{
+typedef struct model_diff_func {
   Rcpp::EvalBase* M1_FUNC;
   Rcpp::EvalBase* M2_FUNC;
   Rcpp::EvalBase* DISTFUNC;
@@ -99,6 +101,27 @@ public:
     model_diff_func() : M1_FUNC(0), M2_FUNC(0), DISTFUNC(0) {}
     model_diff_func(Rcpp::EvalBase* m1, Rcpp::EvalBase* m2, Rcpp::EvalBase* d) : M1_FUNC(m1), M2_FUNC(m2), DISTFUNC(d) {}
 } model_diff_func;
+
+typedef struct lbfgs_eval {
+  model_diff_func* func_input;
+  arma::rowvec R_UPPER;
+  arma::rowvec R_LOWER;
+  arma::irowvec R_NBD;
+  arma::rowvec T_PARA;
+  arma::mat DESIGN;
+  arma::rowvec WT;
+} lbfgs_eval, *Ptr_lbfgs_eval;
+
+typedef struct best_alpha_info {
+  double CRIT_VAL;
+  arma::mat DESIGN;
+} best_alpha_info, *Ptr_best_alpha_info;
+
+typedef struct inner_pso_info {
+  int PAIRID;
+  arma::mat DESIGN;
+  arma::rowvec WT;
+} inner_pso_info, *Ptr_inner_pso_info;
 
 
 #define N_PSO_OPTS 100
@@ -156,9 +179,9 @@ struct PSO_OPTIONS {
   int LINESEARCH_MAXTRIAL; // 50
   double LINESEARCH_MAX; // 1e6
   double LINESEARCH_MIN; // 1e-6
-  double LINESEARCH_RHO;
+  //double LINESEARCH_RHO;
   double LINESEARCH_ARMIJO; // 1e-4
-  //double LINESEARCH_WOLFE; // 0.9
+  double LINESEARCH_WOLFE; // 0.9
 };
 
 // DEFINE STUCTURES OF PSO PARAMETERS WHICH WILL CHANGE ITERATIVELY
@@ -198,19 +221,19 @@ void rvecPrintf(const rowvec &v);
 void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST);
 //void getModelFunc(MODEL_SET MODELS[], const Rcpp::List MODEL_LIST, SEXP env, const int N_model);
 void getInfoStruct(OBJ_INFO &OBJ, const Rcpp::List OBJ_INFO_LIST);
-void PSO_MAIN(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],
-              const rowvec &FIXEDVALUE, const bool &IF_PARALLEL, const bool COUNTER_ON, Ptr_PSO_Result Ptr_PSO_Result);
-void psoUpdateParticle(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const PSO_DYN &PSO_DYN,
+void PSO_MAIN(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],
+              void *external, const bool &IF_PARALLEL, const bool COUNTER_ON, Ptr_PSO_Result Ptr_PSO_Result);
+void psoUpdateParticle(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const PSO_DYN &PSO_DYN,
                        const arma::mat &PBest, const arma::rowvec &GBest,
                        const arma::rowvec &velMax, const arma::rowvec &varUpper, const arma::rowvec &varLower,
                        arma::mat &vStep, arma::mat &swarm);
-void psoCheckParticle(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const PSO_DYN &PSO_DYN,
+void psoCheckParticle(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const PSO_DYN &PSO_DYN,
                       const arma::rowvec &varUpper, const arma::rowvec &varLower, arma::mat &swarm);
-void psoUpdateDynPara(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const int iter, PSO_DYN &PSO_DYN,
+void psoUpdateDynPara(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const int iter, PSO_DYN &PSO_DYN,
                       const arma::mat &swarm, const arma::mat &PBest, const arma::rowvec &GBest,
                       const arma::vec &fSwarm, const arma::vec &fPBest, const double &fGBest);
-void psoFuncEval(const bool &IF_PARALLEL, const int LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, const PSO_DYN &PSO_DYN, 
-                 model_diff_func *MODEL_COLLECTOR[], const rowvec &FIXEDVALUE, const mat &swarm, vec &fSwarm);
+void psoFuncEval(const bool &IF_PARALLEL, const int LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, const PSO_DYN &PSO_DYN,
+                 model_diff_func *MODEL_COLLECTOR[], void *external, const mat &swarm, vec &fSwarm);
 
 #include "psoFuncEval.h"
 #include "psoCheckParticle.h"
@@ -239,6 +262,9 @@ void getInfoStruct(OBJ_INFO &OBJ, const Rcpp::List OBJ_INFO_LIST)
   OBJ.crit_type = as<int>(OBJ_INFO_LIST["CRIT_TYPE_NUM"]);
 
   OBJ.d_type = as<int>(OBJ_INFO_LIST["D_TYPE_NUM"]);
+
+  OBJ.IF_INNER_LBFGS = as<int>(OBJ_INFO_LIST["IF_INNER_LBFGS"]);
+
   //OBJ_INFO->nSubj     = as<int>(OBJ_INFO_LIST["nSubj"]);
   OBJ.dSupp  = as<int>(OBJ_INFO_LIST["dSupp"]);
   OBJ.nSupp  = as<int>(OBJ_INFO_LIST["nSupp"]);
@@ -326,9 +352,9 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST)
   Rcpp::IntegerVector LINESEARCH_MAXTRIAL_Tmp = as<IntegerVector>(ALG_INFO_LIST["LINESEARCH_MAXTRIAL"]);
   Rcpp::NumericVector LINESEARCH_MAX_Tmp      = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_MAX"]);
   Rcpp::NumericVector LINESEARCH_MIN_Tmp      = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_MIN"]);
-  Rcpp::NumericVector LINESEARCH_RHO_Tmp      = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_RHO"]);
+  //Rcpp::NumericVector LINESEARCH_RHO_Tmp      = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_RHO"]);
   Rcpp::NumericVector LINESEARCH_ARMIJO_Tmp   = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_ARMIJO"]);
-  //Rcpp::NumericVector LINESEARCH_WOLFE_Tmp    = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_WOLFE"]);
+  Rcpp::NumericVector LINESEARCH_WOLFE_Tmp    = as<NumericVector>(ALG_INFO_LIST["LINESEARCH_WOLFE"]);
 
   int N_OPTS = nSwarm_Tmp.size();
 
@@ -360,22 +386,22 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &ALG_INFO_LIST)
     //PSO_OPT[i].Q_a_var    = Q_a_var_Tmp[i];
     //PSO_OPT[i].LcRi_L     = LcRi_L_Tmp[i];
     // LBFGS OPTIONS
-    PSO_OPT[i].LBFGS_RETRY          = LBFGS_RETRY_Tmp[i]; 
-    PSO_OPT[i].LBFGS_MAXIT          = LBFGS_MAXIT_Tmp[i]; 
-    PSO_OPT[i].LBFGS_LM             = LBFGS_LM_Tmp[i]; 
-    PSO_OPT[i].FVAL_EPS             = FVAL_EPS_Tmp[i]; 
-    PSO_OPT[i].GRAD_EPS             = GRAD_EPS_Tmp[i]; 
-    PSO_OPT[i].LINESEARCH_MAXTRIAL  = LINESEARCH_MAXTRIAL_Tmp[i]; 
-    PSO_OPT[i].LINESEARCH_MAX       = LINESEARCH_MAX_Tmp[i]; 
-    PSO_OPT[i].LINESEARCH_MIN       = LINESEARCH_MIN_Tmp[i]; 
-    PSO_OPT[i].LINESEARCH_RHO       = LINESEARCH_RHO_Tmp[i]; 
-    PSO_OPT[i].LINESEARCH_ARMIJO    = LINESEARCH_ARMIJO_Tmp[i]; 
-    //PSO_OPT[i].LINESEARCH_WOLFE     = LINESEARCH_WOLFE_Tmp[i]; 
+    PSO_OPT[i].LBFGS_RETRY          = LBFGS_RETRY_Tmp[i];
+    PSO_OPT[i].LBFGS_MAXIT          = LBFGS_MAXIT_Tmp[i];
+    PSO_OPT[i].LBFGS_LM             = LBFGS_LM_Tmp[i];
+    PSO_OPT[i].FVAL_EPS             = FVAL_EPS_Tmp[i];
+    PSO_OPT[i].GRAD_EPS             = GRAD_EPS_Tmp[i];
+    PSO_OPT[i].LINESEARCH_MAXTRIAL  = LINESEARCH_MAXTRIAL_Tmp[i];
+    PSO_OPT[i].LINESEARCH_MAX       = LINESEARCH_MAX_Tmp[i];
+    PSO_OPT[i].LINESEARCH_MIN       = LINESEARCH_MIN_Tmp[i];
+    //PSO_OPT[i].LINESEARCH_RHO       = LINESEARCH_RHO_Tmp[i];
+    PSO_OPT[i].LINESEARCH_ARMIJO    = LINESEARCH_ARMIJO_Tmp[i];
+    PSO_OPT[i].LINESEARCH_WOLFE     = LINESEARCH_WOLFE_Tmp[i];
   }
 }
 
 /*
-void getTopology(const int &LOOPID, const PSO_OPTIONS PSO_OPT[]) {
+void getTopology(const int &LOOPID, PSO_OPTIONS PSO_OPT[]) {
 
   int topo = PSO_OPT[LOOPID].topology;
   switch (topo) {

@@ -1,4 +1,4 @@
-void psoUpdateDynPara(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const int iter, PSO_DYN &PSO_DYN, 
+void psoUpdateDynPara(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const int iter, PSO_DYN &PSO_DYN, 
 											const arma::mat &swarm, const arma::mat &PBest, const arma::rowvec &GBest,
 											const arma::vec &fSwarm, const arma::vec &fPBest, const double &fGBest)
 {

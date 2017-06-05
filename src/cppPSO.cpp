@@ -4,7 +4,7 @@
 // RCPP FUNCTIONS
 //[[Rcpp::export]]
 Rcpp::List cppPSO(const int LOOPID, Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
-                  arma::rowvec FIXEDVALUE, const SEXP env, const bool IF_PARALLEL, const bool VERBOSE)
+                  Rcpp::List EXTERNAL_LIST, const SEXP env, const bool IF_PARALLEL, const bool VERBOSE)
 {
   //arma_rng::set_seed_random();
   /*int NCPU = omp_get_max_threads();
@@ -53,10 +53,15 @@ Rcpp::List cppPSO(const int LOOPID, Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INF
 
   PSO_OPTIONS PSO_OPT[N_PSO_OPTS]; getAlgStruct(PSO_OPT, ALG_INFO_LIST);
 
-  PSO_Result Result = {};
+  best_alpha_info external = {};
+  if (OBJ.d_type == 1001) {
+    external.DESIGN = as<arma::mat>(EXTERNAL_LIST["DESIGN"]);
+    external.CRIT_VAL = as<double>(EXTERNAL_LIST["CRIT_VAL"]);
+  } 
 
+  PSO_Result Result = {};
   if (VERBOSE) Rprintf("\n Calling Cpp PSO Kernel... ");
-  PSO_MAIN(LOOPID, PSO_OPT, OBJ, model_diff_ptr, FIXEDVALUE, IF_PARALLEL, VERBOSE, &Result);
+  PSO_MAIN(LOOPID, PSO_OPT, OBJ, model_diff_ptr, &external, IF_PARALLEL, VERBOSE, &Result);
   if (VERBOSE) Rprintf("Done.\n");
 
   return List::create(Named("GBest") = wrap(Result.GBest),
@@ -69,7 +74,7 @@ Rcpp::List cppPSO(const int LOOPID, Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INF
 
 //[[Rcpp::export]]
 Rcpp::List cppDesignCriterion(Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
-                              arma::rowvec FIXEDVALUE, SEXP env, arma::rowvec DESIGN)
+                              Rcpp::List EXTERNAL_LIST, SEXP env, arma::rowvec DESIGN)
 {
   SEXP DIST_FUNC_SEXP = as<SEXP>(OBJ_INFO_LIST["dist_func"]);
   OBJ_INFO OBJ = {}; getInfoStruct(OBJ, OBJ_INFO_LIST);
@@ -114,7 +119,7 @@ Rcpp::List cppDesignCriterion(Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST
   PSO_OPTIONS PSO_OPT[N_PSO_OPTS]; getAlgStruct(PSO_OPT, ALG_INFO_LIST);
 
   arma::mat R_PARA;
-  double val = DesignCriterion(0, PSO_OPT, OBJ, model_diff_ptr, FIXEDVALUE, DESIGN, R_PARA);
+  double val = DesignCriterion(0, PSO_OPT, OBJ, model_diff_ptr, NULL, DESIGN, R_PARA);
 
   return List::create(Named("val") = wrap(val),
                       Named("theta2") = wrap(R_PARA));
@@ -181,7 +186,7 @@ List cppEquivalence(Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::Li
     xLine_2.reset(); xLine_2 = linspace<vec>(OBJ.dsLower(1), OBJ.dsUpper(1), nGrid);
     DISPVALS.set_size(nGrid, nGrid);
     for (int i = 0; i < nGrid; i++) {
-      arma::mat dsGrid(nGrid, 1); dsGrid.col(0).fill(xLine_1(i)); dsGrid.col(1) = xLine_2;
+      arma::mat dsGrid(nGrid, 2); dsGrid.col(0).fill(xLine_1(i)); dsGrid.col(1) = xLine_2;
       arma::rowvec DIV = directionalDerivative(OBJ, dsGrid, PARA_SET, alpha, model_diff_ptr);
       DISPVALS.row(i) = DIV - GBEST_VAL;
     }

@@ -91,8 +91,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // cppPSO
-Rcpp::List cppPSO(const int LOOPID, Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, arma::rowvec FIXEDVALUE, const SEXP env, const bool IF_PARALLEL, const bool VERBOSE);
-RcppExport SEXP DiscrimOD_cppPSO(SEXP LOOPIDSEXP, SEXP ALG_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP FIXEDVALUESEXP, SEXP envSEXP, SEXP IF_PARALLELSEXP, SEXP VERBOSESEXP) {
+Rcpp::List cppPSO(const int LOOPID, Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, Rcpp::List EXTERNAL_LIST, const SEXP env, const bool IF_PARALLEL, const bool VERBOSE);
+RcppExport SEXP DiscrimOD_cppPSO(SEXP LOOPIDSEXP, SEXP ALG_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP EXTERNAL_LISTSEXP, SEXP envSEXP, SEXP IF_PARALLELSEXP, SEXP VERBOSESEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -100,27 +100,27 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type ALG_INFO_LIST(ALG_INFO_LISTSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type OBJ_INFO_LIST(OBJ_INFO_LISTSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type MODEL_INFO_LIST(MODEL_INFO_LISTSEXP);
-    Rcpp::traits::input_parameter< arma::rowvec >::type FIXEDVALUE(FIXEDVALUESEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type EXTERNAL_LIST(EXTERNAL_LISTSEXP);
     Rcpp::traits::input_parameter< const SEXP >::type env(envSEXP);
     Rcpp::traits::input_parameter< const bool >::type IF_PARALLEL(IF_PARALLELSEXP);
     Rcpp::traits::input_parameter< const bool >::type VERBOSE(VERBOSESEXP);
-    rcpp_result_gen = Rcpp::wrap(cppPSO(LOOPID, ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, FIXEDVALUE, env, IF_PARALLEL, VERBOSE));
+    rcpp_result_gen = Rcpp::wrap(cppPSO(LOOPID, ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, EXTERNAL_LIST, env, IF_PARALLEL, VERBOSE));
     return rcpp_result_gen;
 END_RCPP
 }
 // cppDesignCriterion
-Rcpp::List cppDesignCriterion(Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, arma::rowvec FIXEDVALUE, SEXP env, arma::rowvec DESIGN);
-RcppExport SEXP DiscrimOD_cppDesignCriterion(SEXP ALG_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP FIXEDVALUESEXP, SEXP envSEXP, SEXP DESIGNSEXP) {
+Rcpp::List cppDesignCriterion(Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, Rcpp::List EXTERNAL_LIST, SEXP env, arma::rowvec DESIGN);
+RcppExport SEXP DiscrimOD_cppDesignCriterion(SEXP ALG_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP EXTERNAL_LISTSEXP, SEXP envSEXP, SEXP DESIGNSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type ALG_INFO_LIST(ALG_INFO_LISTSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type OBJ_INFO_LIST(OBJ_INFO_LISTSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type MODEL_INFO_LIST(MODEL_INFO_LISTSEXP);
-    Rcpp::traits::input_parameter< arma::rowvec >::type FIXEDVALUE(FIXEDVALUESEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type EXTERNAL_LIST(EXTERNAL_LISTSEXP);
     Rcpp::traits::input_parameter< SEXP >::type env(envSEXP);
     Rcpp::traits::input_parameter< arma::rowvec >::type DESIGN(DESIGNSEXP);
-    rcpp_result_gen = Rcpp::wrap(cppDesignCriterion(ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, FIXEDVALUE, env, DESIGN));
+    rcpp_result_gen = Rcpp::wrap(cppDesignCriterion(ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, EXTERNAL_LIST, env, DESIGN));
     return rcpp_result_gen;
 END_RCPP
 }

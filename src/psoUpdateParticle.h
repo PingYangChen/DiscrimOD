@@ -1,5 +1,5 @@
 
-void psoUpdateParticle(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const PSO_DYN &PSO_DYN, 
+void psoUpdateParticle(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const PSO_DYN &PSO_DYN, 
 							 				 const arma::mat &PBest, const arma::rowvec &GBest, 
 							 				 const arma::rowvec &velMax, const arma::rowvec &varUpper, const arma::rowvec &varLower,
 							 				 arma::mat &vStep, arma::mat &swarm)

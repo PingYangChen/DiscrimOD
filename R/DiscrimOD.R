@@ -42,8 +42,7 @@
 #'   list(model = m1, para = AF_para_m1),
 #'   list(model = m2,
 #'        paraLower = rep(-10, 3),
-#'        paraUpper = rep(10, 3),
-#'        paraInit = c(0, 0, 0))
+#'        paraUpper = rep(10, 3))
 #' )
 #' # Define the R function for the distance measure
 #' # Here we use T-optimal criterion
@@ -115,12 +114,13 @@
 #' @export
 DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper,
 											crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
-											ALG_INFO = NULL, seed = NULL, verbose = TRUE, environment, ...) {
-
-  assert_that(nSupp >= 2L, all(is.finite(dsLower)), all(is.finite(dsUpper)),
-              length(dsLower) == length(dsUpper), all(dsUpper > dsLower),
-              all(names(ALG_INFO) == names(getAlgInfo())),
-              crit_type %in% c("pair_fixed_true", "maxmin_fixed_true"))
+											IF_INNER_LBFGS = TRUE, ALG_INFO = NULL, seed = NULL, 
+											verbose = TRUE, environment, ...) {
+ 
+  stopifnot(nSupp >= 2L, all(is.finite(dsLower)), all(is.finite(dsUpper)),
+            length(dsLower) == length(dsUpper), all(dsUpper > dsLower),
+            all(names(ALG_INFO) == names(getAlgInfo())),
+            crit_type %in% c("pair_fixed_true", "maxmin_fixed_true"))
 
 	MODEL_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
 
@@ -139,21 +139,27 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper,
 
 	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
                           crit_type = crit_type, MaxMinStdVals = MaxMinStdVals,
-                          dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
+                          dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper, 
+                          IF_INNER_LBFGS = IF_INNER_LBFGS)
 
 	if (is.null(ALG_INFO)) {
 		ALG_INFO <- getAlgInfo()
-		if (verbose) message(paste0("Use the default settings for PSO. See '?getAlgInfo'."))
+		if (verbose) message(paste0("Use the default settings for PSO-LBFGS. See '?getAlgInfo'."))
 	}
 
 	if (!hasArg(environment)) environment <- new.env()
 
 	# Adjust ALG_INFO according to D_INFO
 	swarmSetting <- algInfoUpdate(D_INFO)
-	ALG_INFO$varUpper <- swarmSetting$UB
-	ALG_INFO$varLower <- swarmSetting$LB
-	ALG_INFO$dSwarm	<- ncol(swarmSetting$UB)
+	ALG_INFO$varUpper <- matrix(swarmSetting$UB, length(ALG_INFO$nSwarm), ncol(swarmSetting$UB), byrow = TRUE)
+	ALG_INFO$varLower <- matrix(swarmSetting$LB, length(ALG_INFO$nSwarm), ncol(swarmSetting$UB), byrow = TRUE)
+	ALG_INFO$dSwarm <- rep(ncol(swarmSetting$UB), length(ALG_INFO$nSwarm))
 
+	# Find Initial Guess for parameters of rival model
+	UNIFDESIGN_M <- designV2M(cbind(seq(dsLower, dsUpper, length = nSupp), 1/nSupp), D_INFO)
+	iniGuess <- cppDesignCriterion(ALG_INFO, D_INFO, MODEL_LIST, 0, environment, UNIFDESIGN_M)
+	D_INFO$parasInit <- iniGuess$theta2
+	
 	# Start
 	set.seed(seed)
 	cputime <- system.time(
@@ -194,10 +200,10 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper,
 #' @rdname designCriterion
 #' @export
 designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
-														ALG_INFO = NULL, environment, ...) {
+														IF_INNER_LBFGS = TRUE, ALG_INFO = NULL, environment, ...) {
 
-	assert_that(all(is.finite(dsLower)), all(is.finite(dsUpper)),
-              length(dsLower) == length(dsUpper), all(dsUpper > dsLower))
+	stopifnot(all(is.finite(dsLower)), all(is.finite(dsUpper)),
+            length(dsLower) == length(dsUpper), all(dsUpper > dsLower))
 
 	nSupp <- nrow(DESIGN1)
 	MODEL_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
@@ -205,7 +211,8 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 	if (is.null(MaxMinStdVals)) MaxMinStdVals <- 0
 	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
                           crit_type = crit_type, MaxMinStdVals = MaxMinStdVals,
-                          dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
+                          dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper,
+                          IF_INNER_LBFGS = IF_INNER_LBFGS)
 
 	if (is.null(ALG_INFO)) {
 		ALG_INFO <- getAlgInfo()
@@ -215,14 +222,18 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 
 	# Adjust ALG_INFO according to D_INFO
 	swarmSetting <- algInfoUpdate(D_INFO)
-	ALG_INFO$varUpper <- swarmSetting$UB
-	ALG_INFO$varLower <- swarmSetting$LB
-	ALG_INFO$dSwarm	<- ncol(swarmSetting$UB)
+	ALG_INFO$varUpper <- matrix(swarmSetting$UB, length(ALG_INFO$nSwarm), ncol(swarmSetting$UB), byrow = TRUE)
+	ALG_INFO$varLower <- matrix(swarmSetting$LB, length(ALG_INFO$nSwarm), ncol(swarmSetting$UB), byrow = TRUE)
+	ALG_INFO$dSwarm <- rep(ncol(swarmSetting$UB), length(ALG_INFO$nSwarm))
 
+	# Find Initial Guess for parameters of rival model
+	UNIFDESIGN_M <- designV2M(cbind(seq(dsLower, dsUpper, length = nSupp), 1/nSupp), D_INFO)
+	iniGuess <- cppDesignCriterion(ALG_INFO, D_INFO, MODEL_LIST, 0, environment, UNIFDESIGN_M)
+	D_INFO$parasInit <- iniGuess$theta2
+
+	# Compute the criterion value
 	DESIGN1_M <- designV2M(DESIGN1, D_INFO)
-
 	cri_1 <- cppDesignCriterion(ALG_INFO, D_INFO, MODEL_LIST, 0, environment, DESIGN1_M)
-
 	rownames(cri_1$theta2) <- paste0("model_", 1:length(MODEL_INFO))
 
   return(list(cri_val = -cri_1$val, theta2 = cri_1$theta2))
@@ -258,8 +269,8 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 												MODEL_INFO, DISTANCE, dsLower, dsUpper, crit_type = "pair_fixed_true",
 												MaxMinStdVals = NULL, ALG_INFO = NULL, environment, ...) {
 
-	assert_that(all(is.finite(dsLower)), all(is.finite(dsUpper)),
-              length(dsLower) == length(dsUpper), all(dsUpper > dsLower))
+	stopifnot(all(is.finite(dsLower)), all(is.finite(dsUpper)),
+            length(dsLower) == length(dsUpper), all(dsUpper > dsLower))
 
 	if (is.null(DESIGN)) DESIGN <- PSO_RESULT$BESTDESIGN
 
@@ -275,22 +286,27 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
                           crit_type = crit_type, MaxMinStdVals = MaxMinStdVals,
                           dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
 	if (is.null(ALG_INFO)) {
-		ALG_INFO <- getAlgInfo()
+		ALG_INFO <- getAlgInfo() 
 	}
 	# Adjust ALG_INFO according to D_INFO
 	swarmSetting <- algInfoUpdate(D_INFO)
-	ALG_INFO$varUpper <- swarmSetting$UB
-	ALG_INFO$varLower <- swarmSetting$LB
-	ALG_INFO$dSwarm	<- ncol(swarmSetting$UB)
+	ALG_INFO$varUpper <- matrix(swarmSetting$UB, length(ALG_INFO$nSwarm), ncol(swarmSetting$UB), byrow = TRUE)
+	ALG_INFO$varLower <- matrix(swarmSetting$LB, length(ALG_INFO$nSwarm), ncol(swarmSetting$UB), byrow = TRUE)
+	ALG_INFO$dSwarm <- rep(ncol(swarmSetting$UB), length(ALG_INFO$nSwarm))
 
+	# Find Initial Guess for parameters of rival model
+	UNIFDESIGN_M <- designV2M(cbind(seq(dsLower, dsUpper, length = nSupp), 1/nSupp), D_INFO)
+	iniGuess <- cppDesignCriterion(ALG_INFO, D_INFO, MODEL_LIST, 0, environment, UNIFDESIGN_M)
+	D_INFO$parasInit <- iniGuess$theta2
+
+	# Compute for the equivalence theorem
 	DESIGN_M <- designV2M(DESIGN, D_INFO)
-
 	CRIT_VAL <- cppDesignCriterion(ALG_INFO, D_INFO, MODEL_LIST, 0, environment, DESIGN_M)
 	PARA_SET <- CRIT_VAL$theta2
 
 	ALPHA <- 0
 	if (crit_type == "maxmin_fixed_true") {
-		#message("Looking for best weight...")
+		#message("Looking for best weight...") 
 		# Find the weight vector first
 		ALPHA_INFO <- getDesignInfo(D_TYPE = "maxmin_eqv_wt", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
                           	 		crit_type = crit_type, MaxMinStdVals = MaxMinStdVals,
@@ -298,11 +314,14 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 		ALPHA_INFO$paras <- PARA_SET
 		ALPHA_ALG_INFO <- getAlgInfo(nSwarm = 64, maxIter = 200)
 		swarmSetting <- algInfoUpdate(ALPHA_INFO)
-		ALPHA_ALG_INFO$varUpper <- swarmSetting$UB
-		ALPHA_ALG_INFO$varLower <- swarmSetting$LB
-		ALPHA_ALG_INFO$dSwarm	<- ncol(swarmSetting$UB)
-		FIXEDVALUE <- c(DESIGN_M[1:(nSupp*dSupp)], PSO_RESULT$BESTVAL)
-		psoOut <- cppPSO(0, ALPHA_ALG_INFO, ALPHA_INFO, MODEL_LIST, FIXEDVALUE, environment, FALSE, FALSE)
+		ALPHA_ALG_INFO$varUpper <- matrix(swarmSetting$UB, length(ALPHA_ALG_INFO$nSwarm), ncol(swarmSetting$UB), byrow = TRUE)
+		ALPHA_ALG_INFO$varLower <- matrix(swarmSetting$LB, length(ALPHA_ALG_INFO$nSwarm), ncol(swarmSetting$UB), byrow = TRUE)
+		ALPHA_ALG_INFO$dSwarm <- rep(ncol(swarmSetting$UB), length(ALPHA_ALG_INFO$nSwarm))
+ 
+		dimnames(DESIGN) <- NULL
+		EXTERNAL_LIST <- list(DESIGN = as.matrix(DESIGN[,-ncol(DESIGN)], nSupp, dSupp), CRIT_VAL = PSO_RESULT$BESTVAL)    
+
+		psoOut <- cppPSO(0, ALPHA_ALG_INFO, ALPHA_INFO, MODEL_LIST, EXTERNAL_LIST, environment, FALSE, FALSE)
 		ALPHA <- designM2V(psoOut$GBest, ALPHA_INFO)
 	}
 

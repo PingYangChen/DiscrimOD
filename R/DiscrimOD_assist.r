@@ -64,13 +64,16 @@ getAlgInfo <- function(nSwarm = 32, maxIter = 100,
   #typeTopo = NULL, nGroup = NULL, GC_S_ROOF = NULL, GC_F_ROOF = NULL, GC_RHO = NULL,
   #Q_cen_type = NULL, Q_a0 = NULL, Q_a1 = NULL, Q_a_var = NULL, LcRi_L = NULL,
   LBFGS_RETRY = NULL, LBFGS_MAXIT = NULL, LBFGS_LM = NULL, FVAL_EPS = NULL, GRAD_EPS = NULL,
-  LINESEARCH_MAXTRIAL = NULL, LINESEARCH_MAX = NULL, LINESEARCH_MIN = NULL, LINESEARCH_RHO = NULL,
-  LINESEARCH_ARMIJO = NULL) {#, LINESEARCH_WOLFE = NULL) {
+  LINESEARCH_MAXTRIAL = NULL, LINESEARCH_MAX = NULL, LINESEARCH_MIN = NULL, 
+  #LINESEARCH_RHO = NULL,
+  LINESEARCH_ARMIJO = NULL, LINESEARCH_WOLFE = NULL) {
+
+  assert_that(length(nSwarm) == length(maxIter))
 
   nLoop <- length(nSwarm)
-  #if(is.null(dSwarm))     dSwarm     <- NULL
-  #if(is.null(varUpper))   varUpper   <- NULL
-  #if(is.null(varLower))   varLower   <- NULL
+  #if(is.null(dSwarm))     dSwarm     <- numeric(nLoop)
+  #if(is.null(varUpper))   varUpper   <- matrix(0, nLoop)
+  #if(is.null(varLower))   varLower   <- matrix(0, nLoop)
   #if(is.null(maxIter))    maxIter    <- rep(100   , nLoop)
   if(is.null(checkConv))  checkConv  <- rep(0     , nLoop)
   #if(is.null(typePSO))    typePSO    <- rep(0     , nLoop)
@@ -94,17 +97,16 @@ getAlgInfo <- function(nSwarm = 32, maxIter = 100,
   #if(is.null(Q_a_var))    Q_a_var    <- rep(0.8   , nLoop)
   #if(is.null(LcRi_L))     LcRi_L     <- rep(0.01  , nLoop)
 
-  if(is.null(LBFGS_RETRY))          LBFGS_RETRY         <- rep(3    , nLoop)
-  if(is.null(LBFGS_MAXIT))          LBFGS_MAXIT         <- rep(100  , nLoop)
-  if(is.null(LBFGS_LM))             LBFGS_LM            <- rep(6    , nLoop)
-  if(is.null(FVAL_EPS))             FVAL_EPS            <- rep(0    , nLoop)
-  if(is.null(GRAD_EPS))             GRAD_EPS            <- rep(1e-10, nLoop)
-  if(is.null(LINESEARCH_MAXTRIAL))  LINESEARCH_MAXTRIAL <- rep(50   , nLoop)
-  if(is.null(LINESEARCH_MAX))       LINESEARCH_MAX      <- rep(1    , nLoop)
-  if(is.null(LINESEARCH_MIN))       LINESEARCH_MIN      <- rep(1e-6 , nLoop)
-  if(is.null(LINESEARCH_RHO))       LINESEARCH_RHO      <- rep(0.618, nLoop)
+  if(is.null(LBFGS_RETRY))          LBFGS_RETRY         <- rep(1, nLoop)
+  if(is.null(LBFGS_MAXIT))          LBFGS_MAXIT         <- rep(0, nLoop)
+  if(is.null(LBFGS_LM))             LBFGS_LM            <- rep(6, nLoop)
+  if(is.null(FVAL_EPS))             FVAL_EPS            <- rep(0   , nLoop)
+  if(is.null(GRAD_EPS))             GRAD_EPS            <- rep(1e-5, nLoop)
+  if(is.null(LINESEARCH_MAXTRIAL))  LINESEARCH_MAXTRIAL <- rep(20   , nLoop)
+  if(is.null(LINESEARCH_MAX))       LINESEARCH_MAX      <- rep(1e20 , nLoop)
+  if(is.null(LINESEARCH_MIN))       LINESEARCH_MIN      <- rep(1e-20, nLoop)
   if(is.null(LINESEARCH_ARMIJO))    LINESEARCH_ARMIJO   <- rep(1e-4 , nLoop)
-  #if(is.null(LINESEARCH_WOLFE))     LINESEARCH_WOLFE    <- rep(0.9 , nLoop)
+  if(is.null(LINESEARCH_WOLFE))     LINESEARCH_WOLFE    <- rep(0.9  , nLoop)
 
   list(nSwarm = nSwarm, dSwarm = "autogen", varUpper = "autogen", varLower = "autogen", maxIter = maxIter, #typePSO = typePSO,
     checkConv = checkConv, freeRun = freeRun, tol = tol, c1 = c1, c2 = c2, w0 = w0, w1 = w1, w_var = w_var, #chi = chi,
@@ -113,14 +115,16 @@ getAlgInfo <- function(nSwarm = 32, maxIter = 100,
     #LcRi_L = LcRi_L,
     LBFGS_RETRY = LBFGS_RETRY, LBFGS_MAXIT = LBFGS_MAXIT, LBFGS_LM = LBFGS_LM, FVAL_EPS = FVAL_EPS, GRAD_EPS = GRAD_EPS,
     LINESEARCH_MAXTRIAL = LINESEARCH_MAXTRIAL, LINESEARCH_MAX = LINESEARCH_MAX, LINESEARCH_MIN = LINESEARCH_MIN,
-    LINESEARCH_RHO = LINESEARCH_RHO, LINESEARCH_ARMIJO = LINESEARCH_ARMIJO)#, LINESEARCH_WOLFE = LINESEARCH_WOLFE)
+    #LINESEARCH_RHO = LINESEARCH_RHO, 
+    LINESEARCH_ARMIJO = LINESEARCH_ARMIJO, LINESEARCH_WOLFE = LINESEARCH_WOLFE)
 }
 
 
 #' @export
 getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL,
                           crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
-                          dSupp = 1L, nSupp = 2L, dsLower = NULL, dsUpper = NULL) {
+                          dSupp = 1L, nSupp = 2L, dsLower = NULL, dsUpper = NULL,
+                          IF_INNER_LBFGS = TRUE) {
 
   dParas <- sapply(1:length(MODEL_INFO), function(k) if (k == 1) length(MODEL_INFO[[k]]$para) else length(MODEL_INFO[[k]]$paraUpper))
 
@@ -134,10 +138,11 @@ getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL
       tmp <- is.finite(MODEL_INFO[[k]]$paraLower) + 10*is.finite(MODEL_INFO[[k]]$paraUpper)
       tmp2 <- ifelse(tmp == 0, 0, ifelse(tmp == 1, 1, ifelse(tmp == 10, 3, 2)))
       parasBdd[k,] <- c(tmp2, rep(0, max(dParas) - dParas[k]))
-      parasInit[k,] <- c(MODEL_INFO[[k]]$paraInit, rep(0, max(dParas) - dParas[k]))
+      parasInit[k,] <- runif(max(dParas), as.vector(parasLower[k,]), as.vector(parasUpper[k,])) 
+      #c(MODEL_INFO[[k]]$paraInit, rep(0, max(dParas) - dParas[k]))
     }
   }
-
+ 
   CRIT_TYPE_NUM <- ifelse(crit_type == "pair_fixed_true", 0,
                       ifelse(crit_type == "maxmin_fixed_true", 1, 2))
 
@@ -151,5 +156,5 @@ getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL
               dSupp = dSupp, nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper,
               N_PAIR = N_PAIR, MODEL_PAIR = MODEL_PAIR, dParas = dParas, paras = paras, parasInit = parasInit,
               parasUpper = parasUpper, parasLower = parasLower, parasBdd = parasBdd,
-              MaxMinStdVals = MaxMinStdVals))
+              MaxMinStdVals = MaxMinStdVals, IF_INNER_LBFGS = ifelse(IF_INNER_LBFGS, 1, 0)))
 }

@@ -1,11 +1,13 @@
 
 // INCLUDE HEADER FILES
+#include <malloc.h>
 #include "lbfgsKernel.h"
+#include "lbfgsEval.h"
 
 // DECLARE FUNCTIONS
-double criterionList(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],  
+double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],  
                      const arma::mat &DESIGN, const arma::rowvec &WT, arma::mat &R_PARA);
-double minDistCalc(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID, 
+double minDistCalc(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID, 
                    const arma::mat &DESIGN, const arma::rowvec &WT, arma::rowvec &R_PARA_OUT);
 arma::rowvec directionalDerivative(const OBJ_INFO &OBJ, const arma::mat &dsGrid, const arma::mat &PARA_SET, const arma::rowvec &alpha, 
                                    model_diff_func *MODEL_COLLECTOR[]);
@@ -13,8 +15,8 @@ arma::rowvec distCalc(const OBJ_INFO &OBJ, const arma::mat &x, const arma::mat &
                       model_diff_func *MODEL_COLLECTOR[], const int &PAIRID);
 
 // BODY
-double DesignCriterion(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], 
-                       const arma::rowvec &FIXEDVALUE, const rowvec &x, arma::mat &R_PARA)
+double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], 
+                       void *external, const rowvec &x, arma::mat &R_PARA)
 {
 	int nSupp = OBJ.nSupp;
 	int dSupp = OBJ.dSupp;
@@ -22,76 +24,126 @@ double DesignCriterion(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OB
 	//Rprintf("get design\n");
 
   double val = 0.0;
-	switch (d_type) {
-		// Exact Design Module
-		case 0:
-		{
-      arma::mat DESIGN(nSupp, dSupp, fill::zeros);
-      for (int i = 0; i < nSupp; i++) { DESIGN.row(i) = x.subvec(i*dSupp, (i+1)*dSupp - 1); }
-      arma::rowvec WT(nSupp, fill::zeros);
-			WT.fill(1.0/(double)nSupp);
-      val = criterionList(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, DESIGN, WT, R_PARA);  
-      val *= -1.0;  
-			break;
-		}
-		// Approximation Design Module
-		case 1:
-		{
-      arma::mat DESIGN(nSupp, dSupp, fill::zeros);
-      for (int i = 0; i < nSupp; i++) { DESIGN.row(i) = x.subvec(i*dSupp, (i+1)*dSupp - 1); }
-      arma::rowvec WT(nSupp);
-			// Get Design Weight
-			arma::rowvec ang = x.subvec(nSupp*dSupp, nSupp*dSupp + nSupp - 2);
-			arma::rowvec wcumsin(nSupp, fill::zeros), wcos(nSupp, fill::zeros);
-			arma::rowvec wsin = arma::sin(ang);
-			wcumsin(0) = 1.0; 
-			for (int i = 1; i < nSupp; i++) { wcumsin(i) = wcumsin(i-1)*wsin(i-1); }
-			wcos(nSupp - 1) = 1.0; wcos.subvec(0, nSupp - 2) = arma::cos(ang);
-			WT = wcumsin % wcos;
-			WT = WT % WT;
-      val = criterionList(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, DESIGN, WT, R_PARA);  
-      val *= -1.0;  
-			break;
-		}
-    // Find Optimal Weight for Equivalence Theorem on Max-min Optimal Design
-    case 1001:
-    {
-      arma::mat DESIGN(nSupp, dSupp, fill::zeros);
-      for (int i = 0; i < nSupp; i++) { DESIGN.row(i) = FIXEDVALUE.subvec(i*dSupp, (i+1)*dSupp - 1); }
-      double CRIT_VAL = FIXEDVALUE(FIXEDVALUE.n_elem - 1);
-      int n_model = (int)x.n_elem;
-      arma::rowvec alpha(n_model + 1, fill::zeros);
-      arma::rowvec ang = x;
-      arma::rowvec wcumsin(n_model + 1, fill::zeros), wcos(n_model + 1, fill::zeros);
-      arma::rowvec wsin = arma::sin(ang);
-      wcumsin(0) = 1.0; 
-      for (int i = 1; i < (n_model + 1); i++) { wcumsin(i) = wcumsin(i-1)*wsin(i-1); }
-      wcos(n_model) = 1.0; wcos.subvec(0, n_model - 1) = arma::cos(ang);
-      alpha = wcumsin % wcos;
-      alpha = alpha % alpha;
-      arma::rowvec DIV = directionalDerivative(OBJ, DESIGN, OBJ.paras, alpha, MODEL_COLLECTOR);
-      DIV -= CRIT_VAL;
-      val = arma::accu(DIV % DIV);
-      break;
-    }
-	}
+  if (LOOPID == 0) {
+  	switch (d_type) {
+  		// Exact Design Module
+  		case 0:
+  		{
+        arma::mat DESIGN(nSupp, dSupp, fill::zeros);
+        for (int i = 0; i < nSupp; i++) { DESIGN.row(i) = x.subvec(i*dSupp, (i+1)*dSupp - 1); }
+        arma::rowvec WT(nSupp, fill::zeros);
+  			WT.fill(1.0/(double)nSupp);
+        val = criterionList(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, DESIGN, WT, R_PARA);  
+        val *= -1.0; 
+  			break;
+  		}
+  		// Approximation Design Module
+  		case 1:
+  		{
+        arma::mat DESIGN(nSupp, dSupp, fill::zeros);
+        for (int i = 0; i < nSupp; i++) { DESIGN.row(i) = x.subvec(i*dSupp, (i+1)*dSupp - 1); }
+        arma::rowvec WT(nSupp);
+  			// Get Design Weight
+  			arma::rowvec ang = x.subvec(nSupp*dSupp, nSupp*dSupp + nSupp - 2);
+  			arma::rowvec wcumsin(nSupp, fill::zeros), wcos(nSupp, fill::zeros);
+  			arma::rowvec wsin = arma::sin(ang);
+  			wcumsin(0) = 1.0; 
+  			for (int i = 1; i < nSupp; i++) { wcumsin(i) = wcumsin(i-1)*wsin(i-1); }
+  			wcos(nSupp - 1) = 1.0; wcos.subvec(0, nSupp - 2) = arma::cos(ang);
+  			WT = wcumsin % wcos;
+  			WT = WT % WT;
+        val = criterionList(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, DESIGN, WT, R_PARA);  
+        val *= -1.0;  
+  			break;
+  		}
+      // Find Optimal Weight for Equivalence Theorem on Max-min Optimal Design
+      case 1001:
+      {
+        best_alpha_info EXT = *(best_alpha_info*)(external);
+        arma::mat DESIGN = EXT.DESIGN; 
+        double CRIT_VAL = EXT.CRIT_VAL; 
+
+        int n_model = (int)x.n_elem;
+        arma::rowvec alpha(n_model + 1, fill::zeros);
+        arma::rowvec ang = x;
+        arma::rowvec wcumsin(n_model + 1, fill::zeros), wcos(n_model + 1, fill::zeros);
+        arma::rowvec wsin = arma::sin(ang);
+        wcumsin(0) = 1.0; 
+        for (int i = 1; i < (n_model + 1); i++) { wcumsin(i) = wcumsin(i-1)*wsin(i-1); }
+        wcos(n_model) = 1.0; wcos.subvec(0, n_model - 1) = arma::cos(ang);
+        alpha = wcumsin % wcos;
+        alpha = alpha % alpha;
+        arma::rowvec DIV = directionalDerivative(OBJ, DESIGN, OBJ.paras, alpha, MODEL_COLLECTOR);
+        DIV -= CRIT_VAL;
+        val = arma::accu(DIV % DIV);
+        break;
+      }
+  	}
+  } else {
+    inner_pso_info EXT = *(inner_pso_info*)(external);
+    int PAIRID = EXT.PAIRID;
+    arma::mat DESIGN = EXT.DESIGN;
+    arma::rowvec WT = EXT.WT;
+
+    arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
+    int tmID = MODEL_PAIR(PAIRID, 0);
+    arma::rowvec T_PARA = OBJ.paras.submat(tmID, 0, tmID, OBJ.dParas(tmID) - 1);
+
+    model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
+    Rcpp::EvalBase *m1_func = (Rcpp::EvalBase *) func_input->M1_FUNC;
+    Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC;
+    Rcpp::EvalBase *distFunc = (Rcpp::EvalBase *) func_input->DISTFUNC;
+
+    Rcpp::NumericVector eta_T_Rform, eta_R_Rform, DIV_Rform;
+    eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(Rcpp::wrap(DESIGN), Rcpp::wrap(T_PARA)); 
+    eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(Rcpp::wrap(DESIGN), Rcpp::wrap(x)); 
+    DIV_Rform = (Rcpp::NumericVector) distFunc->eval(Rcpp::wrap(eta_T_Rform), Rcpp::wrap(eta_R_Rform));  
+
+    arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size(), false);
+
+    val = arma::accu(WT % DIV);
+
+    if (std::isnan(val)) { val = 1e20; }
+    if (!(arma::is_finite(val))) { val = 1e20; }
+  }
 	return val;
 }
 
-double criterionList(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],  
+//
+double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],  
 										 const arma::mat &DESIGN, const arma::rowvec &WT, arma::mat &R_PARA)
 {
 	int crit_type = OBJ.crit_type;
 	int N_PAIR = OBJ.N_PAIR;
+  int LBFGS = OBJ.IF_INNER_LBFGS;
 
-  R_PARA.reset(); R_PARA.set_size(OBJ.dParas.n_elem, OBJ.dParas.max());
+  R_PARA.reset(); R_PARA.set_size(OBJ.dParas.n_elem, OBJ.dParas.max()); R_PARA.zeros();
 	double val = 1e20;
 	switch (crit_type) {
 		case 0: // Fixed True
 		{
       R_PARA.submat(0, 0, 0, OBJ.dParas(0) - 1) = OBJ.paras.submat(0, 0, 0, OBJ.dParas(0) - 1);
 			arma::rowvec R_PARA_tmp(OBJ.dParas(1));
-			val = minDistCalc(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, 0, DESIGN, WT, R_PARA_tmp);
+      
+      if (LBFGS == 0) {
+
+        inner_pso_info external = {};
+        external.PAIRID = 0;
+        external.DESIGN = DESIGN;
+        external.WT = WT;
+        
+        PSO_OPTS[1].dSwarm = OBJ.dParas(1);
+        PSO_OPTS[1].varUpper.reset(); PSO_OPTS[1].varUpper = OBJ.parasUpper.submat(1, 0, 1, OBJ.dParas(1) - 1);
+        PSO_OPTS[1].varLower.reset(); PSO_OPTS[1].varLower = OBJ.parasLower.submat(1, 0, 1, OBJ.dParas(1) - 1);
+
+        PSO_Result InnerResult = {};
+        PSO_MAIN(1, PSO_OPTS, OBJ, MODEL_COLLECTOR, &external, FALSE, FALSE, &InnerResult);  
+        R_PARA_tmp = InnerResult.GBest;
+        val = InnerResult.fGBest;
+      } else {
+        val = minDistCalc(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, 0, DESIGN, WT, R_PARA_tmp);  
+      }
+			
       R_PARA.submat(1, 0, 1, OBJ.dParas(1) - 1) = R_PARA_tmp;
 			break;
 		}
@@ -102,7 +154,9 @@ double criterionList(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_
 			arma::rowvec eff_vals(N_PAIR, fill::zeros);
 			for (int i = 0; i < N_PAIR; i++) {
 				arma::rowvec R_PARA_tmp(OBJ.dParas(i+1));
+
 				eff_vals(i) = minDistCalc(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, i, DESIGN, WT, R_PARA_tmp);	
+        
         R_PARA.submat(i+1, 0, i+1, OBJ.dParas(i+1) - 1) = R_PARA_tmp;
 			}
 			eff_vals = eff_vals/std_vals;
@@ -116,7 +170,7 @@ double criterionList(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_
 // SUBFUNCTIONS
 
 // Minimal Distance Between Two Models
-double minDistCalc(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID, 
+double minDistCalc(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID, 
 									 const arma::mat &DESIGN, const arma::rowvec &WT, arma::rowvec &R_PARA_OUT)
 {
   model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
@@ -128,37 +182,73 @@ double minDistCalc(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], const OBJ_IN
 	arma::rowvec T_PARA = OBJ.paras.submat(tmID, 0, tmID, OBJ.dParas(tmID) - 1);
 
 	int dParas = OBJ.dParas(rmID);
-  arma::rowvec R_PARA_INI = OBJ.parasInit.submat(rmID, 0, rmID, dParas - 1);
   arma::rowvec R_UPPER = OBJ.parasUpper.submat(rmID, 0, rmID, dParas - 1);
   arma::rowvec R_LOWER = OBJ.parasLower.submat(rmID, 0, rmID, dParas - 1);
-
   arma::irowvec R_NBD(dParas); 
-  arma::rowvec R_PARA_EX = R_PARA_INI;
-  arma::rowvec R_PARA_EX_1 = R_PARA_INI;
   for (int d = 0; d < dParas; d++) { R_NBD(d) = (int)OBJ.parasBdd(rmID, d); }
 
-  double fx = 1e20, fx1 = 1e20;
-  int CONV_STATUS;
-  CONV_STATUS = lbfgsKernel(LOOPID, PSO_OPTS, fx, R_PARA_EX, T_PARA, DESIGN, WT, func_input, R_UPPER, R_LOWER, R_NBD);
+  lbfgs_eval LBFGS_EVAL = {};
+  LBFGS_EVAL.func_input = func_input;
+  LBFGS_EVAL.R_UPPER    = OBJ.parasUpper.submat(rmID, 0, rmID, dParas - 1);
+  LBFGS_EVAL.R_LOWER    = OBJ.parasLower.submat(rmID, 0, rmID, dParas - 1);
+  LBFGS_EVAL.R_NBD      = R_NBD;
+  LBFGS_EVAL.T_PARA     = T_PARA;
+  LBFGS_EVAL.DESIGN     = DESIGN;
+  LBFGS_EVAL.WT         = WT;
 
-  int LBFGS_RETRY = PSO_OPTS[LOOPID].LBFGS_RETRY + (1 - CONV_STATUS);
+  lbfgs_parameter_t LBFGS_PAR;
+  lbfgs_parameter_init(&LBFGS_PAR);
+  LBFGS_PAR.m               = PSO_OPTS[LOOPID].LBFGS_LM;
+  LBFGS_PAR.max_iterations  = PSO_OPTS[LOOPID].LBFGS_MAXIT;
+  LBFGS_PAR.max_linesearch  = PSO_OPTS[LOOPID].LINESEARCH_MAXTRIAL;
+  LBFGS_PAR.epsilon         = (lbfgsfloatval_t)PSO_OPTS[LOOPID].GRAD_EPS; 
+  LBFGS_PAR.delta           = (lbfgsfloatval_t)PSO_OPTS[LOOPID].FVAL_EPS;
+  LBFGS_PAR.gtol            = (lbfgsfloatval_t)PSO_OPTS[LOOPID].LINESEARCH_WOLFE; 
+  LBFGS_PAR.ftol            = (lbfgsfloatval_t)PSO_OPTS[LOOPID].LINESEARCH_ARMIJO; 
+  LBFGS_PAR.min_step        = (lbfgsfloatval_t)PSO_OPTS[LOOPID].LINESEARCH_MIN;
+  LBFGS_PAR.max_step        = (lbfgsfloatval_t)PSO_OPTS[LOOPID].LINESEARCH_MAX;
+
+  arma::rowvec R_PARA_INI = OBJ.parasInit.submat(rmID, 0, rmID, dParas - 1);
+
+  lbfgsfloatval_t *R_PARA   = lbfgs_malloc(dParas);
+  lbfgsfloatval_t *R_PARA1  = lbfgs_malloc(dParas);
+  for (int d = 0; d < dParas; d++) { R_PARA[d] = (lbfgsfloatval_t)domainMapping(0, R_PARA_INI(d), R_NBD(d), R_UPPER(d), R_LOWER(d)); }
+
+  lbfgsfloatval_t fx, fx1;
+  
+  int CONV;
+  CONV = lbfgs(dParas, R_PARA, &fx, evaluate, NULL, &LBFGS_EVAL, &LBFGS_PAR);
+  //Rprintf("CONV: %d\n", CONV);
+  for (int d = 0; d < dParas; d++) { R_PARA1[d] = R_PARA[d]; } 
+  
+  int LBFGS_RETRY = PSO_OPTS[LOOPID].LBFGS_RETRY; if (CONV) { LBFGS_RETRY++; }
   if ((!std::isfinite(fx)) | std::isnan(fx)) { LBFGS_RETRY++; }
   int count = 0;
   while ((count < LBFGS_RETRY)) {
-    R_PARA_EX_1 = randu(1, dParas) % (R_UPPER - R_LOWER) + R_LOWER;
-    CONV_STATUS = lbfgsKernel(LOOPID, PSO_OPTS, fx1, R_PARA_EX_1, T_PARA, DESIGN, WT, func_input, R_UPPER, R_LOWER, R_NBD);
-    //if ((std::abs(fx1 - fx) > 0.1) | (CONV_STATUS == 0)) { count--; }
+    arma::rowvec SIGN_RAND = randu(1, dParas)*2.0 - 1.0; 
+    for (int d = 0; d < dParas; d++) { R_PARA1[d] = SIGN_RAND(d)*R_PARA1[d]; }
+    CONV = lbfgs(dParas, R_PARA1, &fx1, evaluate, NULL, &LBFGS_EVAL, &LBFGS_PAR);
+    //Rprintf("CONV: %d\n", CONV);
+
     if (std::isfinite(fx1) & (!std::isnan(fx1))) {
       if ((!std::isfinite(fx)) | std::isnan(fx)) { 
-        fx = fx1; R_PARA_EX = R_PARA_EX_1; 
-      }  else {
-        if (fx1 < fx) { fx = fx1; R_PARA_EX = R_PARA_EX_1; }     
+        fx = fx1; 
+        for (int d = 0; d < dParas; d++) { R_PARA[d] = R_PARA1[d]; } 
+      } else {
+        if (fx1 < fx) {
+          count--; fx = fx1; 
+          for (int d = 0; d < dParas; d++) { R_PARA[d] = R_PARA1[d]; } 
+        }     
       }
-    } 
+    } else { count--; }
     count++;
   }
-  R_PARA_OUT = R_PARA_EX;
-	return fx;
+
+  for (int d = 0; d < dParas; d++) { R_PARA_OUT(d) = domainMapping(1, (double)R_PARA[d], R_NBD(d), R_UPPER(d), R_LOWER(d)); } 
+//  boxCheck(R_PARA_OUT, R_UPPER, R_LOWER, R_NBD); 
+
+  lbfgs_free(R_PARA); lbfgs_free(R_PARA1); 
+	return (double)fx;
 }
 
 // Equivalence Theorem
