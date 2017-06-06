@@ -56,16 +56,17 @@ double domainMapping(const int INV, const double par, const int nbd, const doubl
     switch(nbd) {
       case 1:
       {
-        tmp = std::exp(par) + lower; out = tmp; break;
+        tmp = std::exp(par); 
+        if (!std::isfinite(tmp)) { out = 1e12; } else { out = tmp + lower; } break;
       }
       case 2:
       {
-        tmp = std::exp(par); tmp = tmp/(1+tmp);
-        tmp = tmp*(upper - lower) + lower; out = tmp; break;
+        tmp = std::exp(par); 
+        if (!std::isfinite(tmp)) { out = upper; } else { out = (tmp/(1.0 + tmp))*(upper - lower) + lower; } break;
       }
       case 3:
       {
-        tmp = upper - std::exp(par); out = tmp; break;
+        tmp = std::exp(par); if (!std::isfinite(tmp)) { out = -1e12; } else { out = upper - tmp; } break;
       }
     }  
   }

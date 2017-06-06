@@ -7,7 +7,7 @@
 equivalence(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100,
   IFPLOT = FALSE, MODEL_INFO, DISTANCE, dsLower, dsUpper,
   crit_type = "pair_fixed_true", MaxMinStdVals = NULL, PSO_INFO = NULL,
-  LFBGS_INFO = NULL, ALPHA_PSO_INFO = NULL, environment, ...)
+  LBFGS_INFO = NULL, ALPHA_PSO_INFO = NULL, environment, ...)
 }
 \arguments{
 \item{PSO_RESULT}{list.}

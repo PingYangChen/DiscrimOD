@@ -247,7 +247,6 @@ double minDistCalc(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_d
   }
 
   for (int d = 0; d < dParas; d++) { R_PARA_OUT(d) = domainMapping(1, (double)R_PARA[d], R_NBD(d), R_UPPER(d), R_LOWER(d)); } 
-//  boxCheck(R_PARA_OUT, R_UPPER, R_LOWER, R_NBD); 
 
   lbfgs_free(R_PARA); lbfgs_free(R_PARA1); 
 	return (double)fx;

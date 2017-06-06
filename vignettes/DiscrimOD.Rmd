@@ -382,12 +382,24 @@ the number of suppoer points `nSupp` and the lower nad upper bound of the design
 ```{r AF1975b_RESULT_PAIR_12, cache=T}
 # Run PSO-QN Algorithm for discriminating \eta_1 and \eta_2
 af_res_12 <- DiscrimOD(MODEL_INFO = af_info_12, DISTANCE = sq_diff, 
-                       nSupp = 4, dsLower = -1.0, dsUpper = 1.0, crit_type = "pair_fixed_true",
-                       PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, seed = 100, verbose = FALSE)
+                       nSupp = 4, dsLower = -1.0, dsUpper = 1.0, 
+                       crit_type = "pair_fixed_true",
+                       PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, 
+                       seed = 100, verbose = FALSE)
+```
+
+```{r AF1975b_DESIGN_PAIR_12, cache=T}
 round(af_res_12$BESTDESIGN, 3)
+```
+
+```{r AF1975b_VAL_PAIR_12, cache=T}
 af_res_12$BESTVAL
+```
+
+```{r AF1975b_CPU_PAIR_12, cache=T}
 af_res_12$CPUTIME
 ```
+
 
 The output of `DiscrimOD` consists of the best design and its criterion value. 
 It also reports the search path of the global best particle and computing time.
@@ -413,10 +425,20 @@ For the second case of pair discrimination, the implementation is similar.
 af_res_13 <- DiscrimOD(MODEL_INFO = af_info_13, DISTANCE = sq_diff, 
                        nSupp = 5, dsLower = -1.0, dsUpper = 1.0, crit_type = "pair_fixed_true",
                        PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, seed = 100, verbose = FALSE)
+```
+
+```{r AF1975b_DESIGN_PAIR_13, cache=T}
 round(af_res_13$BESTDESIGN, 3)
+```
+
+```{r AF1975b_VAL_PAIR_13, cache=T}
 af_res_13$BESTVAL
+```
+
+```{r AF1975b_CPU_PAIR_13, cache=T}
 af_res_13$CPUTIME
 ```
+
 
 The equivalence thoerem shows the resulting design is $T$-optimal. 
 
@@ -451,9 +473,17 @@ af_res_maxmin <- DiscrimOD(MODEL_INFO = af_info_maxmin, DISTANCE = sq_diff,
                            crit_type = "maxmin_fixed_true", MaxMinStdVals = af_vals_pair,
                            PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO, 
                            seed = 100, verbose = FALSE)
+```
 
+```{r AF1975b_DESIGN_MAXMIN, cache=T}
 round(af_res_maxmin$BESTDESIGN, 3)
+```
+
+```{r AF1975b_VAL_MAXMIN, cache=T}
 af_res_maxmin$BESTVAL
+```
+
+```{r AF1975b_CPU_MAXMIN, cache=T}
 af_res_maxmin$CPUTIME
 ```
 
@@ -756,7 +786,7 @@ l2_diff_cpp <- cppFunction('Rcpp::NumericVector l2_diff(SEXP xt, SEXP xr) {
   arma::rowvec eta_t = Rcpp::as<arma::rowvec>(xt);
   arma::rowvec eta_r = Rcpp::as<arma::rowvec>(xr);
   arma::rowvec div = (eta_t - eta_r) % (eta_t - eta_r);
-  return wrap(div);
+  return Rcpp::wrap(div);
 }', depends = "RcppArmadillo")
 ```
 
@@ -775,7 +805,7 @@ heter_norm_cpp <- cppFunction('Rcpp::NumericVector heter_norm(SEXP xt, SEXP xr) 
   arma::rowvec var_t = eta_t % eta_t;
   arma::rowvec var_r = eta_r % eta_r;
   arma::rowvec div = (var_t + arma::pow(eta_t - eta_r, 2))/var_r - arma::log(var_t/var_r);
-  return wrap(div);
+  return Rcpp::wrap(div);
 }', depends = "RcppArmadillo")
 ```
 
@@ -801,7 +831,7 @@ log_norm_A_cpp <- cppFunction('Rcpp::NumericVector log_norm_A(SEXP xt, SEXP xr) 
   arma::rowvec mu_r = arma::log(eta_r) - s_r;
   arma::rowvec div = 0.5*arma::log(s_r/s_t) - 
     (s_r - s_t - (mu_r - mu_t) % (mu_r - mu_t))/(2*s_r);
-  return wrap(div);
+  return Rcpp::wrap(div);
 }', depends = "RcppArmadillo")
 ```
 
@@ -826,7 +856,7 @@ log_norm_B_cpp <- cppFunction('Rcpp::NumericVector log_norm_B(SEXP xt, SEXP xr) 
   arma::rowvec mu_t = arma::log(eta_t) - 0.5*arma::log(1.0 + (var_t/(eta_t % eta_t)));
   arma::rowvec mu_r = arma::log(eta_r) - 0.5*arma::log(1.0 + (var_r/(eta_r % eta_r)));
   arma::rowvec div = ((mu_r - mu_t) % (mu_r - mu_t))/(2*sigsq);
-  return wrap(div);
+  return Rcpp::wrap(div);
 }', depends = "RcppArmadillo")
 ```
 
@@ -856,7 +886,7 @@ log_norm_C_cpp <- cppFunction('Rcpp::NumericVector log_norm_C(SEXP xt, SEXP xr) 
   arma::rowvec mu_r = arma::log(eta_r) - s_r;
   arma::rowvec div = 0.5*arma::log(s_r/s_t) - 
     (s_r - s_t - (mu_r - mu_t) % (mu_r - mu_t))/(2*s_r);
-  return wrap(div);
+  return Rcpp::wrap(div);
 }', depends = "RcppArmadillo")
 ```
 
@@ -880,7 +910,7 @@ logit_diff_cpp <- cppFunction('Rcpp::NumericVector logit_diff(SEXP xt, SEXP xr) 
   arma::rowvec mu_r = exp_r/(1.0 + exp_r);
   arma::rowvec div = mu_t % (arma::log(mu_t) - arma::log(mu_r)) + 
     (1.0 - mu_t) % (arma::log(1.0 - mu_t) - arma::log(1.0 - mu_r));
-  return wrap(div);
+  return Rcpp::wrap(div);
 }', depends = "RcppArmadillo")
 ```
 
@@ -893,7 +923,7 @@ gamma_diff_cpp <- cppFunction('Rcpp::NumericVector gamma_diff(SEXP xt, SEXP xr) 
   arma::rowvec eta_t = Rcpp::as<arma::rowvec>(xt);
   arma::rowvec eta_r = Rcpp::as<arma::rowvec>(xr);
   arma::rowvec div = arma::log(eta_r/eta_t) + (eta_t - eta_r)/eta_r;
-  return wrap(div);
+  return Rcpp::wrap(div);
 }', depends = "RcppArmadillo")
 ```
 

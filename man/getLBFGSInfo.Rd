@@ -11,7 +11,7 @@ getLBFGSInfo(IF_INNER_LBFGS = TRUE, LBFGS_RETRY = 1, LBFGS_MAXIT = 0,
   LINESEARCH_WOLFE = 0.9)
 }
 \arguments{
-\item{IF_INNER_LBFGS}{logic.}
+\item{IF_INNER_LBFGS}{logical.}
 
 \item{LBFGS_RETRY}{integer. The total times of trials in calculating the minimal distance
 with randomly generated initial starters. The default is 3.}
