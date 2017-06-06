@@ -3,7 +3,8 @@
 
 // RCPP FUNCTIONS
 //[[Rcpp::export]]
-Rcpp::List cppPSO(const int LOOPID, Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
+Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, 
+                  Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
                   Rcpp::List EXTERNAL_LIST, const SEXP env, const bool IF_PARALLEL, const bool VERBOSE)
 {
   //arma_rng::set_seed_random();
@@ -51,7 +52,8 @@ Rcpp::List cppPSO(const int LOOPID, Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INF
     model_diff_ptr[i] = &model_diff_collect[i];
   }
 
-  PSO_OPTIONS PSO_OPT[N_PSO_OPTS]; getAlgStruct(PSO_OPT, ALG_INFO_LIST);
+  PSO_OPTIONS PSO_OPT[N_PSO_OPTS]; getAlgStruct(PSO_OPT, PSO_INFO_LIST);
+  LBFGS_PARAM LBFGS_OPTION = {}; getNewtonStruct(LBFGS_OPTION, LBFGS_INFO_LIST);
 
   best_alpha_info external = {};
   if (OBJ.d_type == 1001) {
@@ -61,7 +63,7 @@ Rcpp::List cppPSO(const int LOOPID, Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INF
 
   PSO_Result Result = {};
   if (VERBOSE) Rprintf("\n Calling Cpp PSO Kernel... ");
-  PSO_MAIN(LOOPID, PSO_OPT, OBJ, model_diff_ptr, &external, IF_PARALLEL, VERBOSE, &Result);
+  PSO_MAIN(LOOPID, PSO_OPT, LBFGS_OPTION, OBJ, model_diff_ptr, &external, IF_PARALLEL, VERBOSE, &Result);
   if (VERBOSE) Rprintf("Done.\n");
 
   return List::create(Named("GBest") = wrap(Result.GBest),
@@ -73,7 +75,8 @@ Rcpp::List cppPSO(const int LOOPID, Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INF
 
 
 //[[Rcpp::export]]
-Rcpp::List cppDesignCriterion(Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
+Rcpp::List cppDesignCriterion(Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, 
+                              Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
                               Rcpp::List EXTERNAL_LIST, SEXP env, arma::rowvec DESIGN)
 {
   SEXP DIST_FUNC_SEXP = as<SEXP>(OBJ_INFO_LIST["dist_func"]);
@@ -116,17 +119,18 @@ Rcpp::List cppDesignCriterion(Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST
     model_diff_ptr[i] = &model_diff_collect[i];
   }
 
-  PSO_OPTIONS PSO_OPT[N_PSO_OPTS]; getAlgStruct(PSO_OPT, ALG_INFO_LIST);
+  PSO_OPTIONS PSO_OPT[N_PSO_OPTS]; getAlgStruct(PSO_OPT, PSO_INFO_LIST);
+  LBFGS_PARAM LBFGS_OPTION = {}; getNewtonStruct(LBFGS_OPTION, LBFGS_INFO_LIST);
 
   arma::mat R_PARA;
-  double val = DesignCriterion(0, PSO_OPT, OBJ, model_diff_ptr, NULL, DESIGN, R_PARA);
+  double val = DesignCriterion(0, PSO_OPT, LBFGS_OPTION, OBJ, model_diff_ptr, NULL, DESIGN, R_PARA);
 
   return List::create(Named("val") = wrap(val),
                       Named("theta2") = wrap(R_PARA));
 }
 
 //[[Rcpp::export]]
-List cppEquivalence(Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
+List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
                     const double GBEST_VAL, const arma::mat PARA_SET, const arma::rowvec alpha, const SEXP env, const int nGrid)
 {
   SEXP DIST_FUNC_SEXP = as<SEXP>(OBJ_INFO_LIST["dist_func"]);
@@ -168,8 +172,6 @@ List cppEquivalence(Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::Li
     model_diff_collect[i] = model_diff_func(m1, m2, dfnc);
     model_diff_ptr[i] = &model_diff_collect[i];
   }
-
-  PSO_OPTIONS PSO_OPT[N_PSO_OPTS]; getAlgStruct(PSO_OPT, ALG_INFO_LIST);
 
   /* REVISE HERE */
   arma::vec xLine_1 = linspace<vec>(OBJ.dsLower(0), OBJ.dsUpper(0), nGrid);

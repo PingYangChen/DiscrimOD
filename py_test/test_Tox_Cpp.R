@@ -132,8 +132,6 @@ CaseID <- 3
 plot(outAll[[CaseID]]$eqv$Grid_1, outAll[[CaseID]]$eqv$DirDeriv, type = "l", col = "blue"); abline(h = 0);
 points(outAll[[CaseID]]$res$BESTDESIGN[,1], rep(0, nrow(outAll[[CaseID]]$res$BESTDESIGN)), pch = 19)
 
-
-
 vals_MM <- sapply(1:length(outAll), function(i) outAll[[i]]$res$BESTVAL)
 nSupp_MM <- 4
 out <- DiscrimOD(MODEL_INFO_cpp, DISTANCE_cpp,

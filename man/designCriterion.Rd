@@ -5,8 +5,8 @@
 \title{Calculate Design Criterion Values}
 \usage{
 designCriterion(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper,
-  crit_type = "pair_fixed_true", MaxMinStdVals = NULL, ALG_INFO = NULL,
-  environment, ...)
+  crit_type = "pair_fixed_true", MaxMinStdVals = NULL, PSO_INFO = NULL,
+  LBFGS_INFO = NULL, environment, ...)
 }
 \arguments{
 \item{DESIGN1}{matrix. The approximate design.}
@@ -28,7 +28,7 @@ The default is 'pair_fixed_true'.}
 
 \item{MaxMinStdVals}{vector. The values of demoninators in the design efficiency calculation for finding max-min discrimination design.}
 
-\item{ALG_INFO}{list. PSO and BFGS options.}
+\item{PSO_INFO}{list. PSO and BFGS options.}
 }
 \value{
 An List.

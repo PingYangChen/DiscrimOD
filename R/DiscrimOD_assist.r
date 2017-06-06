@@ -50,81 +50,103 @@
 #' @return The list of algorithm setting parameters as the input of \code{DiscrimOD}.
 #' @examples
 #' # Get default settings with specified swarm size and maximal number of iterations.
-#' algInfo <- getAlgInfo(nSwarm = 32, maxIter = 100)
+#' algInfo <- getPSOInfo(nSwarm = 32, maxIter = 100)
 #'
-#' # Set the L-BFGS algorithm to repeat 4 times.
-#' algInfo <- getAlgInfo(nSwarm = 32, maxIter = 100, LBFGS_RETRY = 4)
-#' @name getAlgInfo
-#' @rdname getAlgInfo
+#' @name getPSOInfo
+#' @rdname getPSOInfo
 #' @export
-getAlgInfo <- function(nSwarm = 32, maxIter = 100,
-  #typePSO = NULL, #dSwarm = NULL, varUpper = NULL, varLower = NULL,
-  checkConv = NULL, freeRun = NULL, tol = NULL, c1 = NULL, c2 = NULL,
-  w0 = NULL, w1 = NULL, w_var = NULL, vk = NULL, #chi = NULL,
-  #typeTopo = NULL, nGroup = NULL, GC_S_ROOF = NULL, GC_F_ROOF = NULL, GC_RHO = NULL,
-  #Q_cen_type = NULL, Q_a0 = NULL, Q_a1 = NULL, Q_a_var = NULL, LcRi_L = NULL,
-  LBFGS_RETRY = NULL, LBFGS_MAXIT = NULL, LBFGS_LM = NULL, FVAL_EPS = NULL, GRAD_EPS = NULL,
-  LINESEARCH_MAXTRIAL = NULL, LINESEARCH_MAX = NULL, LINESEARCH_MIN = NULL, 
-  #LINESEARCH_RHO = NULL,
-  LINESEARCH_ARMIJO = NULL, LINESEARCH_WOLFE = NULL) {
+getPSOInfo <- function(nSwarm = 32, maxIter = 100,
+  #typePSO = 0, #dSwarm = NULL, varUpper = NULL, varLower = NULL,
+  checkConv = 0, freeRun = 0.25, tol = 1e-6, c1 = 2.05, c2 = 2.05,
+  w0 = 0.95, w1 = 0.2, w_var = 0.8, vk = 4 #, chi = NULL,
+  #typeTopo = NULL, nGroup = NULL, GC_S_ROOF = 5, GC_F_ROOF = 15, GC_RHO = 1,
+  #Q_cen_type = 1, Q_a0 = 1.7, Q_a1 = 0.7, Q_a_var = 0.8, LcRi_L = 0.01,
+  ) {
 
-  assert_that(length(nSwarm) == length(maxIter))
+  stopifnot(length(nSwarm) == length(maxIter))
 
   nLoop <- length(nSwarm)
-  #if(is.null(dSwarm))     dSwarm     <- numeric(nLoop)
-  #if(is.null(varUpper))   varUpper   <- matrix(0, nLoop)
-  #if(is.null(varLower))   varLower   <- matrix(0, nLoop)
-  #if(is.null(maxIter))    maxIter    <- rep(100   , nLoop)
-  if(is.null(checkConv))  checkConv  <- rep(0     , nLoop)
-  #if(is.null(typePSO))    typePSO    <- rep(0     , nLoop)
-  if(is.null(freeRun))    freeRun    <- rep(0.25  , nLoop)
-  if(is.null(tol))        tol        <- rep(1e-6  , nLoop)
-  if(is.null(c1))         c1         <- rep(2.05  , nLoop)
-  if(is.null(c2))         c2         <- rep(2.05  , nLoop)
-  if(is.null(w0))         w0         <- rep(0.95  , nLoop)
-  if(is.null(w1))         w1         <- rep(0.2   , nLoop)
-  if(is.null(w_var))      w_var      <- rep(0.8   , nLoop)
-  #if(is.null(chi))        chi        <- rep(0.729 , nLoop)
-  if(is.null(vk))         vk         <- rep(4     , nLoop)
-  #if(is.null(typeTopo))   typeTopo   <- rep(0     , nLoop)
-  #if(is.null(nGroup))     nGroup     <- rep(1     , nLoop)
-  #if(is.null(GC_S_ROOF))  GC_S_ROOF  <- rep(5     , nLoop)
-  #if(is.null(GC_F_ROOF))  GC_F_ROOF  <- rep(15    , nLoop)
-  #if(is.null(GC_RHO))     GC_RHO     <- rep(1     , nLoop)
-  #if(is.null(Q_cen_type)) Q_cen_type <- rep(1     , nLoop)
-  #if(is.null(Q_a0))       Q_a0       <- rep(1.7   , nLoop)
-  #if(is.null(Q_a1))       Q_a1       <- rep(0.7   , nLoop)
-  #if(is.null(Q_a_var))    Q_a_var    <- rep(0.8   , nLoop)
-  #if(is.null(LcRi_L))     LcRi_L     <- rep(0.01  , nLoop)
-
-  if(is.null(LBFGS_RETRY))          LBFGS_RETRY         <- rep(1, nLoop)
-  if(is.null(LBFGS_MAXIT))          LBFGS_MAXIT         <- rep(0, nLoop)
-  if(is.null(LBFGS_LM))             LBFGS_LM            <- rep(6, nLoop)
-  if(is.null(FVAL_EPS))             FVAL_EPS            <- rep(0   , nLoop)
-  if(is.null(GRAD_EPS))             GRAD_EPS            <- rep(1e-5, nLoop)
-  if(is.null(LINESEARCH_MAXTRIAL))  LINESEARCH_MAXTRIAL <- rep(20   , nLoop)
-  if(is.null(LINESEARCH_MAX))       LINESEARCH_MAX      <- rep(1e20 , nLoop)
-  if(is.null(LINESEARCH_MIN))       LINESEARCH_MIN      <- rep(1e-20, nLoop)
-  if(is.null(LINESEARCH_ARMIJO))    LINESEARCH_ARMIJO   <- rep(1e-4 , nLoop)
-  if(is.null(LINESEARCH_WOLFE))     LINESEARCH_WOLFE    <- rep(0.9  , nLoop)
+  #if (length(dSwarm))     dSwarm     <- numeric(nLoop)
+  #if (length(varUpper))   varUpper   <- matrix(0, nLoop)
+  #if (length(varLower))   varLower   <- matrix(0, nLoop)
+  #if (length(maxIter))    maxIter    <- rep(100   , nLoop)
+  if (length(checkConv) < nLoop)  checkConv  <- rep(0     , nLoop)
+  #if (length(typePSO)) < nLoop)    typePSO    <- rep(0     , nLoop)
+  if (length(freeRun) < nLoop)    freeRun    <- rep(0.25  , nLoop)
+  if (length(tol) < nLoop)        tol        <- rep(1e-6  , nLoop)
+  if (length(c1) < nLoop)         c1         <- rep(2.05  , nLoop)
+  if (length(c2) < nLoop)         c2         <- rep(2.05  , nLoop)
+  if (length(w0) < nLoop)         w0         <- rep(0.95  , nLoop)
+  if (length(w1) < nLoop)         w1         <- rep(0.2   , nLoop)
+  if (length(w_var) < nLoop)      w_var      <- rep(0.8   , nLoop)
+  #if (length(chi) < nLoop)        chi        <- rep(0.729 , nLoop)
+  if (length(vk) < nLoop)         vk         <- rep(4     , nLoop)
+  #if (length(typeTopo) < nLoop)   typeTopo   <- rep(0     , nLoop)
+  #if (length(nGroup) < nLoop)     nGroup     <- rep(1     , nLoop)
+  #if (length(GC_S_ROOF) < nLoop)  GC_S_ROOF  <- rep(5     , nLoop)
+  #if (length(GC_F_ROOF) < nLoop)  GC_F_ROOF  <- rep(15    , nLoop)
+  #if (length(GC_RHO) < nLoop)     GC_RHO     <- rep(1     , nLoop)
+  #if (length(Q_cen_type) < nLoop) Q_cen_type <- rep(1     , nLoop)
+  #if (length(Q_a0) < nLoop)       Q_a0       <- rep(1.7   , nLoop)
+  #if (length(Q_a1) < nLoop)       Q_a1       <- rep(0.7   , nLoop)
+  #if (length(Q_a_var) < nLoop)    Q_a_var    <- rep(0.8   , nLoop)
+  #if (length(LcRi_L) < nLoop)     LcRi_L     <- rep(0.01  , nLoop)
 
   list(nSwarm = nSwarm, dSwarm = "autogen", varUpper = "autogen", varLower = "autogen", maxIter = maxIter, #typePSO = typePSO,
     checkConv = checkConv, freeRun = freeRun, tol = tol, c1 = c1, c2 = c2, w0 = w0, w1 = w1, w_var = w_var, #chi = chi,
-    vk = vk, #typeTopo = typeTopo, nGroup = nGroup, GC_S_ROOF = GC_S_ROOF, GC_F_ROOF = GC_F_ROOF,
+    vk = vk #, #typeTopo = typeTopo, nGroup = nGroup, GC_S_ROOF = GC_S_ROOF, GC_F_ROOF = GC_F_ROOF,
     #GC_RHO = GC_RHO, Q_cen_type = Q_cen_type, Q_a0 = Q_a0, Q_a1 = Q_a1, Q_a_var = Q_a_var,
     #LcRi_L = LcRi_L,
-    LBFGS_RETRY = LBFGS_RETRY, LBFGS_MAXIT = LBFGS_MAXIT, LBFGS_LM = LBFGS_LM, FVAL_EPS = FVAL_EPS, GRAD_EPS = GRAD_EPS,
-    LINESEARCH_MAXTRIAL = LINESEARCH_MAXTRIAL, LINESEARCH_MAX = LINESEARCH_MAX, LINESEARCH_MIN = LINESEARCH_MIN,
-    #LINESEARCH_RHO = LINESEARCH_RHO, 
-    LINESEARCH_ARMIJO = LINESEARCH_ARMIJO, LINESEARCH_WOLFE = LINESEARCH_WOLFE)
+    )
 }
 
+#' Initialize LBFGS options
+#'
+#' Please follow the instruction.
+#'
+#' @param IF_INNER_LBFGS logical. 
+#' @param LBFGS_RETRY integer. The total times of trials in calculating the minimal distance
+#' with randomly generated initial starters. The default is 3.
+#' @param LBFGS_MAXIT integer. The maximal number of iterations of the L-BFGS algorithm.
+#' The default is 100.
+#' @param LBFGS_LM integer. The number of corrections to approximate the inverse hessian matrix.
+#' The default is 6.
+#' @param FVAL_EPS numeric. The value of \eqn{\varepsilon_f} in the stopping criterion,
+#' \eqn{|f'-f|/f<\varepsilon_f} where \eqn{f'} and \eqn{f} are the objective function values
+#' in the previous and current iterations, respectively.
+#' The default is 0 which means not using this stopping criteiron.
+#' @param GRAD_EPS numeric. The value of \eqn{\varepsilon_g} in the stopping criterion,
+#' \eqn{\|g\|/\|x\|<\varepsilon_g} where \eqn{g} is the gradient vector, \eqn{x} is the current position
+#' and \eqn{\|a\|=\sqrt{a^\top a}}. The default is 1e-5.
+#' @param LINESEARCH_MAXTRIAL integer The maximal trial of the backtrackign line search. The default is 50.
+#' @param LINESEARCH_MAX numeric. The initial step size in the line search. The default is 1.
+#' @param LINESEARCH_MIN numeric. The minimal step size in the line search. The default is 1e-9.
+#' @param LINESEARCH_ARMIJO numeric. The parameter to
+#' control the accuracy of the backtracking line search algorithm.
+#' The default is \code{1e-4}. The value should be positive and smaller than 0.5.
+#' @param LINESEARCH_WOLFE numeric. The persentage of the decreasement on the step size in each
+#' iteration of the line search. The default is 0.618.
+#' @return The list of algorithm setting parameters as the input of \code{DiscrimOD}.
+#' @examples
+#' lbfgsInfo <- getLBFGSInfo(LBFGS_RETRY = 2)
+#'
+#' @name getLBFGSInfo
+#' @rdname getLBFGSInfo
+#' @export
+getLBFGSInfo <- function(IF_INNER_LBFGS = TRUE, LBFGS_RETRY = 1, LBFGS_MAXIT = 0, LBFGS_LM = 6, FVAL_EPS = 0, GRAD_EPS = 1e-5,
+                         LINESEARCH_MAXTRIAL = 20, LINESEARCH_MAX = 1e20, LINESEARCH_MIN = 1e-20, 
+                         LINESEARCH_ARMIJO = 1e-4, LINESEARCH_WOLFE = 0.9) {
+
+  list(IF_INNER_LBFGS = as.integer(IF_INNER_LBFGS), LBFGS_RETRY = LBFGS_RETRY, LBFGS_MAXIT = LBFGS_MAXIT, LBFGS_LM = LBFGS_LM, 
+       FVAL_EPS = FVAL_EPS, GRAD_EPS = GRAD_EPS,
+       LINESEARCH_MAXTRIAL = LINESEARCH_MAXTRIAL, LINESEARCH_MAX = LINESEARCH_MAX, LINESEARCH_MIN = LINESEARCH_MIN,
+       LINESEARCH_ARMIJO = LINESEARCH_ARMIJO, LINESEARCH_WOLFE = LINESEARCH_WOLFE)
+}
 
 #' @export
 getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL,
                           crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
-                          dSupp = 1L, nSupp = 2L, dsLower = NULL, dsUpper = NULL,
-                          IF_INNER_LBFGS = TRUE) {
+                          dSupp = 1L, nSupp = 2L, dsLower = NULL, dsUpper = NULL) {
 
   dParas <- sapply(1:length(MODEL_INFO), function(k) if (k == 1) length(MODEL_INFO[[k]]$para) else length(MODEL_INFO[[k]]$paraUpper))
 
@@ -139,7 +161,6 @@ getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL
       tmp2 <- ifelse(tmp == 0, 0, ifelse(tmp == 1, 1, ifelse(tmp == 10, 3, 2)))
       parasBdd[k,] <- c(tmp2, rep(0, max(dParas) - dParas[k]))
       parasInit[k,] <- runif(max(dParas), as.vector(parasLower[k,]), as.vector(parasUpper[k,])) 
-      #c(MODEL_INFO[[k]]$paraInit, rep(0, max(dParas) - dParas[k]))
     }
   }
  
@@ -156,5 +177,5 @@ getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL
               dSupp = dSupp, nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper,
               N_PAIR = N_PAIR, MODEL_PAIR = MODEL_PAIR, dParas = dParas, paras = paras, parasInit = parasInit,
               parasUpper = parasUpper, parasLower = parasLower, parasBdd = parasBdd,
-              MaxMinStdVals = MaxMinStdVals, IF_INNER_LBFGS = ifelse(IF_INNER_LBFGS, 1, 0)))
+              MaxMinStdVals = MaxMinStdVals))
 }

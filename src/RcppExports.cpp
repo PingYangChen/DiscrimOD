@@ -91,46 +91,47 @@ BEGIN_RCPP
 END_RCPP
 }
 // cppPSO
-Rcpp::List cppPSO(const int LOOPID, Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, Rcpp::List EXTERNAL_LIST, const SEXP env, const bool IF_PARALLEL, const bool VERBOSE);
-RcppExport SEXP DiscrimOD_cppPSO(SEXP LOOPIDSEXP, SEXP ALG_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP EXTERNAL_LISTSEXP, SEXP envSEXP, SEXP IF_PARALLELSEXP, SEXP VERBOSESEXP) {
+Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, Rcpp::List EXTERNAL_LIST, const SEXP env, const bool IF_PARALLEL, const bool VERBOSE);
+RcppExport SEXP DiscrimOD_cppPSO(SEXP LOOPIDSEXP, SEXP PSO_INFO_LISTSEXP, SEXP LBFGS_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP EXTERNAL_LISTSEXP, SEXP envSEXP, SEXP IF_PARALLELSEXP, SEXP VERBOSESEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const int >::type LOOPID(LOOPIDSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type ALG_INFO_LIST(ALG_INFO_LISTSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type PSO_INFO_LIST(PSO_INFO_LISTSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type LBFGS_INFO_LIST(LBFGS_INFO_LISTSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type OBJ_INFO_LIST(OBJ_INFO_LISTSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type MODEL_INFO_LIST(MODEL_INFO_LISTSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type EXTERNAL_LIST(EXTERNAL_LISTSEXP);
     Rcpp::traits::input_parameter< const SEXP >::type env(envSEXP);
     Rcpp::traits::input_parameter< const bool >::type IF_PARALLEL(IF_PARALLELSEXP);
     Rcpp::traits::input_parameter< const bool >::type VERBOSE(VERBOSESEXP);
-    rcpp_result_gen = Rcpp::wrap(cppPSO(LOOPID, ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, EXTERNAL_LIST, env, IF_PARALLEL, VERBOSE));
+    rcpp_result_gen = Rcpp::wrap(cppPSO(LOOPID, PSO_INFO_LIST, LBFGS_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, EXTERNAL_LIST, env, IF_PARALLEL, VERBOSE));
     return rcpp_result_gen;
 END_RCPP
 }
 // cppDesignCriterion
-Rcpp::List cppDesignCriterion(Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, Rcpp::List EXTERNAL_LIST, SEXP env, arma::rowvec DESIGN);
-RcppExport SEXP DiscrimOD_cppDesignCriterion(SEXP ALG_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP EXTERNAL_LISTSEXP, SEXP envSEXP, SEXP DESIGNSEXP) {
+Rcpp::List cppDesignCriterion(Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, Rcpp::List EXTERNAL_LIST, SEXP env, arma::rowvec DESIGN);
+RcppExport SEXP DiscrimOD_cppDesignCriterion(SEXP PSO_INFO_LISTSEXP, SEXP LBFGS_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP EXTERNAL_LISTSEXP, SEXP envSEXP, SEXP DESIGNSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type ALG_INFO_LIST(ALG_INFO_LISTSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type PSO_INFO_LIST(PSO_INFO_LISTSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type LBFGS_INFO_LIST(LBFGS_INFO_LISTSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type OBJ_INFO_LIST(OBJ_INFO_LISTSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type MODEL_INFO_LIST(MODEL_INFO_LISTSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type EXTERNAL_LIST(EXTERNAL_LISTSEXP);
     Rcpp::traits::input_parameter< SEXP >::type env(envSEXP);
     Rcpp::traits::input_parameter< arma::rowvec >::type DESIGN(DESIGNSEXP);
-    rcpp_result_gen = Rcpp::wrap(cppDesignCriterion(ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, EXTERNAL_LIST, env, DESIGN));
+    rcpp_result_gen = Rcpp::wrap(cppDesignCriterion(PSO_INFO_LIST, LBFGS_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, EXTERNAL_LIST, env, DESIGN));
     return rcpp_result_gen;
 END_RCPP
 }
 // cppEquivalence
-List cppEquivalence(Rcpp::List ALG_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, const double GBEST_VAL, const arma::mat PARA_SET, const arma::rowvec alpha, const SEXP env, const int nGrid);
-RcppExport SEXP DiscrimOD_cppEquivalence(SEXP ALG_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP GBEST_VALSEXP, SEXP PARA_SETSEXP, SEXP alphaSEXP, SEXP envSEXP, SEXP nGridSEXP) {
+List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, const double GBEST_VAL, const arma::mat PARA_SET, const arma::rowvec alpha, const SEXP env, const int nGrid);
+RcppExport SEXP DiscrimOD_cppEquivalence(SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP GBEST_VALSEXP, SEXP PARA_SETSEXP, SEXP alphaSEXP, SEXP envSEXP, SEXP nGridSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type ALG_INFO_LIST(ALG_INFO_LISTSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type OBJ_INFO_LIST(OBJ_INFO_LISTSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type MODEL_INFO_LIST(MODEL_INFO_LISTSEXP);
     Rcpp::traits::input_parameter< const double >::type GBEST_VAL(GBEST_VALSEXP);
@@ -138,7 +139,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::rowvec >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< const SEXP >::type env(envSEXP);
     Rcpp::traits::input_parameter< const int >::type nGrid(nGridSEXP);
-    rcpp_result_gen = Rcpp::wrap(cppEquivalence(ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, GBEST_VAL, PARA_SET, alpha, env, nGrid));
+    rcpp_result_gen = Rcpp::wrap(cppEquivalence(OBJ_INFO_LIST, MODEL_INFO_LIST, GBEST_VAL, PARA_SET, alpha, env, nGrid));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -151,9 +152,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"DiscrimOD_KL_lognormal_b", (DL_FUNC) &DiscrimOD_KL_lognormal_b, 2},
     {"DiscrimOD_KL_lognormal_c", (DL_FUNC) &DiscrimOD_KL_lognormal_c, 2},
     {"DiscrimOD_KL_gamma_b", (DL_FUNC) &DiscrimOD_KL_gamma_b, 2},
-    {"DiscrimOD_cppPSO", (DL_FUNC) &DiscrimOD_cppPSO, 8},
-    {"DiscrimOD_cppDesignCriterion", (DL_FUNC) &DiscrimOD_cppDesignCriterion, 6},
-    {"DiscrimOD_cppEquivalence", (DL_FUNC) &DiscrimOD_cppEquivalence, 8},
+    {"DiscrimOD_cppPSO", (DL_FUNC) &DiscrimOD_cppPSO, 9},
+    {"DiscrimOD_cppDesignCriterion", (DL_FUNC) &DiscrimOD_cppDesignCriterion, 7},
+    {"DiscrimOD_cppEquivalence", (DL_FUNC) &DiscrimOD_cppEquivalence, 7},
     {NULL, NULL, 0}
 };
 

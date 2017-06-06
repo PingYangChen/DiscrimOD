@@ -44,15 +44,15 @@ KL_gamma_b <- function(xt, xr) {
     .Call('DiscrimOD_KL_gamma_b', PACKAGE = 'DiscrimOD', xt, xr)
 }
 
-cppPSO <- function(LOOPID, ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, EXTERNAL_LIST, env, IF_PARALLEL, VERBOSE) {
-    .Call('DiscrimOD_cppPSO', PACKAGE = 'DiscrimOD', LOOPID, ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, EXTERNAL_LIST, env, IF_PARALLEL, VERBOSE)
+cppPSO <- function(LOOPID, PSO_INFO_LIST, LBFGS_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, EXTERNAL_LIST, env, IF_PARALLEL, VERBOSE) {
+    .Call('DiscrimOD_cppPSO', PACKAGE = 'DiscrimOD', LOOPID, PSO_INFO_LIST, LBFGS_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, EXTERNAL_LIST, env, IF_PARALLEL, VERBOSE)
 }
 
-cppDesignCriterion <- function(ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, EXTERNAL_LIST, env, DESIGN) {
-    .Call('DiscrimOD_cppDesignCriterion', PACKAGE = 'DiscrimOD', ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, EXTERNAL_LIST, env, DESIGN)
+cppDesignCriterion <- function(PSO_INFO_LIST, LBFGS_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, EXTERNAL_LIST, env, DESIGN) {
+    .Call('DiscrimOD_cppDesignCriterion', PACKAGE = 'DiscrimOD', PSO_INFO_LIST, LBFGS_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, EXTERNAL_LIST, env, DESIGN)
 }
 
-cppEquivalence <- function(ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, GBEST_VAL, PARA_SET, alpha, env, nGrid) {
-    .Call('DiscrimOD_cppEquivalence', PACKAGE = 'DiscrimOD', ALG_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, GBEST_VAL, PARA_SET, alpha, env, nGrid)
+cppEquivalence <- function(OBJ_INFO_LIST, MODEL_INFO_LIST, GBEST_VAL, PARA_SET, alpha, env, nGrid) {
+    .Call('DiscrimOD_cppEquivalence', PACKAGE = 'DiscrimOD', OBJ_INFO_LIST, MODEL_INFO_LIST, GBEST_VAL, PARA_SET, alpha, env, nGrid)
 }
 

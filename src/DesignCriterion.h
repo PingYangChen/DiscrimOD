@@ -5,9 +5,10 @@
 #include "lbfgsEval.h"
 
 // DECLARE FUNCTIONS
-double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],  
+double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, 
+                     model_diff_func *MODEL_COLLECTOR[],  
                      const arma::mat &DESIGN, const arma::rowvec &WT, arma::mat &R_PARA);
-double minDistCalc(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID, 
+double minDistCalc(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID, 
                    const arma::mat &DESIGN, const arma::rowvec &WT, arma::rowvec &R_PARA_OUT);
 arma::rowvec directionalDerivative(const OBJ_INFO &OBJ, const arma::mat &dsGrid, const arma::mat &PARA_SET, const arma::rowvec &alpha, 
                                    model_diff_func *MODEL_COLLECTOR[]);
@@ -15,8 +16,8 @@ arma::rowvec distCalc(const OBJ_INFO &OBJ, const arma::mat &x, const arma::mat &
                       model_diff_func *MODEL_COLLECTOR[], const int &PAIRID);
 
 // BODY
-double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], 
-                       void *external, const rowvec &x, arma::mat &R_PARA)
+double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, 
+                       model_diff_func *MODEL_COLLECTOR[], void *external, const rowvec &x, arma::mat &R_PARA)
 {
 	int nSupp = OBJ.nSupp;
 	int dSupp = OBJ.dSupp;
@@ -33,7 +34,7 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO
         for (int i = 0; i < nSupp; i++) { DESIGN.row(i) = x.subvec(i*dSupp, (i+1)*dSupp - 1); }
         arma::rowvec WT(nSupp, fill::zeros);
   			WT.fill(1.0/(double)nSupp);
-        val = criterionList(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, DESIGN, WT, R_PARA);  
+        val = criterionList(LOOPID, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, DESIGN, WT, R_PARA);  
         val *= -1.0; 
   			break;
   		}
@@ -52,7 +53,7 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO
   			wcos(nSupp - 1) = 1.0; wcos.subvec(0, nSupp - 2) = arma::cos(ang);
   			WT = wcumsin % wcos;
   			WT = WT % WT;
-        val = criterionList(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, DESIGN, WT, R_PARA);  
+        val = criterionList(LOOPID, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, DESIGN, WT, R_PARA);  
         val *= -1.0;  
   			break;
   		}
@@ -110,12 +111,13 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO
 }
 
 //
-double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],  
+double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, 
+                     model_diff_func *MODEL_COLLECTOR[],  
 										 const arma::mat &DESIGN, const arma::rowvec &WT, arma::mat &R_PARA)
 {
 	int crit_type = OBJ.crit_type;
 	int N_PAIR = OBJ.N_PAIR;
-  int LBFGS = OBJ.IF_INNER_LBFGS;
+  int LBFGS = LBFGS_OPTION.IF_INNER_LBFGS;
 
   R_PARA.reset(); R_PARA.set_size(OBJ.dParas.n_elem, OBJ.dParas.max()); R_PARA.zeros();
 	double val = 1e20;
@@ -132,16 +134,16 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &
         external.DESIGN = DESIGN;
         external.WT = WT;
         
-        PSO_OPTS[1].dSwarm = OBJ.dParas(1);
-        PSO_OPTS[1].varUpper.reset(); PSO_OPTS[1].varUpper = OBJ.parasUpper.submat(1, 0, 1, OBJ.dParas(1) - 1);
-        PSO_OPTS[1].varLower.reset(); PSO_OPTS[1].varLower = OBJ.parasLower.submat(1, 0, 1, OBJ.dParas(1) - 1);
+        PSO_OPTS[LOOPID + 1].dSwarm = OBJ.dParas(1);
+        PSO_OPTS[LOOPID + 1].varUpper.reset(); PSO_OPTS[1].varUpper = OBJ.parasUpper.submat(1, 0, 1, OBJ.dParas(1) - 1);
+        PSO_OPTS[LOOPID + 1].varLower.reset(); PSO_OPTS[1].varLower = OBJ.parasLower.submat(1, 0, 1, OBJ.dParas(1) - 1);
 
         PSO_Result InnerResult = {};
-        PSO_MAIN(1, PSO_OPTS, OBJ, MODEL_COLLECTOR, &external, FALSE, FALSE, &InnerResult);  
+        PSO_MAIN(LOOPID + 1, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, &external, FALSE, FALSE, &InnerResult);  
         R_PARA_tmp = InnerResult.GBest;
         val = InnerResult.fGBest;
       } else {
-        val = minDistCalc(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, 0, DESIGN, WT, R_PARA_tmp);  
+        val = minDistCalc(LBFGS_OPTION, OBJ, MODEL_COLLECTOR, 0, DESIGN, WT, R_PARA_tmp);  
       }
 			
       R_PARA.submat(1, 0, 1, OBJ.dParas(1) - 1) = R_PARA_tmp;
@@ -155,7 +157,7 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &
 			for (int i = 0; i < N_PAIR; i++) {
 				arma::rowvec R_PARA_tmp(OBJ.dParas(i+1));
 
-				eff_vals(i) = minDistCalc(LOOPID, PSO_OPTS, OBJ, MODEL_COLLECTOR, i, DESIGN, WT, R_PARA_tmp);	
+				eff_vals(i) = minDistCalc(LBFGS_OPTION, OBJ, MODEL_COLLECTOR, i, DESIGN, WT, R_PARA_tmp);	
         
         R_PARA.submat(i+1, 0, i+1, OBJ.dParas(i+1) - 1) = R_PARA_tmp;
 			}
@@ -170,7 +172,7 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &
 // SUBFUNCTIONS
 
 // Minimal Distance Between Two Models
-double minDistCalc(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID, 
+double minDistCalc(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID, 
 									 const arma::mat &DESIGN, const arma::rowvec &WT, arma::rowvec &R_PARA_OUT)
 {
   model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
@@ -198,15 +200,15 @@ double minDistCalc(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OB
 
   lbfgs_parameter_t LBFGS_PAR;
   lbfgs_parameter_init(&LBFGS_PAR);
-  LBFGS_PAR.m               = PSO_OPTS[LOOPID].LBFGS_LM;
-  LBFGS_PAR.max_iterations  = PSO_OPTS[LOOPID].LBFGS_MAXIT;
-  LBFGS_PAR.max_linesearch  = PSO_OPTS[LOOPID].LINESEARCH_MAXTRIAL;
-  LBFGS_PAR.epsilon         = (lbfgsfloatval_t)PSO_OPTS[LOOPID].GRAD_EPS; 
-  LBFGS_PAR.delta           = (lbfgsfloatval_t)PSO_OPTS[LOOPID].FVAL_EPS;
-  LBFGS_PAR.gtol            = (lbfgsfloatval_t)PSO_OPTS[LOOPID].LINESEARCH_WOLFE; 
-  LBFGS_PAR.ftol            = (lbfgsfloatval_t)PSO_OPTS[LOOPID].LINESEARCH_ARMIJO; 
-  LBFGS_PAR.min_step        = (lbfgsfloatval_t)PSO_OPTS[LOOPID].LINESEARCH_MIN;
-  LBFGS_PAR.max_step        = (lbfgsfloatval_t)PSO_OPTS[LOOPID].LINESEARCH_MAX;
+  LBFGS_PAR.m               = LBFGS_OPTION.LBFGS_LM;
+  LBFGS_PAR.max_iterations  = LBFGS_OPTION.LBFGS_MAXIT;
+  LBFGS_PAR.max_linesearch  = LBFGS_OPTION.LINESEARCH_MAXTRIAL;
+  LBFGS_PAR.epsilon         = (lbfgsfloatval_t)LBFGS_OPTION.GRAD_EPS; 
+  LBFGS_PAR.delta           = (lbfgsfloatval_t)LBFGS_OPTION.FVAL_EPS;
+  LBFGS_PAR.gtol            = (lbfgsfloatval_t)LBFGS_OPTION.LINESEARCH_WOLFE; 
+  LBFGS_PAR.ftol            = (lbfgsfloatval_t)LBFGS_OPTION.LINESEARCH_ARMIJO; 
+  LBFGS_PAR.min_step        = (lbfgsfloatval_t)LBFGS_OPTION.LINESEARCH_MIN;
+  LBFGS_PAR.max_step        = (lbfgsfloatval_t)LBFGS_OPTION.LINESEARCH_MAX;
 
   arma::rowvec R_PARA_INI = OBJ.parasInit.submat(rmID, 0, rmID, dParas - 1);
 
@@ -221,7 +223,7 @@ double minDistCalc(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const OBJ_INFO &OB
   //Rprintf("CONV: %d\n", CONV);
   for (int d = 0; d < dParas; d++) { R_PARA1[d] = R_PARA[d]; } 
   
-  int LBFGS_RETRY = PSO_OPTS[LOOPID].LBFGS_RETRY; if (CONV) { LBFGS_RETRY++; }
+  int LBFGS_RETRY = LBFGS_OPTION.LBFGS_RETRY; if (CONV) { LBFGS_RETRY++; }
   if ((!std::isfinite(fx)) | std::isnan(fx)) { LBFGS_RETRY++; }
   int count = 0;
   while ((count < LBFGS_RETRY)) {

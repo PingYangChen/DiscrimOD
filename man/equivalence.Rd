@@ -6,8 +6,8 @@
 \usage{
 equivalence(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100,
   IFPLOT = FALSE, MODEL_INFO, DISTANCE, dsLower, dsUpper,
-  crit_type = "pair_fixed_true", MaxMinStdVals = NULL, ALG_INFO = NULL,
-  environment, ...)
+  crit_type = "pair_fixed_true", MaxMinStdVals = NULL, PSO_INFO = NULL,
+  LFBGS_INFO = NULL, ALPHA_PSO_INFO = NULL, environment, ...)
 }
 \arguments{
 \item{PSO_RESULT}{list.}
@@ -28,7 +28,7 @@ equivalence(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100,
 
 \item{MaxMinStdVals}{vector. The values of demoninators in the design efficiency calculation for finding max-min discrimination design.}
 
-\item{ALG_INFO}{list. PSO and BFGS options.}
+\item{PSO_INFO}{list. PSO and BFGS options.}
 
 \item{DESIGN1}{matrix.}
 }

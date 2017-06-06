@@ -5,8 +5,8 @@
 \title{Hybrid Algorithm of PSO and L-BFGS for Finding Optimal Discrimination Design}
 \usage{
 DiscrimOD(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper,
-  crit_type = "pair_fixed_true", MaxMinStdVals = NULL, ALG_INFO = NULL,
-  seed = NULL, verbose = TRUE, environment, ...)
+  crit_type = "pair_fixed_true", MaxMinStdVals = NULL, PSO_INFO = NULL,
+  LBFGS_INFO = NULL, seed = NULL, verbose = TRUE, environment, ...)
 }
 \arguments{
 \item{MODEL_INFO}{list of information of competing models.
@@ -29,7 +29,7 @@ The default is 'pair_fixed_true'.}
 \item{MaxMinStdVals}{vector. The values of demoninators in the design efficiency
 calculation for finding max-min discrimination design.}
 
-\item{ALG_INFO}{list. PSO and BFGS options.}
+\item{PSO_INFO}{list. PSO and BFGS options.}
 
 \item{seed}{numeric. random seed.  The default is \code{NULL}.}
 
@@ -65,20 +65,19 @@ MODEL_INFO <- list(
   list(model = m1, para = AF_para_m1),
   list(model = m2,
        paraLower = rep(-10, 3),
-       paraUpper = rep(10, 3),
-       paraInit = c(0, 0, 0))
+       paraUpper = rep(10, 3))
 )
 # Define the R function for the distance measure
 # Here we use T-optimal criterion
 DISTANCE <- function(xt, xr) (xt - xr)^2
 
 # Initialize PSO and BFGS options
-ALG_INFO <- getAlgInfo(nSwarm = 32, maxIter = 100,
+PSO_INFO <- getPSOInfo(nSwarm = 32, maxIter = 100,
                     		LBFGS_RETRY = 3, GRAD_EPS = 1e-6)
 
 # Run Algorithm
 out <- DiscrimOD(MODEL_INFO, DISTANCE, nSupp = 4, dsLower = -1.0, dsUpper = 1.0, crit_type = "pair_fixed_true",
-                 MaxMinStdVals = NULL, ALG_INFO = ALG_INFO, seed = NULL, verbose = TRUE)
+                 MaxMinStdVals = NULL, PSO_INFO = PSO_INFO, seed = NULL, verbose = TRUE)
 
 
 # C++ Function Input
@@ -131,6 +130,6 @@ DISTANCE_Cpp <- cxxfunction(signature(), body = dist.body, inc = dist.inc,
 
 # Run Algorithm with C++ functions
 out <- DiscrimOD(MODEL_INFO_Cpp, DISTANCE_Cpp(), nSupp = 4, dsLower = -1.0, dsUpper = 1.0, crit_type = "pair_fixed_true",
-                 MaxMinStdVals = NULL, ALG_INFO = ALG_INFO, seed = NULL, verbose = TRUE)
+                 MaxMinStdVals = NULL, PSO_INFO = PSO_INFO, seed = NULL, verbose = TRUE)
 
 }
