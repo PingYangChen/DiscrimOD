@@ -109,6 +109,7 @@ typedef struct lbfgs_eval {
   arma::rowvec T_PARA;
   arma::mat DESIGN;
   arma::rowvec WT;
+  double FD_DELTA;
 } lbfgs_eval, *Ptr_lbfgs_eval;
 
 typedef struct best_alpha_info {
@@ -205,6 +206,7 @@ typedef struct LBFGS_PARAM {
   double LINESEARCH_MIN; // 1e-6
   double LINESEARCH_ARMIJO; // 1e-4
   double LINESEARCH_WOLFE; // 0.9
+  double FD_DELTA; // 1e-3
 } LBFGS_PARAM, *Ptr_LBFGS_PARAM;
 
 // DEFINE PSO RESULTS
@@ -326,6 +328,7 @@ void getNewtonStruct(LBFGS_PARAM &LFBGS_OPT, const Rcpp::List LBFGS_INFO_LIST)
   LFBGS_OPT.LINESEARCH_MIN      = as<double>(LBFGS_INFO_LIST["LINESEARCH_MIN"]);
   LFBGS_OPT.LINESEARCH_ARMIJO   = as<double>(LBFGS_INFO_LIST["LINESEARCH_ARMIJO"]);
   LFBGS_OPT.LINESEARCH_WOLFE    = as<double>(LBFGS_INFO_LIST["LINESEARCH_WOLFE"]);
+  LFBGS_OPT.FD_DELTA            = as<double>(LBFGS_INFO_LIST["FD_DELTA"]);
 }
 
 // PSO OPTIONS

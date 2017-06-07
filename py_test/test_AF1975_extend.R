@@ -11,7 +11,7 @@ library(Rcpp); library(RcppArmadillo); #library(assertthat)
 
 ## Define R functions
 afex1 <- function(x, p) p[1] + p[2]*exp(p[3]*x) + p[4]*exp(-p[5]*x)
-afex2 <- function(x, p) p[1] + p[2]*x + p[3]*(x^2) + p[4]*(x^3) + p[5]*(x^4)
+afex2 <- function(x, p) p[1] + p[2]*x + p[3]*(x^2) + p[4]*(x^3)
 sq_diff <- function(xt, xr) (xt - xr)^2
 
 ## Define C++ functions

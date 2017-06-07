@@ -128,7 +128,6 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARA
 			arma::rowvec R_PARA_tmp(OBJ.dParas(1));
       
       if (LBFGS == 0) {
-
         inner_pso_info external = {};
         external.PAIRID = 0;
         external.DESIGN = DESIGN;
@@ -157,8 +156,24 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARA
 			for (int i = 0; i < N_PAIR; i++) {
 				arma::rowvec R_PARA_tmp(OBJ.dParas(i+1));
 
-				eff_vals(i) = minDistCalc(LBFGS_OPTION, OBJ, MODEL_COLLECTOR, i, DESIGN, WT, R_PARA_tmp);	
-        
+        if (LBFGS == 0) {
+          inner_pso_info external = {};
+          external.PAIRID = i;
+          external.DESIGN = DESIGN;
+          external.WT = WT;
+          
+          PSO_OPTS[LOOPID + 1].dSwarm = OBJ.dParas(i);
+          PSO_OPTS[LOOPID + 1].varUpper.reset(); PSO_OPTS[1].varUpper = OBJ.parasUpper.submat(i, 0, i, OBJ.dParas(i) - 1);
+          PSO_OPTS[LOOPID + 1].varLower.reset(); PSO_OPTS[1].varLower = OBJ.parasLower.submat(i, 0, i, OBJ.dParas(i) - 1);
+
+          PSO_Result InnerResult = {};
+          PSO_MAIN(LOOPID + 1, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, &external, FALSE, FALSE, &InnerResult);  
+          R_PARA_tmp = InnerResult.GBest;
+          eff_vals(i) = InnerResult.fGBest;
+        } else {
+          eff_vals(i) = minDistCalc(LBFGS_OPTION, OBJ, MODEL_COLLECTOR, i, DESIGN, WT, R_PARA_tmp); 
+        }
+
         R_PARA.submat(i+1, 0, i+1, OBJ.dParas(i+1) - 1) = R_PARA_tmp;
 			}
 			eff_vals = eff_vals/std_vals;
@@ -197,6 +212,7 @@ double minDistCalc(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_d
   LBFGS_EVAL.T_PARA     = T_PARA;
   LBFGS_EVAL.DESIGN     = DESIGN;
   LBFGS_EVAL.WT         = WT;
+  LBFGS_EVAL.FD_DELTA   = LBFGS_OPTION.FD_DELTA;
 
   lbfgs_parameter_t LBFGS_PAR;
   lbfgs_parameter_init(&LBFGS_PAR);
@@ -231,18 +247,17 @@ double minDistCalc(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_d
     for (int d = 0; d < dParas; d++) { R_PARA1[d] = SIGN_RAND(d)*R_PARA1[d]; }
     CONV = lbfgs(dParas, R_PARA1, &fx1, evaluate, NULL, &LBFGS_EVAL, &LBFGS_PAR);
     //Rprintf("CONV: %d\n", CONV);
-
     if (std::isfinite(fx1) & (!std::isnan(fx1))) {
       if ((!std::isfinite(fx)) | std::isnan(fx)) { 
         fx = fx1; 
         for (int d = 0; d < dParas; d++) { R_PARA[d] = R_PARA1[d]; } 
       } else {
         if (fx1 < fx) {
-          count--; fx = fx1; 
+          fx = fx1; 
           for (int d = 0; d < dParas; d++) { R_PARA[d] = R_PARA1[d]; } 
         }     
       }
-    } else { count--; }
+    } 
     count++;
   }
 

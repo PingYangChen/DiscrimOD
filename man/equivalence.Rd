@@ -2,7 +2,7 @@
 % Please edit documentation in R/DiscrimOD.R
 \name{equivalence}
 \alias{equivalence}
-\title{Equivalence Theorem}
+\title{Equivalence theorem for discrimination design}
 \usage{
 equivalence(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100,
   IFPLOT = FALSE, MODEL_INFO, DISTANCE, dsLower, dsUpper,
@@ -43,5 +43,6 @@ An List.
 }
 }
 \description{
-Please follow the instruction.
+Computes the values of directional derivative function on an user-defined grid and
+returns its maximal value.
 }

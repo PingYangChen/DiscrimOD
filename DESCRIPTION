@@ -1,13 +1,21 @@
 Package: DiscrimOD
 Type: Package
-Title: Optimal Discrimination Design for Nonlinear Models
+Title: DiscrimOD: Finding Optimal Discrimination Designs by Hybridizing Particle Swarm and L-BFGS Algorithms
 Version: 0.1.0
 Date: 2017-04-30
 Authors@R: person("Ping-Yang", "Chen", , "pychen.ping@gmail.com", c("aut", "cre"))
 Author: Ping-Yang Chen [aut, cre]
 Maintainer: Ping-Yang Chen <pychen.ping@gmail.com>
-Description: Optimal Exact Design for Nonlinear Models
-    Use four spaces when indenting paragraphs within the Description.
+Description: The **DiscrimOD** package adopts a hybrid algorithm
+  to search for the optimal discrimination designs
+  when there are two or more than two competing models
+  under normal or non-normal error assumption.
+  This hybrid algorithm is chosen to efficiently solve the maximin design criteria
+  in the optimal discrimination design problem which is usually a challenging task.
+  It combines the particle swarm optimization (PSO) algorithm and the L-BFGS algorithm
+  to tackle the outer and inner objectives of the maximin design criterion, respectively.
+  The equivalence theorems for various discrimination criteria are also available for
+  verifying the optimal discrimination designs.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -16,7 +24,6 @@ Depends:
 Imports:
     Rcpp (>= 0.12.7),
     RcppArmadillo,
-    assertthat,
     inline,
     utils
 LinkingTo: Rcpp,

@@ -2,80 +2,59 @@
 % Please edit documentation in R/DiscrimOD_assist.r
 \name{getPSOInfo}
 \alias{getPSOInfo}
-\title{Initialize PSO options}
+\title{Generation function of PSO parameter settings}
 \usage{
 getPSOInfo(nSwarm = 32, maxIter = 100, checkConv = 0, freeRun = 0.25,
-  tol = 1e-06, c1 = 2.05, c2 = 2.05, w0 = 0.95, w1 = 0.2,
+  tol = 1e-06, c1 = 2.05, c2 = 2.05, w0 = 1.2, w1 = 0.2,
   w_var = 0.8, vk = 4)
 }
 \arguments{
-\item{nSwarm}{integer. Swarm size.}
+\item{nSwarm}{A integer number of swarm size in PSO algorithm.}
 
-\item{maxIter}{integer. Maximal number of iterations.}
+\item{maxIter}{A integer number of maximal PSO iterations.}
 
-\item{checkConv}{logical. Specify \code{TRUE} if one wants PSO to stop when
-satisfyning the stopping criterion \eqn{|f'-f|<\varepsilon}
+\item{checkConv}{A logical value which controls whether PSO checks the stopping criterion during updating procedure.
+Specify \code{TRUE} for PSO to compute the stopping criterion \eqn{|f'-f|<\varepsilon}
 where \eqn{f'} and \eqn{f} are the objective function values in the previous and current iterations, respectively.
 The default is \code{FALSE}.}
 
-\item{freeRun}{numeric. The persentage of iterations which are free from examing the stopping criterion.
-The default is 0.25.}
+\item{freeRun}{A number between \eqn{[0,1]} that controls the percentage of PSO iterations which are free from examining the stopping criterion.
+If \code{checkConv = TRUE}, the default is 0.25. Otherwise, this value would not affect the algorithm.}
 
-\item{tol}{numeric. The value of \eqn{\varepsilon} in the stopping criterion, \eqn{|f'-f|<\varepsilon}.
-The default is \code{1e-6}.}
+\item{tol}{A small value for the tolerance, \eqn{\varepsilon}, in the stopping criterion.
+If \code{checkConv = TRUE}, the default is \code{1e-6}. Otherwise, this value would not affect the algorithm.}
 
-\item{c1}{numeric. The cognitive parameter in the PSO update procedure. The default is 2.05.}
+\item{c1}{The value of cognitive parameter in PSO updating procedure. The default is 2.05.}
 
-\item{c2}{numeric. The social parameter in the PSO update procedure. The default is 2.05.}
+\item{c2}{The value of social parameter in PSO updating procedure. The default is 2.05.}
 
-\item{w0}{numeric. The starting inertia weight in the PSO update procedure. The default is 0.95.}
+\item{w0}{The value of starting inertia weight in PSO updating procedure. The default is 1.2.}
 
-\item{w1}{numeric. The ending inertia weight in the PSO update procedure. The default is 0.2.}
+\item{w1}{The value of ending inertia weight in PSO updating procedure. The default is 0.2.}
 
-\item{w_var}{numeric. The persentage of iterations which linearly decrease the inertia weight
+\item{w_var}{A number between \eqn{[0,1]} that controls the percentage of iterations that PSO linearly decreases the inertia weight
 from \code{w0} to \code{w1}. The default is 0.8.}
 
-\item{vk}{numeric. The velocity clamping parameter. The default is 4.}
-
-\item{LBFGS_RETRY}{integer. The total times of trials in calculating the minimal distance
-with randomly generated initial starters. The default is 3.}
-
-\item{LBFGS_MAXIT}{integer. The maximal number of iterations of the L-BFGS algorithm.
-The default is 100.}
-
-\item{LBFGS_LM}{integer. The number of corrections to approximate the inverse hessian matrix.
-The default is 6.}
-
-\item{FVAL_EPS}{numeric. The value of \eqn{\varepsilon_f} in the stopping criterion,
-\eqn{|f'-f|/f<\varepsilon_f} where \eqn{f'} and \eqn{f} are the objective function values
-in the previous and current iterations, respectively.
-The default is 0 which means not using this stopping criteiron.}
-
-\item{GRAD_EPS}{numeric. The value of \eqn{\varepsilon_g} in the stopping criterion,
-\eqn{\|g\|/\|x\|<\varepsilon_g} where \eqn{g} is the gradient vector, \eqn{x} is the current position
-and \eqn{\|a\|=\sqrt{a^\top a}}. The default is 1e-5.}
-
-\item{LINESEARCH_MAXTRIAL}{integer The maximal trial of the backtrackign line search. The default is 50.}
-
-\item{LINESEARCH_MAX}{numeric. The initial step size in the line search. The default is 1.}
-
-\item{LINESEARCH_MIN}{numeric. The minimal step size in the line search. The default is 1e-9.}
-
-\item{LINESEARCH_RHO}{numeric. The persentage of the decreasement on the step size in each
-iteration of the line search. The default is 0.618.}
-
-\item{LINESEARCH_ARMIJO}{numeric. The parameter to
-control the accuracy of the backtracking line search algorithm.
-The default is \code{1e-4}. The value should be positive and smaller than 0.5.}
+\item{vk}{The value of velocity clamping parameter. The default is 4.}
 }
 \value{
-The list of algorithm setting parameters as the input of \code{DiscrimOD}.
+A list of PSO parameter settings.
 }
 \description{
-Please follow the instruction.
+Create a list with PSO parameters for optimal discrimination design search.
 }
 \examples{
 # Get default settings with specified swarm size and maximal number of iterations.
-algInfo <- getPSOInfo(nSwarm = 32, maxIter = 100)
+PSO_INFO <- getPSOInfo(nSwarm = 32, maxIter = 100)
 
+# If wanted to disable L-BFGS for the inner optimization loop and
+# use NestedPSO algorithm (Chen et al., 2015), we need the options
+# for the two-layer PSO: c(outer loop option, inner loop option)
+NESTEDPSO_INFO <- getPSOInfo(nSwarm = c(16, 32), maxIter = c(100, 200))
+# Also, disable the L-BFGS algorithm
+LBFGS_NOTRUN <- getLBFGSInfo(IF_INNER_LBFGS = FALSE)
+
+}
+\references{
+Chen, R.-B., Chang, S.-P., Wang, W., Tung, H.-C., and Wong, W. K. (2015). Minimax optimal designs via particle swarm optimization methods. Statistics and Computing, 25(5):975-988.
 }

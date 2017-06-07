@@ -2,55 +2,69 @@
 % Please edit documentation in R/DiscrimOD_assist.r
 \name{getLBFGSInfo}
 \alias{getLBFGSInfo}
-\title{Initialize LBFGS options}
+\title{Generation function of L-BFGS parameter settings}
 \usage{
 getLBFGSInfo(IF_INNER_LBFGS = TRUE, LBFGS_RETRY = 1, LBFGS_MAXIT = 0,
   LBFGS_LM = 6, FVAL_EPS = 0, GRAD_EPS = 1e-05,
   LINESEARCH_MAXTRIAL = 20, LINESEARCH_MAX = 1e+20,
   LINESEARCH_MIN = 1e-20, LINESEARCH_ARMIJO = 1e-04,
-  LINESEARCH_WOLFE = 0.9)
+  LINESEARCH_WOLFE = 0.9, FD_DELTA = 0.001)
 }
 \arguments{
-\item{IF_INNER_LBFGS}{logical.}
+\item{IF_INNER_LBFGS}{The logical input \code{TRUE}/\code{FALSE} to turn on/off L-BFGS algorithm for the
+inner optimization problem (minimizing the distance among parameter space).
+If \code{IF_INNER_LBFGS = FALSE}, then the NestedPSO algorithm in Chen et al. (2015) is used for optimal discrimination design search.}
 
-\item{LBFGS_RETRY}{integer. The total times of trials in calculating the minimal distance
-with randomly generated initial starters. The default is 3.}
+\item{LBFGS_RETRY}{The integer number of total trials of L-BFGS in computing the minimal distance
+with randomly generated initial values. The default is 1.}
 
-\item{LBFGS_MAXIT}{integer. The maximal number of iterations of the L-BFGS algorithm.
-The default is 100.}
+\item{LBFGS_MAXIT}{The integer number of maximal iteration of L-BFGS algorithm.
+The default is 0 and L-BFGS stops when it converges.}
 
-\item{LBFGS_LM}{integer. The number of corrections to approximate the inverse hessian matrix.
+\item{LBFGS_LM}{The integer number of corrections to approximate the inverse hessian matrix.
 The default is 6.}
 
-\item{FVAL_EPS}{numeric. The value of \eqn{\varepsilon_f} in the stopping criterion,
+\item{FVAL_EPS}{The tolerance value, \eqn{\varepsilon_f}, of the stopping criterion on objective function value,
 \eqn{|f'-f|/f<\varepsilon_f} where \eqn{f'} and \eqn{f} are the objective function values
 in the previous and current iterations, respectively.
-The default is 0 which means not using this stopping criteiron.}
+The default is 0 and L-BFGS ignores this stopping criterion.}
 
-\item{GRAD_EPS}{numeric. The value of \eqn{\varepsilon_g} in the stopping criterion,
-\eqn{\|g\|/\|x\|<\varepsilon_g} where \eqn{g} is the gradient vector, \eqn{x} is the current position
-and \eqn{\|a\|=\sqrt{a^\top a}}. The default is 1e-5.}
+\item{GRAD_EPS}{The tolerance value, \eqn{\varepsilon_g}, of the stopping criterion on gradients,
+\eqn{\|g\|/\|x\|<\varepsilon_g} where \eqn{g} is the gradient, \eqn{x} is the current position
+and \eqn{\|a\|=\sqrt{a^\top a}}. The default is \code{1e-5}.}
 
-\item{LINESEARCH_MAXTRIAL}{integer The maximal trial of the backtrackign line search. The default is 50.}
+\item{LINESEARCH_MAXTRIAL}{The integer number of maximal trial of More-Thuente line search routine. The default is 20.}
 
-\item{LINESEARCH_MAX}{numeric. The initial step size in the line search. The default is 1.}
+\item{LINESEARCH_MAX}{The maximal step size in the line search routine. The default is 1e20.}
 
-\item{LINESEARCH_MIN}{numeric. The minimal step size in the line search. The default is 1e-9.}
+\item{LINESEARCH_MIN}{The minimal step size in the line search routine. The default is 1e-20.}
 
-\item{LINESEARCH_ARMIJO}{numeric. The parameter to
-control the accuracy of the backtracking line search algorithm.
-The default is \code{1e-4}. The value should be positive and smaller than 0.5.}
+\item{LINESEARCH_ARMIJO}{A parameter to control the accuracy of the line search routine. The default value
+is \code{1e-4}. This parameter should be greater than zero and smaller than 0.5.}
 
-\item{LINESEARCH_WOLFE}{numeric. The persentage of the decreasement on the step size in each
-iteration of the line search. The default is 0.618.}
+\item{LINESEARCH_WOLFE}{A coefficient for the Wolfe condition in the line search routine. The default
+value is 0.9. This parameter should be greater than \code{LINESEARCH_ARMIJO} parameter and smaller than 1.0.}
+
+\item{FD_DELTA}{A small value for the gap of finite difference method for computing the gradient. The default is \code{1e-3}.}
 }
 \value{
-The list of algorithm setting parameters as the input of \code{DiscrimOD}.
+The list of L-BFGS parameter settings.
 }
 \description{
-Please follow the instruction.
+Create a list with L-BFGS parameters for optimal discrimination design search.
 }
 \examples{
-lbfgsInfo <- getLBFGSInfo(LBFGS_RETRY = 2)
+# Get default settings with 2 repeatedly trails for L-BFGS algorithm.
+LBFGS_INFO <- getLBFGSInfo(LBFGS_RETRY = 2)
 
+# If wanted to disable L-BFGS for the inner optimization loop and
+# use NestedPSO algorithm (Chen et al., 2015), we need the options
+# for the two-layer PSO: c(outer loop option, inner loop option)
+NESTEDPSO_INFO <- getPSOInfo(nSwarm = c(16, 32), maxIter = c(100, 200))
+# Also, disable the L-BFGS algorithm
+LBFGS_NOTRUN <- getLBFGSInfo(IF_INNER_LBFGS = FALSE)
+
+}
+\references{
+Chen, R.-B., Chang, S.-P., Wang, W., Tung, H.-C., and Wong, W. K. (2015). Minimax optimal designs via particle swarm optimization methods. Statistics and Computing, 25(5):975-988.
 }

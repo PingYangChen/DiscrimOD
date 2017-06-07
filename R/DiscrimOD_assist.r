@@ -1,17 +1,17 @@
-#' Initialize PSO options
+#' Generation function of PSO parameter settings
 #'
-#' Please follow the instruction.
+#' Create a list with PSO parameters for optimal discrimination design search.
 #'
-#' @param nSwarm integer. Swarm size.
-#' @param maxIter integer. Maximal number of iterations.
-#' @param checkConv logical. Specify \code{TRUE} if one wants PSO to stop when
-#' satisfyning the stopping criterion \eqn{|f'-f|<\varepsilon}
+#' @param nSwarm A integer number of swarm size in PSO algorithm.
+#' @param maxIter A integer number of maximal PSO iterations.
+#' @param checkConv A logical value which controls whether PSO checks the stopping criterion during updating procedure.
+#' Specify \code{TRUE} for PSO to compute the stopping criterion \eqn{|f'-f|<\varepsilon}
 #' where \eqn{f'} and \eqn{f} are the objective function values in the previous and current iterations, respectively.
 #' The default is \code{FALSE}.
-#' @param freeRun numeric. The persentage of iterations which are free from examing the stopping criterion.
-#' The default is 0.25.
-#' @param tol numeric. The value of \eqn{\varepsilon} in the stopping criterion, \eqn{|f'-f|<\varepsilon}.
-#' The default is \code{1e-6}.
+#' @param freeRun A number between \eqn{[0,1]} that controls the percentage of PSO iterations which are free from examining the stopping criterion.
+#' If \code{checkConv = TRUE}, the default is 0.25. Otherwise, this value would not affect the algorithm.
+#' @param tol A small value for the tolerance, \eqn{\varepsilon}, in the stopping criterion.
+#' If \code{checkConv = TRUE}, the default is \code{1e-6}. Otherwise, this value would not affect the algorithm.
 # @param typePSO integer. The type of PSO. In this package, we have the following types:
 # \itemize{
 # \item{0}{ Linearly Decreasing Weight PSO (Shi, Y. H.	and Eberhart, R. C., 1998)}
@@ -19,46 +19,33 @@
 # \item{2}{ Quantum PSO (Sun, J., Feng, B. and Xu, W., 2004)}
 # \item{3}{ LcRiPSO (Bonyadi, M. R., Michalewicz, Z., 2014)}
 # }
-#' @param c1 numeric. The cognitive parameter in the PSO update procedure. The default is 2.05.
-#' @param c2 numeric. The social parameter in the PSO update procedure. The default is 2.05.
-#' @param w0 numeric. The starting inertia weight in the PSO update procedure. The default is 0.95.
-#' @param w1 numeric. The ending inertia weight in the PSO update procedure. The default is 0.2.
-#' @param w_var numeric. The persentage of iterations which linearly decrease the inertia weight
+#' @param c1 The value of cognitive parameter in PSO updating procedure. The default is 2.05.
+#' @param c2 The value of social parameter in PSO updating procedure. The default is 2.05.
+#' @param w0 The value of starting inertia weight in PSO updating procedure. The default is 1.2.
+#' @param w1 The value of ending inertia weight in PSO updating procedure. The default is 0.2.
+#' @param w_var A number between \eqn{[0,1]} that controls the percentage of iterations that PSO linearly decreases the inertia weight
 #' from \code{w0} to \code{w1}. The default is 0.8.
-#' @param vk numeric. The velocity clamping parameter. The default is 4.
-#' @param LBFGS_RETRY integer. The total times of trials in calculating the minimal distance
-#' with randomly generated initial starters. The default is 3.
-#' @param LBFGS_MAXIT integer. The maximal number of iterations of the L-BFGS algorithm.
-#' The default is 100.
-#' @param LBFGS_LM integer. The number of corrections to approximate the inverse hessian matrix.
-#' The default is 6.
-#' @param FVAL_EPS numeric. The value of \eqn{\varepsilon_f} in the stopping criterion,
-#' \eqn{|f'-f|/f<\varepsilon_f} where \eqn{f'} and \eqn{f} are the objective function values
-#' in the previous and current iterations, respectively.
-#' The default is 0 which means not using this stopping criteiron.
-#' @param GRAD_EPS numeric. The value of \eqn{\varepsilon_g} in the stopping criterion,
-#' \eqn{\|g\|/\|x\|<\varepsilon_g} where \eqn{g} is the gradient vector, \eqn{x} is the current position
-#' and \eqn{\|a\|=\sqrt{a^\top a}}. The default is 1e-5.
-#' @param LINESEARCH_MAXTRIAL integer The maximal trial of the backtrackign line search. The default is 50.
-#' @param LINESEARCH_MAX numeric. The initial step size in the line search. The default is 1.
-#' @param LINESEARCH_MIN numeric. The minimal step size in the line search. The default is 1e-9.
-#' @param LINESEARCH_RHO numeric. The persentage of the decreasement on the step size in each
-#' iteration of the line search. The default is 0.618.
-#' @param LINESEARCH_ARMIJO numeric. The parameter to
-#' control the accuracy of the backtracking line search algorithm.
-#' The default is \code{1e-4}. The value should be positive and smaller than 0.5.
-#' @return The list of algorithm setting parameters as the input of \code{DiscrimOD}.
+#' @param vk The value of velocity clamping parameter. The default is 4.
+#' @return A list of PSO parameter settings.
 #' @examples
 #' # Get default settings with specified swarm size and maximal number of iterations.
-#' algInfo <- getPSOInfo(nSwarm = 32, maxIter = 100)
+#' PSO_INFO <- getPSOInfo(nSwarm = 32, maxIter = 100)
 #'
+#' # If wanted to disable L-BFGS for the inner optimization loop and
+#' # use NestedPSO algorithm (Chen et al., 2015), we need the options
+#' # for the two-layer PSO: c(outer loop option, inner loop option)
+#' NESTEDPSO_INFO <- getPSOInfo(nSwarm = c(16, 32), maxIter = c(100, 200))
+#' # Also, disable the L-BFGS algorithm
+#' LBFGS_NOTRUN <- getLBFGSInfo(IF_INNER_LBFGS = FALSE)
+#'
+#' @references Chen, R.-B., Chang, S.-P., Wang, W., Tung, H.-C., and Wong, W. K. (2015). Minimax optimal designs via particle swarm optimization methods. Statistics and Computing, 25(5):975-988.
 #' @name getPSOInfo
 #' @rdname getPSOInfo
 #' @export
 getPSOInfo <- function(nSwarm = 32, maxIter = 100,
   #typePSO = 0, #dSwarm = NULL, varUpper = NULL, varLower = NULL,
   checkConv = 0, freeRun = 0.25, tol = 1e-6, c1 = 2.05, c2 = 2.05,
-  w0 = 0.95, w1 = 0.2, w_var = 0.8, vk = 4 #, chi = NULL,
+  w0 = 1.2, w1 = 0.2, w_var = 0.8, vk = 4 #, chi = NULL,
   #typeTopo = NULL, nGroup = NULL, GC_S_ROOF = 5, GC_F_ROOF = 15, GC_RHO = 1,
   #Q_cen_type = 1, Q_a0 = 1.7, Q_a1 = 0.7, Q_a_var = 0.8, LcRi_L = 0.01,
   ) {
@@ -70,17 +57,17 @@ getPSOInfo <- function(nSwarm = 32, maxIter = 100,
   #if (length(varUpper))   varUpper   <- matrix(0, nLoop)
   #if (length(varLower))   varLower   <- matrix(0, nLoop)
   #if (length(maxIter))    maxIter    <- rep(100   , nLoop)
-  if (length(checkConv) < nLoop)  checkConv  <- rep(0     , nLoop)
+  if (length(checkConv) < nLoop)  checkConv  <- rep(checkConv, nLoop)
   #if (length(typePSO)) < nLoop)    typePSO    <- rep(0     , nLoop)
-  if (length(freeRun) < nLoop)    freeRun    <- rep(0.25  , nLoop)
-  if (length(tol) < nLoop)        tol        <- rep(1e-6  , nLoop)
-  if (length(c1) < nLoop)         c1         <- rep(2.05  , nLoop)
-  if (length(c2) < nLoop)         c2         <- rep(2.05  , nLoop)
-  if (length(w0) < nLoop)         w0         <- rep(0.95  , nLoop)
-  if (length(w1) < nLoop)         w1         <- rep(0.2   , nLoop)
-  if (length(w_var) < nLoop)      w_var      <- rep(0.8   , nLoop)
+  if (length(freeRun) < nLoop)    freeRun    <- rep(freeRun, nLoop)
+  if (length(tol) < nLoop)        tol        <- rep(tol, nLoop)
+  if (length(c1) < nLoop)         c1         <- rep(c1, nLoop)
+  if (length(c2) < nLoop)         c2         <- rep(c2, nLoop)
+  if (length(w0) < nLoop)         w0         <- rep(w0, nLoop)
+  if (length(w1) < nLoop)         w1         <- rep(w1, nLoop)
+  if (length(w_var) < nLoop)      w_var      <- rep(w_var, nLoop)
   #if (length(chi) < nLoop)        chi        <- rep(0.729 , nLoop)
-  if (length(vk) < nLoop)         vk         <- rep(4     , nLoop)
+  if (length(vk) < nLoop)         vk         <- rep(vk, nLoop)
   #if (length(typeTopo) < nLoop)   typeTopo   <- rep(0     , nLoop)
   #if (length(nGroup) < nLoop)     nGroup     <- rep(1     , nLoop)
   #if (length(GC_S_ROOF) < nLoop)  GC_S_ROOF  <- rep(5     , nLoop)
@@ -100,47 +87,58 @@ getPSOInfo <- function(nSwarm = 32, maxIter = 100,
     )
 }
 
-#' Initialize LBFGS options
+#' Generation function of L-BFGS parameter settings
 #'
-#' Please follow the instruction.
+#' Create a list with L-BFGS parameters for optimal discrimination design search.
 #'
-#' @param IF_INNER_LBFGS logical. 
-#' @param LBFGS_RETRY integer. The total times of trials in calculating the minimal distance
-#' with randomly generated initial starters. The default is 3.
-#' @param LBFGS_MAXIT integer. The maximal number of iterations of the L-BFGS algorithm.
-#' The default is 100.
-#' @param LBFGS_LM integer. The number of corrections to approximate the inverse hessian matrix.
+#' @param IF_INNER_LBFGS The logical input \code{TRUE}/\code{FALSE} to turn on/off L-BFGS algorithm for the
+#' inner optimization problem (minimizing the distance among parameter space).
+#' If \code{IF_INNER_LBFGS = FALSE}, then the NestedPSO algorithm in Chen et al. (2015) is used for optimal discrimination design search.
+#' @param LBFGS_RETRY The integer number of total trials of L-BFGS in computing the minimal distance
+#' with randomly generated initial values. The default is 1.
+#' @param LBFGS_MAXIT The integer number of maximal iteration of L-BFGS algorithm.
+#' The default is 0 and L-BFGS stops when it converges.
+#' @param LBFGS_LM The integer number of corrections to approximate the inverse hessian matrix.
 #' The default is 6.
-#' @param FVAL_EPS numeric. The value of \eqn{\varepsilon_f} in the stopping criterion,
+#' @param FVAL_EPS The tolerance value, \eqn{\varepsilon_f}, of the stopping criterion on objective function value,
 #' \eqn{|f'-f|/f<\varepsilon_f} where \eqn{f'} and \eqn{f} are the objective function values
 #' in the previous and current iterations, respectively.
-#' The default is 0 which means not using this stopping criteiron.
-#' @param GRAD_EPS numeric. The value of \eqn{\varepsilon_g} in the stopping criterion,
-#' \eqn{\|g\|/\|x\|<\varepsilon_g} where \eqn{g} is the gradient vector, \eqn{x} is the current position
-#' and \eqn{\|a\|=\sqrt{a^\top a}}. The default is 1e-5.
-#' @param LINESEARCH_MAXTRIAL integer The maximal trial of the backtrackign line search. The default is 50.
-#' @param LINESEARCH_MAX numeric. The initial step size in the line search. The default is 1.
-#' @param LINESEARCH_MIN numeric. The minimal step size in the line search. The default is 1e-9.
-#' @param LINESEARCH_ARMIJO numeric. The parameter to
-#' control the accuracy of the backtracking line search algorithm.
-#' The default is \code{1e-4}. The value should be positive and smaller than 0.5.
-#' @param LINESEARCH_WOLFE numeric. The persentage of the decreasement on the step size in each
-#' iteration of the line search. The default is 0.618.
-#' @return The list of algorithm setting parameters as the input of \code{DiscrimOD}.
+#' The default is 0 and L-BFGS ignores this stopping criterion.
+#' @param GRAD_EPS The tolerance value, \eqn{\varepsilon_g}, of the stopping criterion on gradients,
+#' \eqn{\|g\|/\|x\|<\varepsilon_g} where \eqn{g} is the gradient, \eqn{x} is the current position
+#' and \eqn{\|a\|=\sqrt{a^\top a}}. The default is \code{1e-5}.
+#' @param LINESEARCH_MAXTRIAL The integer number of maximal trial of More-Thuente line search routine. The default is 20.
+#' @param LINESEARCH_MAX The maximal step size in the line search routine. The default is 1e20.
+#' @param LINESEARCH_MIN The minimal step size in the line search routine. The default is 1e-20.
+#' @param LINESEARCH_ARMIJO A parameter to control the accuracy of the line search routine. The default value
+#' is \code{1e-4}. This parameter should be greater than zero and smaller than 0.5.
+#' @param LINESEARCH_WOLFE A coefficient for the Wolfe condition in the line search routine. The default
+#' value is 0.9. This parameter should be greater than \code{LINESEARCH_ARMIJO} parameter and smaller than 1.0.
+#' @param FD_DELTA A small value for the gap of finite difference method for computing the gradient. The default is \code{1e-3}.
+#' @return The list of L-BFGS parameter settings.
 #' @examples
-#' lbfgsInfo <- getLBFGSInfo(LBFGS_RETRY = 2)
+#' # Get default settings with 2 repeatedly trails for L-BFGS algorithm.
+#' LBFGS_INFO <- getLBFGSInfo(LBFGS_RETRY = 2)
 #'
+#' # If wanted to disable L-BFGS for the inner optimization loop and
+#' # use NestedPSO algorithm (Chen et al., 2015), we need the options
+#' # for the two-layer PSO: c(outer loop option, inner loop option)
+#' NESTEDPSO_INFO <- getPSOInfo(nSwarm = c(16, 32), maxIter = c(100, 200))
+#' # Also, disable the L-BFGS algorithm
+#' LBFGS_NOTRUN <- getLBFGSInfo(IF_INNER_LBFGS = FALSE)
+#'
+#' @references Chen, R.-B., Chang, S.-P., Wang, W., Tung, H.-C., and Wong, W. K. (2015). Minimax optimal designs via particle swarm optimization methods. Statistics and Computing, 25(5):975-988.
 #' @name getLBFGSInfo
 #' @rdname getLBFGSInfo
 #' @export
 getLBFGSInfo <- function(IF_INNER_LBFGS = TRUE, LBFGS_RETRY = 1, LBFGS_MAXIT = 0, LBFGS_LM = 6, FVAL_EPS = 0, GRAD_EPS = 1e-5,
-                         LINESEARCH_MAXTRIAL = 20, LINESEARCH_MAX = 1e20, LINESEARCH_MIN = 1e-20, 
-                         LINESEARCH_ARMIJO = 1e-4, LINESEARCH_WOLFE = 0.9) {
+                         LINESEARCH_MAXTRIAL = 20, LINESEARCH_MAX = 1e20, LINESEARCH_MIN = 1e-20,
+                         LINESEARCH_ARMIJO = 1e-4, LINESEARCH_WOLFE = 0.9, FD_DELTA = 1e-3) {
 
-  list(IF_INNER_LBFGS = as.integer(IF_INNER_LBFGS), LBFGS_RETRY = LBFGS_RETRY, LBFGS_MAXIT = LBFGS_MAXIT, LBFGS_LM = LBFGS_LM, 
+  list(IF_INNER_LBFGS = as.integer(IF_INNER_LBFGS), LBFGS_RETRY = LBFGS_RETRY, LBFGS_MAXIT = LBFGS_MAXIT, LBFGS_LM = LBFGS_LM,
        FVAL_EPS = FVAL_EPS, GRAD_EPS = GRAD_EPS,
        LINESEARCH_MAXTRIAL = LINESEARCH_MAXTRIAL, LINESEARCH_MAX = LINESEARCH_MAX, LINESEARCH_MIN = LINESEARCH_MIN,
-       LINESEARCH_ARMIJO = LINESEARCH_ARMIJO, LINESEARCH_WOLFE = LINESEARCH_WOLFE)
+       LINESEARCH_ARMIJO = LINESEARCH_ARMIJO, LINESEARCH_WOLFE = LINESEARCH_WOLFE, FD_DELTA = FD_DELTA)
 }
 
 #' @export
@@ -160,10 +158,10 @@ getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL
       tmp <- is.finite(MODEL_INFO[[k]]$paraLower) + 10*is.finite(MODEL_INFO[[k]]$paraUpper)
       tmp2 <- ifelse(tmp == 0, 0, ifelse(tmp == 1, 1, ifelse(tmp == 10, 3, 2)))
       parasBdd[k,] <- c(tmp2, rep(0, max(dParas) - dParas[k]))
-      parasInit[k,] <- runif(max(dParas), as.vector(parasLower[k,]), as.vector(parasUpper[k,])) 
+      parasInit[k,] <- runif(max(dParas), as.vector(parasLower[k,]), as.vector(parasUpper[k,]))
     }
   }
- 
+
   CRIT_TYPE_NUM <- ifelse(crit_type == "pair_fixed_true", 0,
                       ifelse(crit_type == "maxmin_fixed_true", 1, 2))
 

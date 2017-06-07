@@ -1,5 +1,5 @@
 ---
-title: "Finding Optimal Discrimination Designs by Hybirdizing Particle Swarm and L-BFGS Algorithms"
+title: "DiscrimOD: Finding Optimal Discrimination Designs by Hybridizing Particle Swarm and L-BFGS Algorithms"
 author: 
   - name: Ping-Yang Chen
     affiliation: Department of Statistics, National Cheng Kung University
@@ -15,20 +15,22 @@ output:
     highlight: vignette
     number_sections: yes
     toc: yes
+    fig_caption: true
+    pandoc_args: [--filter=pandoc-crossref]
 vignette: >
-  %\VignetteIndexEntry{Finding Optimal Discrimination Designs by Hybirdizing Particle Swarm and L-BFGS Algorithms}
+  %\VignetteIndexEntry{DiscrimOD\: Finding Optimal Discrimination Designs by Hybridizing Particle Swarm and L-BFGS Algorithms}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 abstract: >
-  This package adopts a hybrid algorithm
-  to search for optimal discrimination designs
+  The **DiscrimOD** package adopts a hybrid algorithm
+  to search for the optimal discrimination designs
   when there are two or more than two competing models
   under normal or non-normal error assumption.
   This hybrid algorithm is chosen to efficiently solve the maximin design criteria
   in the optimal discrimination design problem which is usually a challenging task.
   It combines the particle swarm optimization (PSO) algorithm and the L-BFGS algorithm
   to tackle the outer and inner objectives of the maximin design criterion, respectively.
-  The equivalence theorems for various discriminaiton criteria are also available for
+  The equivalence theorems for various discrimination criteria are also available for
   verifying the optimal discrimination designs.
 ---
 
@@ -38,6 +40,13 @@ library(knitcitations)
 ```
 
 # Introduction
+
+The **DiscrimOD** package is currently in the *alpha* testing stage which means we only open this package for a few people to test it and hopefully we can have some responses and suggestions on the computational issues.
+
+Section [2](#pkg) is the complete user guide for implementing the **DiscrimOD** package.
+Section [3](#af) is an example from @atkinson1975optimal. We show how to use **DiscrimOD** to find the max-min $T$-optimal design.
+Section [4](#tox) shows a real application in toxicology and find the max-min $KL$-optimal design when the models have non-normal errors.
+Section [5](#vs) extends an example in @atkinson1975design and compare the newly proposed algorithm with the NestedPSO in @chen2015minimax. We show the new algorithm is more efficient in tackling the optimal discrimination design search problems.
 
 ## Discrimination Designs
 
@@ -56,18 +65,20 @@ The goal is to find the optimal design to discriminate among these competing mod
 We consider the approximate design.
 An approximate design is a measure on trails over the experimental
 region $\mathcal{X}$ which has the form
-\begin{equation*}\label{eq:approxDesign}
+
+$$
   \xi = \left\{s_1, s_2, \ldots, s_n; p_1, p_2, \ldots, p_n\right\}
-\end{equation*}
+$${#eq:approxDesign}
+
 where $s_1, s_2, \ldots, s_n$ are $n$ distinct support points in $\mathcal{X}$, and,
 $p_i$ is corresponding measure at the $i$th support point satisfying $\sum_ip_i=1$.
 In practice, suppose the total budget is $N$ runs. Then based on the design $\xi$, roughly $p_iN$ observations are taken at each support point of the design $\xi$.
 For this type of experimental design, usually we can appraise the
 optimality of a design by using the equivalence theorem.
 
-### Discriminating Between Two Models
+### Discriminating Between Two Models {#twomodel}
 
-There are several types of distance-measure-based discrimination design crietria 
+There are several types of distance-measure-based discrimination design criteria 
 for different underlying distribution assumptions.
 The first criterion is the $T$-optimal criterion proposed by @atkinson1975design 
 which is based on homoscedastic Gaussian assumption.
@@ -83,96 +94,108 @@ The criterion in @lopez2007optimal is called the $KL$-optimal criterion, and in 
 Let $f_1(y\mid x,\theta_1,\sigma^2)$ and $f_2(y\mid x,\theta_2,\sigma^2)$ be the two competing models.
 Assume the true model, $f_t(y\mid x, \sigma^2)$, is $f_1(y\mid x,\theta_1,\sigma^2)$ with specified parameter $\theta_1$.
 To measure the difference between two competing models, 
-the Kullback--Leibler ($KL$) divergence (\ref{eq:kldiv}) is used, i.e.,
-\begin{equation}\label{eq:kldiv}
+the Kullback--Leibler ($KL$) divergence ([@eq:kldiv]) is used, i.e.,
+
+$$
   \mathcal{I}(f_t, f_2, x, \theta_2) = 
     \int f_t(y\mid x,\sigma^2)\log{\left\{\frac{f_t(y\mid x,\sigma^2)}{f_2(y\mid x,\theta_2,\sigma^2)}\right\}}~dy, ~\forall~x\in\mathcal{X}.
-\end{equation}
+$${#eq:kldiv}
+
 The $KL$-optimal criterion is the minimal value of 
 $\mathcal{I}(f_t, f_2, x, \theta_2)$ over $\theta_2\in\Theta_2$, i.e.
-\begin{equation}\label{eq:klCri}
+
+$$
   I_{2,t}(\xi) = \underset{\theta_2\in\Theta_2}{\min}\left\{ \int_\mathcal{X} \mathcal{I}(f_t, f_2, x, \theta_2)~\xi(dx) \right\},
-\end{equation}
+$${#eq:klCri} 
+
 and the design $\xi^*_{KL}$ is $KL$-optimal if it maximizes $I_{2,t}(\xi)$.
 
 According to @lopez2007optimal, the equivalence theorem tells, 
 the design $\xi^*_{KL}$ is the $KL$-optimal design if and only if
 the directional derivative, $\psi_{KL}(x,\xi^*_{KL})$,
-\begin{equation}\label{eq:klDisp}
+
+$$
   \psi_{KL}\left(x,\xi^*_{KL}\right) = \mathcal{I}(f_t, f_2, x, \hat{\theta}_2(\xi^*_{KL})) - I_{2,t}(\xi^*_{KL}) \leq 0
-\end{equation}
-for all $x \in \mathcal{X}$, where $\hat{\theta}_2(\xi)$ minimizes the $KL$ divergence in (\ref{eq:kldiv}) at $\xi^*_{KL}$.  The equality of (\ref{eq:klDisp}) holds at each support point of $\xi^*_{KL}$.
+$${#eq:klDisp}
+
+for all $x \in \mathcal{X}$, where $\hat{\theta}_2(\xi)$ minimizes the $KL$ divergence in ([@eq:kldiv]) at $\xi^*_{KL}$.  The equality of ([@eq:klDisp]) holds at each support point of $\xi^*_{KL}$.
 It is easy to show that the $T$-optimal criterion is a special case of the $KL$-optimal criterion when homoscedasticity model and normal error assumptions are held.
 
-### Discriminating Between More Than Two Models
+### Discriminating Between More Than Two Models {#moremodel}
 
 When the number of the competing models is more than 2, say $f_1, f_2, \ldots, f_K$, $K>2$, @tommasi2007optimal and @tommasi2016max studied the corresponding discriminate design problem based on the relative design efficiencies.
 With out loss of generality, we fix the first model as the true model, $f_t = f_1$, and brief their approach in the following.
 Consider a two-step procedure.  First, we need to identify the $KL$-optimal designs, $\xi^*_{KL,i}$, $i = 2, \ldots, K$, for discriminating each pair of the $i$th rival model and true model $f_t$ separately.  
 Given a design $\xi$, define the $KL$-efficiency of $\xi$ with respect to $\xi^*_{KL,i}$ as
-\begin{equation}\label{eq:klEff}
+
+$$
   \mbox{Eff}_i(\xi) = \frac{I_{i,t}(\xi)}{I_{i,t}(\xi^*_{KL,i})}~, i = 2, \ldots, K,
-\end{equation}
-where $I_{i,t}(\xi)$ can be found in (\ref{eq:klCri}).  The idea of finding the optimal discrimination designs for more than 2 competing models is to maximize all the $KL$-efficiencies as possible as one can.  Thus finding the optimal discriminate designs can be transferred as a multiple objective optimization problem.
+$${#eq:klEff}
+
+where $I_{i,t}(\xi)$ can be found in ([@eq:klEff]).  The idea of finding the optimal discrimination designs for more than 2 competing models is to maximize all the $KL$-efficiencies as possible as one can.  Thus finding the optimal discriminate designs can be transferred as a multiple objective optimization problem.
 
 To accomplish this goal, @tommasi2007optimal considered a pre-specified weight vector, $\alpha=(\alpha_2,\ldots,\alpha_K)$ satisfying $0\leq\alpha_i\leq1$ and $\sum_{i=2}^K \alpha_i = 1$, and proposed the generalized $KL$-optimal design that maximizes the weighted sum of the $KL$-efficiencies based on $\alpha$, i.e. $\sum_i \alpha_i \mbox{Eff}_i(\xi)$.
 The $i$th component in $\alpha$ represents the importance of the $i$th rival models of user's interest.
 On the other hand, due to the lack of prior knowledge to $\alpha$,
 @tommasi2016max considered the worst case of the $KL$-efficiencies.  Their idea is to maximize the minimal $KL$-efficiency among $\mbox{Eff}_i(\xi)$, $i = 2,\ldots,K$, that is to maximize
-\begin{equation}\label{eq:mmklCri}
+
+$$
   I_m(\xi) = \underset{2\leq i\leq K}{\min}\mbox{Eff}_i(\xi).
-\end{equation}
-The design that maximizes (\ref{eq:mmklCri}) is called the max-min $KL$-optimal design.
+$${#eq:mmklCri}
+
+The design that maximizes ([@eq:mmklCri]) is called the max-min $KL$-optimal design.
 
 Consider the equivalence theorem of the max-min $KL$-optimal design, $\xi^*_{mmKL}$.
 Define a subset, $\mathcal{C}\left(\xi^*_{mmKL}\right)$, that consists of the indices of closest rival models to the true model such that
-\begin{equation}\label{eq:mmModelSet}
+
+$$
 \mbox{Eff}_i(\xi^*_{mmKL}) < \mbox{Eff}_j(\xi^*_{mmKL}), ~i\in\mathcal{C}\left(\xi^*_{mmKL}\right), j\notin\mathcal{C}\left(\xi^*_{mmKL}\right).
-\end{equation}
+$${#eq:mmModelSet}
+
 \cite{tommasi2016max} showed that there exists a weight vector in $[0,1]^{K-1}$, $\tilde\alpha = (\tilde\alpha_2, \ldots, \tilde\alpha_K)$ satisfying
-\begin{equation}\label{eq:mmwt}
+
+$$
 \sum_{i=2}^K \tilde\alpha_i = 1~\mbox{ and }~ \tilde\alpha_i = 0~\mbox{ if }~i\notin\mathcal{C}\left(\xi^*_{mmKL}\right)
-\end{equation}
+$${#eq:mmwt}
+
 such that $\xi^*_{mmKL}$ is the max-min $KL$-optimal design if and only if
 it is also the special case of generalized $KL$-optimal design through $\tilde\alpha$, and hence,
 adopting the equivalence theorem for generalized $KL$-optimal design, we have
-\begin{equation}\label{eq:mmklDisp}
+
+$$
 \psi_{mmKL}\left(x,\xi^*_{mmKL}\right) =
 \sum_{i=2}^K \tilde\alpha_i~\frac{\mathcal{I}\left(f_t,f_i,x,\hat{\theta}_i\left(\xi^*_{mmKL}\right)\right) }
     {I_{i,t}\left(\xi^*_{KL,i}\right)} - I_m(\xi^*_{mmKL}) \leq 0
-\end{equation}
+$${#eq:mmklDisp}
+
 for all $x \in \mathcal{X}$, where
-\begin{equation*}
+
+$$
 \hat{\theta}_i\left(\xi\right) =
   \underset{\theta_i\in\Theta_i}{\arg\min} \int_\mathcal{X} \mathcal{I}(f_t,f_i,x,\theta_i)~\xi(dx),
-\end{equation*}
+$$
+
 and the equality holds at all support points of $\xi^*_{mmKL}$.
 
-## Algorithms
+## Algorithms {#alg}
 
 ### PSO and L-BFGS Briefly
 
-In order to efficiently identify the optimal design, we initiate a flock of $N$ birds (particles) in the pre-defined search space randomly.
-Each particle is a design, $\xi$, and we represent it as a vector, $(s_1, \ldots, s_n, p_1, \ldots, p_{n-1})^\top$.  We do not need to search for the $n$th weight in the design because it can be calculated by $p_n = 1-\sum_{j=1}^{n-1}p_j$.
-Let $\xi_i^{(t)}$ be $i$th particle at the $t$th iteration.  Define $\xi_{i^*}^{(t-1)}$ to be the design with the maximal design criterion value discovered by the $i$th particle before the $t$th iteration, and $\xi_g^{(t-1)}$ to be the design of the best value found by the whole swarm before the $t$th iteration.
-Let $V_i^{(t)}$ be the velocity of the $i$th particle at the $t$th iteration, PSO updates its position by
-\begin{align}
-V_i^{(t)}   & = \omega^{(t)} V_i^{(t-1)} + c_1 R_1 \otimes \left[\xi_{i^*}^{(t-1)} - \xi_i^{(t-1)}\right] +
-                                       c_2 R_2 \otimes \left[\xi_g^{(t-1)} - \xi_i^{(t-1)}\right], \label{eq:pso_v} \\
-\xi_i^{(t)} & = \xi_i^{(t-1)} + V_i^{(t)}~\mbox{ for }~i=1,\ldots,N. \label{eq:pso_u}
-\end{align}
-The notation $\otimes$ indicates the componentwise product.
-The PSO parameters in (\ref{eq:pso_v}) are illustrated as follows.  First, $R_1$ and $R_2$ are two random vectors whose components are independently drawn from the uniform $[0,1]$.  The inertia weight, $\omega^{(t)}$, represents how active the particles are and it is chosen to be a linearly decreasing sequence from 0.95 to 0.2 over the first 80\% iterations and fixed at 0.2 for the remaining 20\% iterations.  The parameters $c_1$ and $c_2$ are two positive constants which are fixed to be 2.
+PY: Will be filled.
 
 ### PSO-QN Algorithm
 
+PY: Will be filled.
+
 ### PSO-S-QN Algorithm
 
-# Implementation
+PY: Will be filled.
+
+# Implementation {#pkg}
 
 This section includes the comprehensive guideline to use our **DiscrimOD** package.
 We start with the installation for this current *alpha* test version which has not been uploaded on CRAN yet.
-Then we show how to configurate the parameters of PSO-QN and PSO-S-QN algorithms.
+Then we show how to configure the parameters of PSO-QN and PSO-S-QN algorithms.
 To use the **DiscrimOD** package, the most important step is to properly specify the information
 on the target discrimination design problem. 
 We will show how to input the design criterion and the competing models in R.
@@ -180,10 +203,10 @@ Finally, there 3 main functions in the **DiscrimOD** package which are designed 
 the design search algorithm, to compute for the equivalence theorem and 
 to calculate design criterion for a specified design.
 
-## Installation
+## Installation {#pkginstall}
 
 The current status of **DiscrimOD** package is in the process of *alpha* test, i.e. it is open for development team only. Before install **DiscrimOD** package, one need to install R software with version 3.4.0 and then the **devtool** package. 
-Esensially, the **DiscrimOD** package depends on a few R packages, **Rcpp** and **RcppArmadillo**.
+Essentially, the **DiscrimOD** package depends on a few R packages, **Rcpp** and **RcppArmadillo**.
 Please make sure to install them as well.
 Next, use `install_github` command in **devtool** to install **DiscrimOD** package from Ping-Yang Chen's github repository. The R codes are shown below. 
 
@@ -198,53 +221,53 @@ After installation, we use `library` to load the **DiscrimOD** package.
 library(DiscrimOD)
 ```
 
-## Algorithm Parameters
+## Algorithm Parameters {#pkgparam}
 
-The optimal discrimination design search algorithm in the **DiscrimOD** package involves two types of algorithms, PSO and L-BFGS.  The PSO settings are defined through `getPSOInfo()` function.  For complete information including the default values on the PSO settings, please refer to Appendix XXX. 
+The optimal discrimination design search algorithm in the **DiscrimOD** package involves two types of algorithms, PSO and L-BFGS.  The PSO settings are defined through `getPSOInfo()` function.  For complete information including the default values on the PSO settings, please refer to Appendix A. 
 Here, we list the most influential tuning parameters of PSO below:
 
 * `nSwarm`: The size of the particle swarm. Typically, we set 16 or 32 partciels.
 * `maxIter`: The number of maximal iterations. 100 iterations should be enough for the example here.
 
 The settings for the L-BFGS algorithm are specified through `getLBFGSInfo()` function.
-The complete information on the L-BFGS setting can be found in Appendix XXX.
+The complete information on the L-BFGS setting can be found in Appendix B.
 
-* `IF_INNER_LBFGS`: The logical input `TRUE`/`FALSE` to turn on/off the L-BFGS algorithm for the inner optimization problem (minimizing the distance among parameter space). If specified `FALSE`, the **DiscrimOD** package will run the NestedPSO algorithm in @chen2015minimax. 
-* `LBFGS_RETRY`: The maximal times of trails of L-BFGS algorithm. To avoid L-BFGS algorihtm collapses due to a poor initial vaector, we may want to try 2 to 3 times of the algorithm.
+* `IF_INNER_LBFGS`: The logical input `TRUE`/`FALSE` to turn on/off the L-BFGS algorithm for the inner optimization problem (minimizing the distance among parameter space). If specified `IF_INNER_LBFGS = FALSE`, the **DiscrimOD** package will run the NestedPSO algorithm in @chen2015minimax. 
+* `LBFGS_RETRY`: The maximal times of trails of L-BFGS algorithm. To avoid L-BFGS algorithm collapses due to a poor initial vector, we may want to try 2 to 3 times of the algorithm.
 
 The codes shown below are the algorithm settings used in this vignette.
-First, for PSO-QN algorithm working on discrimination design for two models, we set 16 particles and 100 iterations for PSO, and for each computation for the inner loop, we repeat L-BFGS algorithm twice.
-The remaining settings in both algorihtms are set as default values.
+First, for PSO-QN algorithm working on discrimination design for two models, we set 32 particles and 200 iterations for PSO, and for each computation for the inner loop, we repeat L-BFGS algorithm twice.
+The remaining settings in both algorithms are set as default values.
 
 ```{r ALG_SETTING, cache=T}
 # PSO basic settings
-PSO_INFO <- getPSOInfo(nSwarm = 16, maxIter = 100)
+PSO_INFO <- getPSOInfo(nSwarm = 32, maxIter = 200)
 # L-BFGS basic settings
 LBFGS_INFO <- getLBFGSInfo(LBFGS_RETRY = 2)
 ```
 
-Second, for more than 2 models, we use the PSO-S-QN algorithm to search for the max-min type design. This type of optimal design problem is considered to be harder. Therefore we may use more particles and iterations than the PSO-QN algorithm.  Here, we set 32 particles and 200 iterations and use `LBFGS_INFO` as the settings for L-BFGS in the PSO-S-QN algorithm.
+Second, for more than 2 models, we use the PSO-S-QN algorithm to search for the max-min type design. This type of optimal design problem is considered to be harder. Therefore we may use more particles and iterations than the PSO-QN algorithm.  Here, we set 32 particles and 400 iterations and use `LBFGS_INFO` as the settings for L-BFGS in the PSO-S-QN algorithm.
 
 ```{r ALG_SETTING_MAXMIN, cache=T}
-PSO_INFO_MAXMIN <- getPSOInfo(nSwarm = 32, maxIter = 200)
+PSO_INFO_MAXMIN <- getPSOInfo(nSwarm = 32, maxIter = 400)
 ```
 
-In **DiscrimOD** package, we can replace L-BFGS algorithm by PSO for tackling the inner optimization problem.
+In **DiscrimOD** package, we can replace L-BFGS algorithm by PSO for tackling the inner optimization problem in ([@eq:klCri]).
 By doing so, we find the optimal discrimination design by the NestedPSO algorithm in @chen2015minimax.
-To setup for the NestedPSO algorithm, we specify for each parameter in `getPSOInfo()` with a vector of length 2.
+To setup for the NestedPSO algorithm, we specify for each parameter in the `getPSOInfo()` function with a vector of length 2.
 The first component is the parameter for the outer PSO loop and the second one is set for the inner PSO loop.
-For example, the codes below indicates that, we set 16 particles and 100 iterations for the outer PSO loop, and, 32 particles and 200 iterations for the inner PSO loop.
-Most importantly, we need to turn the L-BFGS algorithm off by specifying `IF_INNER_LBFGS = FALSE` in teh `getLBFGSInfo()` function.
+For example, the codes below indicates that, we set 32 particles and 200 iterations for the outer PSO loop, and, 32 particles and 400 iterations for the inner PSO loop.
+Most importantly, we need to turn the L-BFGS algorithm off by specifying `IF_INNER_LBFGS = FALSE` in the `getLBFGSInfo()` function.
 
 ```{r ALG_SETTING_NESTEDPSO, cache=T}
 # Set NestedPSO options. The length of setting indicates the number of loops
-NESTEDPSO_INFO <- getPSOInfo(nSwarm = c(16, 32), maxIter = c(100, 200))
+NESTEDPSO_INFO <- getPSOInfo(nSwarm = c(32, 32), maxIter = c(200, 400))
 # Turn off L-BFGS implementation for the inner optimization loop
 LBFGS_NOTRUN <- getLBFGSInfo(IF_INNER_LBFGS = FALSE)
 ```
 
 
-## Distance Measure Function
+## Distance Measure Function {#pkgintro1}
 
 Base on the considered optimal design criterion, we need to define the distance measure function in R.
 The distance function has two inputs. 
@@ -273,12 +296,12 @@ heter_norm <- function(xt, xr) {
 }
 ```
 
-In the Appendix, we provide the codes for several distance measure functions in @lopez2007optimal.
+In the Appendix C, we provide the codes for several distance measure functions in @lopez2007optimal.
 
-## Information on Competing Models
+## Information on Competing Models {#pkgintro2}
 
 This section is the key in the **DiscrimOD** package.  
-An optimal discrimination design problem involves the forms of mean functions of the competing models, the nominal values for the true model and the parameter spaces fort he rival models.
+An optimal discrimination design problem involves the forms of mean functions of the competing models, the nominal values for the true model and the parameter spaces for the rival models.
 To specify all these information for our package, we need to properly create an R list with the required structure.
 
 The guideline to setup the R list can be found by calling the `emptyModelList()` function.
@@ -289,24 +312,24 @@ emptyModelList(N_model = 2)
 ```
 
 In the first sub-list, we input the information of the true model with two components, 
-`model` for storing the user-defined R function and `para` is the vector fo nominal values.
+`model` for storing the user-defined R function and `para` is the vector of nominal values.
 
 Starting from the second sub-list, we input the information of the rival models and each sub-list is constructed in the same way. 
 The sub-lists for the rival models has 3 components and the first one `model` is the user-define R function. 
 The second and third components are `paraLower` and `paraUpper`, respectively.  They are the lower and upper bounds of the parameter space of the parameters of the rival model. The length of the bounds must be equal to the number of parameters in the rival model.
 
-Later on, we will demonstrate the setup with various real examples. Please see those examples in Sections XXX, XXX and XXX.
+Later on, we will demonstrate the setup with various real examples. Please see those examples in Sections [3](#af) to [5](#vs).
 
-## Main Functions
+## Main Functions {#pkgintro3}
 
 When the model list and the distance function are well-prepared, 
 we now can implement our main function `DiscrimOD` to search for the optimal discrimination design.  
 There are a few more vital inputs.  
 Input the number of support points for `nSupp` which should be larger than or equal to 2.
 Input the vectors of lower and upper bounds of the design space in `dsLower` and `dsUpper`, respectively.
-The lengthes of `dsLower` and `dsUpper` must be the same and equal to the dimension of the design space. 
+The lengths of `dsLower` and `dsUpper` must be the same and equal to the dimension of the design space. 
 
-The type of esign crterion is specified through `crit_type`. 
+The type of design criterion is specified through `crit_type`. 
 Currently, the **DiscrimOD** package can search for $T$- and $KL$-optimal designs (`crit_type = "pair_fixed_true"`) when there are two competing models, and, max-min $T$- and $KL$-optimal designs (`crit_type = "maxmin_fixed_true"`) when there are more than two competing models.
 
 For finding the max-min $T$- and $KL$-optimal designs, we need to know those $T$- and $KL$-optimal designs for pairwise discrimination in advance.  Then, input their optimal criterion values as a vector in `MaxMinStdVals`.
@@ -316,7 +339,8 @@ DiscrimOD(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper,
           crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
 					PSO_INFO = NULL, LBFGS_INFO = NULL, seed = NULL, verbose = TRUE)
 
-equivalence(ngrid = 100, DESIGN = NULL, PSO_RESULT = NULL, MODEL_INFO, DISTANCE, dsLower, dsUpper, 
+equivalence(ngrid = 100, DESIGN = NULL, PSO_RESULT = NULL, MODEL_INFO, DISTANCE, 
+            dsLower, dsUpper, 
             crit_type = "pair_fixed_true", MaxMinStdVals = NULL, 
 						PSO_INFO = NULL, LBFGS_INFO = NULL, ALPHA_PSO_INFO = NULL)
 
@@ -327,7 +351,7 @@ designCriterion(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper,
 
 
 
-# Atkison and Fedorov's Example
+# Atkison and Fedorov's Example {#af}
 
 We revisit an example in @atkinson1975optimal but find a new result of optimal design
 based on max-min $T$-optimal design criterion
@@ -338,9 +362,12 @@ Consider three linear and homoscedastic models with mean responses given by
 \eta_2(x,\theta_2) & = \theta_{20} + \theta_{21}x + \theta_{22}x^2,       \label{eq:af2}  \\
 \eta_3(x,\theta_3) & = \theta_{30} + \theta_{31}\sin{\left(\frac{\pi x}{2}\right)} + \theta_{32}\cos{\left(\frac{\pi x}{2}\right)} + \theta_{33}\sin{\left(\pi x\right)}. \label{eq:af3}
 \end{align}
-In addition to the normal error assumption, they also set the first model, $\eta_1(x,\theta_1)$, as the true model with parameters $\theta_1=(\theta_{10}, \theta_{11}, \theta_{12}) = (4.5, -1.5, -2)$.
+In addition to the normal error assumption, they also set the first model, 
+$\eta_1(x,\theta_1)$, as the true model with parameters 
+$\theta_1=(\theta_{10}, \theta_{11}, \theta_{12}) = (4.5, -1.5, -2)$.
+The design space is $x\in[-1,1]$.
 
-First, we write the R functions for those competing models.  The true model is `af1` ($\eta_1$).
+To use the **DiscrimOD** package to find the optimal design for discriminating these 3 models, we first write the R functions, `af1` to `af3` for $\eta_1$ to $\eta_3$, respectively.  
 
 ```{r AF1975b_MODEL, cache=T}
 af1 <- function(x, p) p[1] + p[2]*exp(x) + p[3]*exp(-x)
@@ -348,7 +375,7 @@ af2 <- function(x, p) p[1] + p[2]*x + p[3]*x^2
 af3 <- function(x, p) p[1] + p[2]*sin(0.5*pi*x) + p[3]*cos(0.5*pi*x) + p[4]*sin(pi*x)
 ```
 
-Before we search for the max-min $T$-optimal design, we need to know the $T$-optimal designs for pairwisely discrimination between $\eta_1$ and $\eta_2$, and $\eta_3$, respectively.  Thus, we define two model lists for each discrimination case. 
+Before we search for the max-min $T$-optimal design, we need to identify the $T$-optimal designs for pairwisely discrimination between true model $\eta_1$ and rival models $\eta_2$, and $\eta_3$, respectively.  Thus, we define two model lists for each discrimination case. 
 The codes are shown below.
 
 ```{r AF1975b_CASE_PAIR, cache=T}
@@ -367,50 +394,73 @@ af_info_13 <- list(
 )
 ```
 
-For $T$-optimal design, we specify the distance measure, squared difference between two means, in R.
+For $T$-optimal design, we specify the distance measure, 
+squared difference between two means, in R.
 ```{r T_OPTIMAL, cache=T}
 # xt is the mean values of the true model
 # xr is the mean values of the rival model
 sq_diff <- function(xt, xr) (xt - xr)^2
 ```
 
-Use `DiscrimOD` to run the PSO-QN algorithm.
+Next, we use `DiscrimOD` function to run the PSO-QN algorithm for both cases of pairwise discrimination.
+
+We use the first case, $\eta_1$ versus $\eta_2$, to illustrate the details.
 In addition to the model list, distance function and the algorithm settings, 
-we need to input the type of discrimination criterion (for pairwise discrimination it is `"pair_fixed_true"`), 
-the number of suppoer points `nSupp` and the lower nad upper bound of the design space, `dsLower` and `dsUpper`, respecitvely.
+we need to input the type of discrimination criterion for pairwise discrimination by 
+`crit_type = "pair_fixed_true"`, 
+the number of support points (here, `nSupp = 4`) and the lower and upper bound of the design space, `dsLower = -1` and `dsUpper = 1`, respecitvely.
 
 ```{r AF1975b_RESULT_PAIR_12, cache=T}
 # Run PSO-QN Algorithm for discriminating \eta_1 and \eta_2
-af_res_12 <- DiscrimOD(MODEL_INFO = af_info_12, DISTANCE = sq_diff, 
-                       nSupp = 4, dsLower = -1.0, dsUpper = 1.0, 
+af_res_12 <- DiscrimOD(MODEL_INFO = af_info_12, DISTANCE = sq_diff,
+                       nSupp = 4, dsLower = -1, dsUpper = 1, 
                        crit_type = "pair_fixed_true",
                        PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, 
-                       seed = 100, verbose = FALSE)
+                       seed = NULL, verbose = FALSE)
 ```
-
-```{r AF1975b_DESIGN_PAIR_12, cache=T}
-round(af_res_12$BESTDESIGN, 3)
-```
-
-```{r AF1975b_VAL_PAIR_12, cache=T}
-af_res_12$BESTVAL
-```
-
-```{r AF1975b_CPU_PAIR_12, cache=T}
-af_res_12$CPUTIME
-```
-
 
 The output of `DiscrimOD` consists of the best design and its criterion value. 
 It also reports the search path of the global best particle and computing time.
 
-The **DiscrimOD** package provides the `equivalence` function for checking the equivalence theorem. We need to input the result obtain by `DiscrimOD` to this function.
-The other settings are the same.
+The best design found by the PSO-QN algorithm is stored in the tag `$BESTDESIGN`.
+The output is a matrix with `nSupp` rows and 2 columns.
+The first column consists of 4 support points and the second one is the weight vector for each support point. In this case, the best design is
+$$\{-1.000, -0.669, 0.144, 0.957; 0.253, 0.428, 0.247, 0.072\}.$$
+
+```{r AF1975b_DESIGN_PAIR_12, cache=T}
+round(af_res_12$BESTDESIGN, 3) 
+```
+
+The design criterion value of the best design can be found in the `$BESTVAL` tag.
+In this case, the value is 0.001087 after rounding.
+
+```{r AF1975b_VAL_PAIR_12, cache=T}
+af_res_12$BESTVAL 
+```
+
+The computing time in seconds is in the `$CPUTIME` tag.
+
+```{r AF1975b_CPU_PAIR_12, cache=T}
+af_res_12$CPUTIME 
+```
+
+To verify whether the resulting design is optimal or not, we use the equivalence theorem.
+In the **DiscrimOD** package, we implement the `equivalence` function to this end. 
+In this function, we need to input the numerical result, `af_res_12`, obtain by `DiscrimOD`.
+Based on the numerical result, the `equivalence` function computes the values of directional derivative function on the grid of length `ngrid`.
+One can draw the plot for the directional derivative function by R utility function `plot`.
+The x-axis is the grid vector of design space which can be found in the `$Grid_1` tag.
+The y-axis is the values of directional derivative function in `$DirDeriv` tag.
+Also, we can pin the support points on the plot by `points` function.
+We use the horizontal line at $y=0$ to show the resulting design is $T$-optimal, that is,
+the values of directional derivative function are smaller than zero, and at the support points,
+the values should be zero (at least close to zero).
 
 ```{r AF1975b_EQUV_PAIR_12, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='Directional derivative function of T-optimal design in the case \'af_res_12\'.'}
 af_eqv_12 <- equivalence(ngrid = 100, PSO_RESULT = af_res_12, 
                          MODEL_INFO = af_info_12, DISTANCE = sq_diff, 
-                         dsLower = -1.0, dsUpper = 1.0, crit_type = "pair_fixed_true",
+                         dsLower = -1, dsUpper = 1,
+                         crit_type = "pair_fixed_true",
                          PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
 # Draw the directional derivative curve
 plot(af_eqv_12$Grid_1, af_eqv_12$DirDeriv, type = "l", col = "blue", 
@@ -418,34 +468,38 @@ plot(af_eqv_12$Grid_1, af_eqv_12$DirDeriv, type = "l", col = "blue",
 points(af_res_12$BESTDESIGN[,1], rep(0, nrow(af_res_12$BESTDESIGN)), pch = 16)
 ```
 
-For the second case of pair discrimination, the implementation is similar.
+For the second case of pairwise discrimination, $\eta_1$ versus $\eta_3$, the implementation of the PSO-QN algorithm is similar.  We input the model list for this case, `af_info_13`, which has been constructed earlier. In this case, we are looking for 5-point design.
 
 ```{r AF1975b_RESULT_PAIR_13, cache=T}
 # Run PSO-QN Algorithm for discriminating \eta_1 and \eta_3
 af_res_13 <- DiscrimOD(MODEL_INFO = af_info_13, DISTANCE = sq_diff, 
-                       nSupp = 5, dsLower = -1.0, dsUpper = 1.0, crit_type = "pair_fixed_true",
-                       PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, seed = 100, verbose = FALSE)
+                       nSupp = 5, dsLower = -1.0, dsUpper = 1.0, 
+                       crit_type = "pair_fixed_true",
+                       PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, 
+                       seed = NULL, verbose = FALSE)
 ```
+
+The resulting design is
+$$\{-1.000, -0.741, -0.104, 0.634, 1.000; 0.192, 0.323, 0.227, 0.177, 0.081\}.$$
 
 ```{r AF1975b_DESIGN_PAIR_13, cache=T}
 round(af_res_13$BESTDESIGN, 3)
 ```
 
+The value of design criterion is 0.005715 after rounding.
+
 ```{r AF1975b_VAL_PAIR_13, cache=T}
 af_res_13$BESTVAL
 ```
 
-```{r AF1975b_CPU_PAIR_13, cache=T}
-af_res_13$CPUTIME
-```
+By using the `equivalence` function and plot the directional derivative function, 
+the equivalence theorem shows the resulting design for the second case is $T$-optimal. 
 
-
-The equivalence thoerem shows the resulting design is $T$-optimal. 
-
-```{r AF1975b_EQUV_PAIR_13, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='Directional derivative function of T-optimal design in the case \'af_res_13\'.'}
+```{r AF1975b_EQUV_PAIR_13, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='FIGURE. Directional derivative function of T-optimal design in the case \'af_res_13\'.'}
 af_eqv_13 <- equivalence(ngrid = 100, PSO_RESULT = af_res_13, 
                          MODEL_INFO = af_info_13, DISTANCE = sq_diff, 
-                         dsLower = -1.0, dsUpper = 1.0, crit_type = "pair_fixed_true",
+                         dsLower = -1, dsUpper = 1, 
+                         crit_type = "pair_fixed_true",
                          PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
 # Draw the directional derivative curve
 plot(af_eqv_13$Grid_1, af_eqv_13$DirDeriv, type = "l", col = "blue", 
@@ -453,46 +507,79 @@ plot(af_eqv_13$Grid_1, af_eqv_13$DirDeriv, type = "l", col = "blue",
 points(af_res_13$BESTDESIGN[,1], rep(0, nrow(af_res_13$BESTDESIGN)), pch = 16)
 ```
 
-Now, we concentrate on finding the max-min $T$-optimal design for models $\eta_1$, $\eta_2$ and $\eta_3$.
-Here, since we have already set the lists of information for these three models, we can directly include them
-fom previously defined lists to form a new list for max-min approach.
+Now, we concentrate on finding the max-min $T$-optimal design for 
+models $\eta_1$, $\eta_2$ and $\eta_3$.
+Here, since we have already set the lists of information for these three models, 
+we can directly include them from previously defined lists to form 
+a new list for max-min approach.
+
+An important information for the max-min approach is those previously identified
+criterion values. Be careful with the order of the criterion value vector.
+Since we set the order of the rival models in the list by $\eta_2$ and then $\eta_3$, 
+we need to have the same order for the pairwise discrimination results, that is,
+`af_res_12$BESTVAL` and then `af_res_13$BESTVAL`.
+
 ```{r AF1975b_CASE_MAXMIN, cache=T}
 af_info_maxmin <- list(af_info_12[[1]], af_info_12[[2]], af_info_13[[2]])
 # Define the vector of optimal criterion values for efficiency computations
 af_vals_pair <- c(af_res_12$BESTVAL, af_res_13$BESTVAL)
 ```
 
+To run the PSO-S-QN algorithm to search for the max-min optimal discrimination design, 
+we input `crit_type = "maxmin_fixed_true"` and the model list that
+consists of all three models and necessary parameter information.  
+We also need to specify the vector of 
+$T$-optimal criterion values in `MaxMinStdVals` for the algorithm 
+to compute the $T$-efficiencies.
 
-
-To run our algorihtm to search for the max-min optimal discrimination design, we input `crit_type = "maxmin_fixed_true"` and the model list that
-consist of all three models and necessary parameter information.  We also need to specify the vector of 
-$T$-optimal criterion values in `MaxMinStdVals` for the algorihtm to compute the $T$-efficiencies.
 ```{r AF1975b_RESULT_MAXMIN, cache=T}
 af_res_maxmin <- DiscrimOD(MODEL_INFO = af_info_maxmin, DISTANCE = sq_diff, 
-                           nSupp = 5, dsLower = -1.0, dsUpper = 1.0, 
-                           crit_type = "maxmin_fixed_true", MaxMinStdVals = af_vals_pair,
+                           nSupp = 5, dsLower = -1, dsUpper = 1, 
+                           crit_type = "maxmin_fixed_true", 
+                           MaxMinStdVals = af_vals_pair,
                            PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO, 
-                           seed = 100, verbose = FALSE)
+                           seed = NULL, verbose = FALSE)
 ```
+
+The resulting max-min design is
+$$\{-1.000, -0.703, -0.026, 0.561, 1.000; 0.230, 0.386, 0.214, 0.111, 0.059\}.$$
 
 ```{r AF1975b_DESIGN_MAXMIN, cache=T}
 round(af_res_maxmin$BESTDESIGN, 3)
 ```
 
+The criterion value is the minimum among the two $T$-efficiencies.  
+Here, the resulting minimal $T$-efficiency is 0.8061 after rounding.
+
 ```{r AF1975b_VAL_MAXMIN, cache=T}
 af_res_maxmin$BESTVAL
 ```
+
+The computational time of the PSO-S-QN algorithm is usually longer because 
+(1) we use more particles and iterations and 
+(2) the computation of the criterion value involves many times of L-BFGS algorithm depending on
+the number of rival models.
 
 ```{r AF1975b_CPU_MAXMIN, cache=T}
 af_res_maxmin$CPUTIME
 ```
 
 To check whether the resulting design is max-min optimal or not, we use the equivalence theorem.
-```{r AF1975b_EQUV_MAXMIN, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='Directional derivative function of max-min T-optimal design in the case af_res_maxmin.'}
+In the `equivalence` function, we input the numerical result `PSO_RESULT = af_res_maxmin`
+and the vector of $T$-optimal criterion values, `MaxMinStdVals = af_vals_pair`.
+For max-min optimal design, the `equivalence` function first finds the 
+$\alpha$ vector in ([@eq:mmwt]) by an ordinary PSO algorithm and outputs the $\alpha$ vector in `$alpha` tag. In this case, $\alpha=(0.694, 0.306)$.
+
+Then it computes the directional derivative function values so that we can draw the
+equivalence plot with `plot` and `points` functions.
+In the plot, the equivalence theorem shows the resulting design is max-min $T$-optimal. 
+
+```{r AF1975b_EQUV_MAXMIN, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='FIGURE. Directional derivative function of max-min T-optimal design in the case af_res_maxmin.'}
 af_eqv_maxmin <- equivalence(ngrid = 100, PSO_RESULT = af_res_maxmin, 
                              MODEL_INFO = af_info_maxmin, DISTANCE = sq_diff, 
-                             dsLower = -1.0, dsUpper = 1.0, 
-                             crit_type = "maxmin_fixed_true", MaxMinStdVals = af_vals_pair, 
+                             dsLower = -1, dsUpper = 1, 
+                             crit_type = "maxmin_fixed_true", 
+                             MaxMinStdVals = af_vals_pair, 
                              PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO)
 # The weight of efficiency values
 af_eqv_maxmin$alpha
@@ -502,182 +589,32 @@ plot(af_eqv_maxmin$Grid_1, af_eqv_maxmin$DirDeriv, type = "l", col = "blue",
 points(af_res_maxmin$BESTDESIGN[,1], rep(0, nrow(af_res_maxmin$BESTDESIGN)), pch = 16)
 ```
 
-<!--
-## Acceleratation by C++ Function Inputs
-
-Like widely used generic optimization function `optim`, **DiscrimOD** package also accepts the C++ function inputs for the models and distance measure.  By doing so, the code will be accelerated.
-
-Here, we use the same example to illustrate how to write the C++ codes through **Rcpp** package.
-There are two steps to construct the C++ function inputs:
-\begin{enumerate}
-\item wrtie the C++ codes for models and distance measure as the *string* object in R.
-\item compile the codes by `cppFunction` in **Rcpp** package.
-\end{enumerate}
-
-To define a model, we create a C++ function with output type, `Rcpp::NumericVector`, and two `SEXP` type inputs.
-The first input, `xx`, is the covariate of the model which, in optimal design problems, is the support points.
-The second input, `pp`, is the model parameter vector.
-
-In the C++ function, we need to firstly re-define the `SEXP` type inputs as Rcpp objects by `Rcpp::as<>()` function.  
-The example here is an one-dimensional design problem, and therefore, all support points form a vector which can be defined by `Rcpp::NumericVector`.  For higher dimensional design, the support points form a $n\times m$ matrix where $n$ is the number of support points and $m$ is the dimension of the design space. In such case, we use `Rcpp::NumericMatrix` to re-define `xx`.  The model parameter must be a vector, and thus, it has to be of `Rcpp::NumericVector` type.
-Then we compute the response values with **for** loop for each support point and return the response vector.
-Usually the users only need to assign the proper variable type for the support points (`Rcpp::NumericVector` or `Rcpp::NumericMatrix`) and change the codes in the **for** loop for their optimal design problems.
-
-```{r AF1975b_MODEL_CPP, cache=TRUE}
-library(Rcpp)
-#
-af1_cpp <- cppFunction('Rcpp::NumericVector af1(SEXP xx, SEXP pp) {
-  // Re-define variable types
-  Rcpp::NumericVector x = Rcpp::as<Rcpp::NumericVector>(xx);
-  Rcpp::NumericVector p = Rcpp::as<Rcpp::NumericVector>(pp);
-  Rcpp::NumericVector eta(x.size());
-  for (int i = 0; i < x.size(); i++) {
-    eta[i] = p[0] + p[1]*std::exp(x[i]) + p[2]*std::exp(-x[i]);
-  }
-  return eta;
-}')
-af2_cpp <- cppFunction('Rcpp::NumericVector af2(SEXP xx, SEXP pp) {
-  // Re-define variable types
-  Rcpp::NumericVector x = Rcpp::as<Rcpp::NumericVector>(xx);
-  Rcpp::NumericVector p = Rcpp::as<Rcpp::NumericVector>(pp);
-  Rcpp::NumericVector eta(x.size());
-  for (int i = 0; i < x.size(); i++) {
-    eta[i] = p[0] + p[1]*x[i] + p(2)*x[i]*x[i];
-  }
-  return eta;
-}')
-af3_cpp <- cppFunction('Rcpp::NumericVector af3(SEXP xx, SEXP pp) {
-  // Re-define variable types
-  Rcpp::NumericVector x = Rcpp::as<Rcpp::NumericVector>(xx);
-  Rcpp::NumericVector p = Rcpp::as<Rcpp::NumericVector>(pp);
-  Rcpp::NumericVector eta(x.size());
-  for (int i = 0; i < x.size(); i++) {
-    eta[i] = p[0] + p[1]*std::sin(0.5*M_PI*x[i]) + 
-      p[2]*std::cos(0.5*M_PI*x[i]) + p[3]*std::sin(M_PI*x[i]);
-  }
-  return eta;
-}')
-
-sq_diff_cpp <- cppFunction('Rcpp::NumericVector dist(SEXP xt, SEXP xr) {
-  // Re-define variable types
-  Rcpp::NumericVector eta_t = Rcpp::as<Rcpp::NumericVector>(xt);
-  Rcpp::NumericVector eta_r = Rcpp::as<Rcpp::NumericVector>(xr);
-  Rcpp::NumericVector div(eta_t.size());
-  for (int i = 0; i < eta_t.size(); i++) {
-    div[i] = (eta_t[i] - eta_r[i])*(eta_t[i] - eta_r[i]);
-  }
-  return div;
-}')
-```
-
-The definiation for the distance measure is simlar except that the two inputs are two response vectors generated by two competing models.  Its output is still of ``Rcpp::NumericVecotr`` type which represents the vector of distances between two competing models at each support point.  To specify the other distance measure such as $KL$-divergence, the users only need to change the codes in the **for** loop.
-
-To compile the C++ codes, we simply input the text of C++ codes into the ``cppFunction`` function.  Then we input those C++ functions into the `$model` tags in the model list required by the **DiscrimOD** package and input the C++ function for distance measure into the `DiscrimOD` function.
-
-```{r AF1975b_RESULT_PAIR_12_CPP, cache=T}
-# Run PSO-QN Algorithm for discriminating \eta_1 and \eta_2 by C++ inputs
-af_cpp_12 <- list(
-  # The first list should be the true model
-  list(model = af1_cpp, para = AF_para_af1),
-  # Then the rival models are listed accordingly
-  list(model = af2_cpp, paraLower = rep(-10, 3), paraUpper = rep(10, 3))
-)
-# Run
-af_res_cpp_12 <- DiscrimOD(MODEL_INFO = af_cpp_12, DISTANCE = sq_diff_cpp, 
-                           nSupp = 4, dsLower = -1.0, dsUpper = 1.0, crit_type = "pair_fixed_true",
-                           PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, seed = 100, verbose = FALSE)
-round(af_res_cpp_12$BESTDESIGN, 3)
-af_res_cpp_12$BESTVAL
-af_res_cpp_12$CPUTIME
-```
-
-One can notice that the computing time is less than using R function inputs.
-To check an optimal design by the equivalence theorem, we still use the same function, `equivalence`.
-The only difference here is the values of directional derivative function are computed via C++.
-
-```{r AF1975b_EQUV_PAIR_12_CPP, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='Directional derivative function of T-optimal design in the case \'af_res_cpp_12\'.'}
-af_eqv_cpp_12 <- equivalence(ngrid = 100, PSO_RESULT = af_res_cpp_12, 
-                             MODEL_INFO = af_cpp_12, DISTANCE = sq_diff_cpp, 
-                             dsLower = -1.0, dsUpper = 1.0, crit_type = "pair_fixed_true",
-                             PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
-# Draw the directional derivative curve
-plot(af_eqv_cpp_12$Grid_1, af_eqv_cpp_12$DirDeriv, type = "l", col = "blue", 
-     main = "af_res_cpp_12", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
-points(af_res_cpp_12$BESTDESIGN[,1], rep(0, nrow(af_res_cpp_12$BESTDESIGN)), pch = 16)
-```
-
-
-
-```{r AF1975b_RESULT_PAIR_13_CPP, cache=T}
-# Run PSO-QN Algorithm for discriminating \eta_1 and \eta_3 by C++ inputs
-af_cpp_13 <- list(
-  # The first list should be the true model
-  list(model = af1_cpp, para = AF_para_af1),
-  # Then the rival models are listed accordingly
-  list(model = af3_cpp, paraLower = rep(-10, 4), paraUpper = rep(10, 4))
-)
-# Run
-af_res_cpp_13 <- DiscrimOD(MODEL_INFO = af_cpp_13, DISTANCE = sq_diff_cpp, 
-                           nSupp = 5, dsLower = -1.0, dsUpper = 1.0, crit_type = "pair_fixed_true",
-                           PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, seed = 100, verbose = FALSE)
-round(af_res_cpp_13$BESTDESIGN, 3)
-af_res_cpp_13$BESTVAL
-af_res_cpp_13$CPUTIME
-```
-
-```{r AF1975b_EQUV_PAIR_13_CPP, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='Directional derivative function of T-optimal design in the case \'af_res_cpp_13\'.'}
-af_eqv_cpp_13 <- equivalence(ngrid = 100, PSO_RESULT = af_res_cpp_13, 
-                             MODEL_INFO = af_cpp_13, DISTANCE = sq_diff_cpp, 
-                             dsLower = -1.0, dsUpper = 1.0, crit_type = "pair_fixed_true",
-                             PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
-# Draw the directional derivative curve
-plot(af_eqv_cpp_13$Grid_1, af_eqv_cpp_13$DirDeriv, type = "l", col = "blue", 
-     main = "af_res_cpp_13", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
-points(af_res_cpp_13$BESTDESIGN[,1], rep(0, nrow(af_res_cpp_13$BESTDESIGN)), pch = 16)
-```
-
-
-```{r AF1975b_RESULT_MAXMIN_CPP, cache=T}
-af_cpp_maxmin <- list(af_cpp_12[[1]], af_cpp_12[[2]], af_cpp_13[[2]])
-#
-af_vals_cpp_pair <- c(af_res_cpp_12$BESTVAL, af_res_cpp_13$BESTVAL)
-# Run
-af_res_cpp_maxmin <- DiscrimOD(MODEL_INFO = af_cpp_maxmin, DISTANCE = sq_diff_cpp, 
-                               nSupp = 5, dsLower = -1.0, dsUpper = 1.0, 
-                               crit_type = "maxmin_fixed_true", MaxMinStdVals = af_vals_cpp_pair,
-                               PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO, 
-                               seed = 100, verbose = FALSE)
-
-round(af_res_cpp_maxmin$BESTDESIGN, 3)
-af_res_cpp_maxmin$BESTVAL
-af_res_cpp_maxmin$CPUTIME
-```
-
-```{r AF1975b_EQUV_MAXMIN_CPP, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='Directional derivative function of max-min T-optimal design in the case \'af_res_cpp_maxmin\'.'}
-af_eqv_cpp_maxmin <- equivalence(ngrid = 100, PSO_RESULT = af_res_cpp_maxmin, 
-                                 MODEL_INFO = af_cpp_maxmin, DISTANCE = sq_diff_cpp, 
-                                 dsLower = -1.0, dsUpper = 1.0, 
-                                 crit_type = "maxmin_fixed_true", MaxMinStdVals = af_vals_cpp_pair, 
-                                 PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO)
-# The weight of efficiency values
-af_eqv_maxmin$alpha
-# Draw the directional derivative curve
-plot(af_eqv_maxmin$Grid_1, af_eqv_maxmin$DirDeriv, type = "l", col = "blue", 
-     main = "af_eqv_cpp_maxmin", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
-points(af_res_cpp_maxmin$BESTDESIGN[,1], rep(0, nrow(af_res_cpp_maxmin$BESTDESIGN)), pch = 16)
-```
--->
-
-# Dose-Response Models in Toxicology 
+# Dose-Response Models in Toxicology {#tox}
 
 In this section, we show how to use the PSO-QN and PSO-S-QN algorithms to find the optimal discrimination design in a real application.  In @piersma2000developmental, they proposed a class of 5 dose-response models which are widely used in modelling continuous endpoint in toxicology.  These models with the different mean responses are given below.
+
 \begin{align}
-\eta_1(x,\theta_1) & = a,                                    && \quad\theta_1 = a > 0, \label{m1}                                        \\
-\eta_2(x,\theta_2) & = a e^{-x/b},                           && \quad\theta_2 = (a,b)^\top, a > 0, b > 0, \label{m2}                        \\
-\eta_3(x,\theta_3) & = a e^{-(x/b)^d},                       && \quad\theta_3 = (a,b,d)^\top, a > 0, b > 0, d\geq1, \label{m3}              \\
-\eta_4(x,\theta_4) & = a \left(c - (c-1)e^{-x/b}\right),     && \quad\theta_4 = (a,b,c)^\top, a > 0, b > 0, c\in[0,1], \label{m4}           \\
-\eta_5(x,\theta_5) & = a \left(c - (c-1)e^{-(x/b)^d}\right), && \quad\theta_5 = (a,b,c,d)^\top, a > 0, b > 0, c\in[0,1], d\geq1. \label{m5}
+\eta_1(x,\theta_1) & = a,                                    && \quad\theta_1 = a > 0,                                         \\
+\eta_2(x,\theta_2) & = a e^{-x/b},                           && \quad\theta_2 = (a,b)^\top, a > 0, b > 0,                         \\
+\eta_3(x,\theta_3) & = a e^{-(x/b)^d},                       && \quad\theta_3 = (a,b,d)^\top, a > 0, b > 0, d\geq1,               \\
+\eta_4(x,\theta_4) & = a \left(c - (c-1)e^{-x/b}\right),     && \quad\theta_4 = (a,b,c)^\top, a > 0, b > 0, c\in[0,1],            \\
+\eta_5(x,\theta_5) & = a \left(c - (c-1)e^{-(x/b)^d}\right), && \quad\theta_5 = (a,b,c,d)^\top, a > 0, b > 0, c\in[0,1], d\geq1. 
 \end{align}
+
+In particular, @piersma2000developmental were interested in how the exposure to butyl benzyl phthalate (BBP) in maternal animals during gestation affects the fetal weights.
+The experimental region is $x\in[0, 1250]$.
+In @slob2002dose, they used the dataset in @piersma2000developmental and illustrated the model selection procedure for this model class.
+They concluded that $\eta_5$ is the most accurate one that describes the dataset and reported the estimated parameters which are $\hat\theta_5=(\hat{a},\hat{b},\hat{c},\hat{d}) = (4.282$, $835.571$, $0.739$, $3.515)$.
+Assume the largest model \@ref(eq:m5) is the true model with nominal values in $\hat\theta_5$.
+In this section, we consider all errors are assumed to be log-normally distributed 
+and the goal is to search for the optimal discrimination designs for all 5 models, $\eta_1$ to $\eta_5$.
+
+Here, we provide different coding style from Section 3 for users in organizing the model list 
+to achieve the same goal. 
+we first create the list consisting of 5 models which will be used in finding the max-min optimal discrimination design.
+The first sub-list is the true model $\eta_5$ with nominal values $\hat\theta_5$.
+Starting from the second sub-list, we input the information for models $\eta_4$, $\eta_3$, $\eta_2$ and $\eta_1$ in the order.
+Based on many times of trial-and-error, for each rival model, we can roughly identify the parameter space which includes the location of the minimal distance between two models.
 
 ```{r TOX_MODEL}
 tox5_par <- c(4.282, 835.571, 0.739, 3.515)
@@ -704,27 +641,69 @@ tox_info <- list(
 )
 ```
 
+According to @lopez2007optimal, the $KL$-divergence between two log-normal models is
+
+\begin{equation}\label{eq:kllognorm}
+\mathcal{I}_{LN}(f_2, f_1, x, \theta_1)
+ = \log{\left\{\frac{\sigma_1^2}{\sigma_2^2}\right\}} - \frac{\sigma_1^2 - \sigma_2^2 - \left(\mu_1^2 - \mu_2^2\right)^2}{2\sigma_1^2},
+\end{equation}
+
+where $\mu_j$ and $\sigma_j^2$ are the mean and variance of $\log{(Y_j)}$, respectively, 
+that are
+
+\begin{align*}
+\mu_j      & = \mu_j(x, \theta_j)
+             = \log{\left\{\eta_j(x,\theta_j) \big/ \sqrt{1+\nu_j^2(x, \theta_j)\eta_j(x, \theta_j)^{-2}}\right\}}, \\
+\sigma_j^2 & = \sigma_j^2(x, \theta_j)
+             = \log{\left\{1+\nu_j^2(x, \theta_j)\eta_j(x, \theta_j)^{-2}\right\}}.
+\end{align*}
+
+The parameters $\nu_1^2$ and $\nu_2^2$ are considered as nuisance and
+@lopez2007optimal applied the constant coefficient of variation assumption [@mccullagh1989generalized].
+That is, $\nu_j(x, \theta_j) / \eta_j(x, \theta_j) = constant$, and it implies
+that $\sigma_1^2 = \sigma_2^2 = \sigma^2$ which we assume to be 0.01.
+The R code for this distance measure is shown below.
+
+```{r LOGNORM_B}
+log_norm_B <- function(xt, xr) {
+  sigsq <- 0.01 # nuisance parameter
+  var_t <- (exp(sigsq) - 1.0)*(xt^2) # variance (true mdoel)
+  var_r <- (exp(sigsq) - 1.0)*(xr^2) # variance (rival model)
+  mu_t <- log(xt) - 0.5*log(1.0 + (var_t/(xt^2))) # mean (true model)
+  mu_r <- log(xr) - 0.5*log(1.0 + (var_r/(xr^2))) # mean (rival model)
+  ((mu_r - mu_t)^2)/(2*sigsq) # KL-divergence
+}
+```
+
+Before searching for the max-min discrimination design, we need to identify 
+the $KL$-optimal designs for 4 cases of pairwise discrimination.
+Thus, to implement the **DiscrimOD** package, we first re-organize the 
+full model list `tox_info` into 4 smaller model lists, each has $\eta_5$ and one rival model.
+The numbers of support points for the 4 cases are 3, 4, 3, and 2.
+Then we implement `DiscrimOD` function to find the $KL$-optimal designs and use the `equivalence`   function to verify the optimalities of the resulting designs.
+
 ```{r TOX_PAIR}
-# Number of support points
-two_tox_n <- c(3, 4, 3, 2)
 # Cases of pairwise discrimination
 two_tox_info <- list(
   list(tox_info[[1]], tox_info[[2]]), # tox_5 vs tox_4
   list(tox_info[[1]], tox_info[[3]]), # tox_5 vs tox_3
   list(tox_info[[1]], tox_info[[4]]), # tox_5 vs tox_2
-  list(tox_info[[1]], tox_info[[5]])  # tox_5 vs tox_1
+  list(tox_info[[1]], tox_info[[5]])  # tox_5 vs tox_1 
 )
-#
+# Number of support points 
+two_tox_nSupp <- c(3, 4, 3, 2)
+# Run for each case
 tox_res_pair <- vector("list", 4)
 for (CaseID in 1:4) {
-  res <- DiscrimOD(MODEL_INFO = two_tox_info[[CaseID]], DISTANCE = sq_diff, 
-                   nSupp = two_tox_n[CaseID], dsLower = 0, dsUpper = 1250, 
+  res <- DiscrimOD(MODEL_INFO = two_tox_info[[CaseID]], DISTANCE = log_norm_B, 
+                   nSupp = two_tox_nSupp[CaseID], dsLower = 0, dsUpper = 1250, 
                    crit_type = "pair_fixed_true", 
-                   PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, seed = 100, verbose = FALSE)
+                   PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO,
+                   seed = NULL, verbose = FALSE) 
   
   eqv <- equivalence(ngrid = 100, PSO_RESULT = res, 
-                     MODEL_INFO = two_tox_info[[CaseID]], DISTANCE = sq_diff,
-                     dsLower = 0, dsUpper = 1250,
+                     MODEL_INFO = two_tox_info[[CaseID]], DISTANCE = log_norm_B,
+                     dsLower = 0, dsUpper = 1250, 
                      crit_type = "pair_fixed_true", 
                      PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
   
@@ -732,33 +711,66 @@ for (CaseID in 1:4) {
 }
 ```
 
-```{r TOX_PAIR_EQV, cache = T, eval = T, echo = F, fig.align='center', fig.height = 7, fig.width = 7, fig.cap='Directional derivative function of T-optimal designs for four pairwise discrimination.'}
-lay <- layout(matrix(1:4, 2, 2))
+The resulting design for each case can be found in `tox_res_pair$res$BESTDESIGN` and we omit to show them here.  We directly draw the directional derivative function plots for each case.
+In some curves, the points might be visually greater than zero, but the maximal value of the directional derivative function is still smaller than $10^-4$.  This suggests that the PSO-QN algorithm finds the $KL$-optimal designs for all cases.
+
+```{r TOX_PAIR_EQV, cache = T, eval = T, echo = F, fig.align='center', fig.height = 7, fig.width = 7, fig.cap='FIGURE. Directional derivative function of KL-optimal designs for four pairwise discrimination.'}
+lay <- layout(matrix(1:4, 2, 2, byrow = TRUE))
 for (i in 1:4) {
-  tmp <- tox_res_pair[[i]]
-  plot(tmp$eqv$Grid_1, tmp$eqv$DirDeriv, type = "l", col = "blue", main = paste0("Tox 5 vs. Tox", 5-i),
+  tmp <- tox_res_pair[[i]] 
+  plot(tmp$eqv$Grid_1, tmp$eqv$DirDeriv, type = "l", col = "blue", 
+       main = paste0("Tox 5 vs. Tox", 5-i),
        xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
   points(tmp$res$BESTDESIGN[,1], rep(0, nrow(tmp$res$BESTDESIGN)), pch = 16)
 }
 ```
 
-```{r TOX_MM, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='Directional derivative function of max-min T-optimal design in the case \'tox_res_maxmin\'.'}
+Finally, we search for the max-min $KL$-optimal design by the PSO-S-QN algorithm.
+From the collection of results for pairwise discrimination, we construct the
+vector for each criterion value in `tox_vals_pair`.
+
+```{r TOX_RES_MM}
+# Get criterion values from pairwise discrimination results
 tox_vals_pair <- sapply(1:length(tox_res_pair), function(i) tox_res_pair[[i]]$res$BESTVAL)
-nSupp_MM <- 4
-tox_res_maxmin <- DiscrimOD(MODEL_INFO = tox_info, DISTANCE = sq_diff, 
+# Run for finding max-min KL-optimal design 
+tox_res_maxmin <- DiscrimOD(MODEL_INFO = tox_info, DISTANCE = log_norm_B, 
                             nSupp = 4, dsLower = 0, dsUpper = 1250, 
-                            crit_type = "maxmin_fixed_true", MaxMinStdVals = tox_vals_pair,
+                            crit_type = "maxmin_fixed_true", 
+                            MaxMinStdVals = tox_vals_pair,
                             PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO, 
-                            seed = 100, verbose = FALSE)
+                            seed = NULL, verbose = FALSE)
+```
 
-round(tox_res_maxmin$BESTDESIGN, 3)
-tox_res_maxmin$BESTVAL
-tox_res_maxmin$CPUTIME
+The resulting max-min discrimination design is
+$$\{0.000, 455.348, 1046.136, 1250.000; 0.219, 0.340, 0.254, 0.187\}.$$
 
+```{r TOX_DESIGN_MM}
+round(tox_res_maxmin$BESTDESIGN, 3) 
+```
+
+The minimal $KL$-efficiency among 4 efficiencies is 0.7676 after rounding.
+
+```{r TOX_VAL_MM}
+tox_res_maxmin$BESTVAL 
+```
+
+The computational time is about 200 seconds (less than 4 minutes).
+
+```{r TOX_CPU_MM}
+tox_res_maxmin$CPUTIME 
+```
+
+
+To check whether the resulting design is max-min optimal or not, we use the equivalence theorem.
+In the `equivalence` function, we input the numerical result `PSO_RESULT = tox_res_maxmin`
+and the vector of $T$-optimal criterion values, `MaxMinStdVals = tox_vals_pair`.
+
+```{r TOX_EQV_MM, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='FIGURE. Directional derivative function of max-min KL-optimal design in the case \'tox_res_maxmin\'.'}
 tox_eqv_maxmin <- equivalence(ngrid = 100, PSO_RESULT = tox_res_maxmin, 
-                              MODEL_INFO = tox_info, DISTANCE = sq_diff, 
-                              dsLower = 0, dsUpper = 1250, 
-                              crit_type = "maxmin_fixed_true", MaxMinStdVals = tox_vals_pair, 
+                              MODEL_INFO = tox_info, DISTANCE = log_norm_B, 
+                              dsLower = 0, dsUpper = 1250,  
+                              crit_type = "maxmin_fixed_true", 
+                              MaxMinStdVals = tox_vals_pair, 
                               PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO)
 # The weight of efficiency values
 tox_eqv_maxmin$alpha
@@ -768,12 +780,239 @@ plot(tox_eqv_maxmin$Grid_1, tox_eqv_maxmin$DirDeriv, type = "l", col = "blue",
 points(tox_res_maxmin$BESTDESIGN[,1], rep(0, nrow(tox_res_maxmin$BESTDESIGN)), pch = 16)
 ```
 
-# Acceleration with C++ Function Inputs
+We draw the curve of directional derivative function by `plot` function.
+In the plot, the equivalence theorem tells the resulting design is max-min $KL$-optimal. 
 
 
-# Appendix A: Configuration for PSO Algorithm {-}
+# PSO-QN versus NestedPSO {#vs}
 
-# Appendix B: Configuration for L-BFGS Algorithm {-}
+In this section, we show how to change the inner optimization loop in ([@eq:klCri]) from L-BFGS to PSO, i.e. implement the NestedPSO algorithm for finding the optimal discrimination design.
+Also, we compare the performance of our PSO-QN algorithm with the NestedPSO algorithm in the example below.
+
+We follow @atkinson1975design and extend their example with more parameters.
+Consider two non-linear models with mean responses given by
+\begin{align}
+\eta_1(x,\theta_1) & = \theta_{10} + \theta_{11}e^{\theta_{12} x} + \theta_{13}e^{-\theta_{14}x},  \label{eq:afex1}  \\
+\eta_2(x,\theta_2) & = \theta_{20} + \theta_{21}x + \theta_{22}x^2 + \theta_{23}x^3,       \label{eq:afex2}  \\
+\end{align}
+We assume normal errors for both models and set the first model, 
+$\eta_1(x,\theta_1)$, as the true model with parameters 
+$\theta_1=(\theta_{10}, \theta_{11}, \theta_{12}, \theta_{13}, \theta_{14}) = (4.5, -1.5, 0.5, -2, 0.5)$.
+The design space is $x\in[-1,1]$.
+
+To use the **DiscrimOD** package to find the $T$-optimal design for discriminating these 2 models, we first write the R functions, `afex1` and `afex2` for $\eta_1$ and $\eta_2$, respectively.  
+
+```{r AFEX_MODEL, cache=T}
+# models
+afex1 <- function(x, p) p[1] + p[2]*exp(p[3]*x) + p[4]*exp(-p[5]*x)
+afex2 <- function(x, p) p[1] + p[2]*x + p[3]*(x^2) + p[4]*(x^3)
+# Nominal values
+afex1_para <- c(4.5, -1.5, 0.5, -2.0, 0.5)
+# model list
+afex_list <- list(
+  list(model = afex1, para = afex1_para),
+  list(model = afex2, paraLower = rep(-10, 4), paraUpper = rep(10, 4))
+)
+```
+
+To run the PSO-QN algorithm, the settings for the `DiscrimOD` has been introduced in Sections [3](#af) and [4](#tox). The codes are shown below.
+
+```{r AFEX_PSOQN, cache=T}
+afex_res <- DiscrimOD(afex_list, sq_diff, nSupp = 5, dsLower = -1, dsUpper = 1,
+                      crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
+                      PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO,
+                      seed = NULL, verbose = FALSE)
+```
+
+The best design found by the PSO-QN algorithm is 
+$$\{-1.000, -0.710, -0.004, 0.706, 1.000; 0.127, 0.252, 0.250, 0.248, 0.124\}.$$
+and its criterion value is $1.331\times10^{-6}$ after rounding.
+
+```{r AFEX_DESIGN_PSOQN, cache=T}
+round(afex_res$BESTDESIGN, 3)
+afex_res$BESTVAL
+```
+
+To implement the NestedPSO algorithm, we input the third parameter settings in Section [2.2](#pkgparam) which are `NESTEDPSO_INFO` and `LBFGS_NOTRUN`.
+
+```{r AFEX_NPSO, cache=T}
+afex_npso <- DiscrimOD(afex_list, sq_diff, nSupp = 5, dsLower = -1, dsUpper = 1,
+                       crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
+                       PSO_INFO = NESTEDPSO_INFO, LBFGS_INFO = LBFGS_NOTRUN,
+                       seed = NULL, verbose = FALSE)
+```
+
+The best design found by the NestedPSO algorithm is shown below.
+and its criterion value is larger than the one obtained by the PSO-QN algorithm.
+
+```{r AFEX_DESIGN_NPSO, cache=T}
+round(afex_npso$BESTDESIGN, 3)
+afex_npso$BESTVAL
+```
+
+The criterion value obtained by the NestedPSO algorithm seems to be larger than the one found by the PSO-QN algorithm.  Does it mean NestedPSO performs better?
+We draw the curves of directional derivative function for both resulting designs found by each algorithm.  Surprisingly, The PSO-QN finds the $T$-optimal design whereas the NestedPSO does not.
+The reason is PSO might not performs well on solving the inner optimization problem in ([@eq:klCri]).
+
+```{r AFEX_EQV, cache = T, eval = T, echo = F, fig.align='center', fig.height = 4, fig.width = 7, fig.cap='FIGURE. Directional derivative functions of resulting designs obtained by PSO-QN and NestedPSO algorithms.'}
+eqv_psoqn <- equivalence(ngrid = 100, PSO_RESULT = afex_res, 
+                         MODEL_INFO = afex_list, DISTANCE = sq_diff,
+                         dsLower = -1, dsUpper = 1,
+                         crit_type = "pair_fixed_true", 
+                         PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
+
+eqv_npso <- equivalence(ngrid = 100, PSO_RESULT = afex_npso, 
+                        MODEL_INFO = afex_list, DISTANCE = sq_diff,
+                        dsLower = -1, dsUpper = 1,
+                        crit_type = "pair_fixed_true", 
+                        PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
+
+lay <- layout(matrix(1:2, 1, 2, byrow = TRUE))
+plot(eqv_psoqn$Grid_1, eqv_psoqn$DirDeriv, type = "l", col = "blue", 
+     main = "PSO-QN for Extend A&F Example",
+     xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
+points(afex_res$BESTDESIGN[,1], rep(0, nrow(afex_res$BESTDESIGN)), pch = 16)
+plot(eqv_npso$Grid_1, eqv_npso$DirDeriv, type = "l", col = "blue", 
+     main = "NestedPSO for Extend A&F Example",
+     xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
+points(afex_npso$BESTDESIGN[,1], rep(0, nrow(afex_npso$BESTDESIGN)), pch = 16)
+```
+
+Finally, we show the computational time for both algorithm. The PSO-QN algorithm can find the optimal discrimination design in less than 1 minutes.  However, the NestedPSO cannot identify the optimal design even though it has spent more than 18 minutes.
+
+```{r AFEX_CPUTIME, cache=T, eval=T, echo=F}
+cat(paste0("CPU time of PSO-QN algorithm: ", afex_res$CPUTIME, " seconds.")) 
+cat(paste0("CPU time of NestedPSO algorithm: ", afex_npso$CPUTIME, " seconds."))
+```
+
+# Discussion and Future Work {#discuss}
+
+- Ideally, the `DiscrimOD` function would be accelerated if using C++ codes on the model and distance functions. But, somehow it results similar computing time as inputting the R functions. Thus currently I would suggest to ignore the instruction for C++ function inputs.
+- Several extensions can be considered. For example, the generalized $KL$-optimal design criterion in @tommasi2007optimal can be easily included in this current package.
+- Sadly, with the feature of user-defined function input, we cannot parallelize the algorithm anymore.  This is because the function input is an R object whose device memory cannot be deployed into multi-threads environment.
+- Some potential errors remain unidentified.
+
+# Appendix A: Settings for PSO Algorithm {-}
+
+The PSO parameters in the PSO-QN and PSO-S-QN algorithms are set through the `getPSOInfo()` function.  There are 11 inputs, and among them, the user must specify the 
+swarm size and the maximal number of iterations.
+
+```{r, cache=F, eval=F, echo=T}
+getPSOInfo(nSwarm, maxIter, checkConv = 0, freeRun = 0.25, tol = 1e-06, 
+           c1 = 2.05, c2 = 2.05, w0 = 0.95, w1 = 0.2, w_var = 0.8, vk = 4)
+```
+
+The complete details are shown in the list below.
+
+----------- ---------------------------------------------------------------------------
+`nSwarm`    A integer number of swarm size in PSO algorithm. 
+
+`maxIter`   A integer number of maximal PSO iterations.
+
+`checkConv` A logical value which controls whether PSO checks the stopping criterion 
+            during updating procedure.  Specify `TRUE` for PSO to compute the 
+            stopping criterion $|f'-f|<\varepsilon$ where $f'$ and $f$ are the objective 
+            function values in the previous and current iterations, 
+            respectively. The default is `FALSE`.
+
+`freeRun`   A number between $[0,1]$ that controls the percentage  of PSO iterations 
+            which are free from examining the stopping criterion. 
+            If `checkConv = TRUE`, the default is 0.25. Otherwise, this value 
+            would not affect the algorithm.
+
+`tol`       A small value for the tolerance, $\varepsilon$, in the stopping criterion. 
+            If `checkConv = TRUE`, the default is `1e-6`. Otherwise, this value would 
+            not affect the algorithm.
+
+`c1`        The value of cognitive parameter in PSO updating procedure. 
+            The default is 2.05.
+
+`c2`        The value of social parameter in PSO updating procedure. 
+            The default is 2.05.
+
+`w0`        The value of starting inertia weight in PSO updating procedure. 
+            The default is 1.2.
+
+`w1`        The value of ending inertia weight in PSO updating procedure. 
+            The default is 0.2.
+
+`w_var`     A number between $[0,1]$ that controls the percentage of iterations 
+            that PSO linearly decreases the inertia weight from `w0` to `w1`. 
+            The default is 0.8.
+
+`vk`        The value of velocity clamping parameter. The default is 4.
+----------- ---------------------------------------------------------------------------
+
+: The PSO algorithm settings in the **DiscrimOD** package. {#tbl:psoopt}
+
+
+# Appendix B: Settings for L-BFGS Algorithm {-}
+
+The L-BFGS parameters in the PSO-QN and PSO-S-QN algorithms are set through the `getLBFGSInfo()` function.  There are 11 inputs.
+We suggest to vary the number of trails of L-BFGS algorithm in `LBFGS_RETRY` 
+and keep the other parameters remain default.
+
+```{r,cache=F,eval=F,echo=T}
+getLBFGSInfo(IF_INNER_LBFGS = TRUE, LBFGS_RETRY = 1, LBFGS_MAXIT = 0,
+             LBFGS_LM = 6, FVAL_EPS = 0, GRAD_EPS = 1e-05,
+             LINESEARCH_MAXTRIAL = 20, LINESEARCH_MAX = 1e+20,
+             LINESEARCH_MIN = 1e-20, LINESEARCH_ARMIJO = 1e-04,
+             LINESEARCH_WOLFE = 0.9)
+```
+
+The complete details are shown in the list below.
+
+--------------------- -----------------------------------------------------------------
+`IF_INNER_LBFGS`      The logical input `TRUE`/`FALSE` to turn on/off the L-BFGS 
+                      algorithm for the inner optimization problem (minimizing the 
+                      distance among parameter space). 
+                      If specified `IF_INNER_LBFGS = FALSE`, the **DiscrimOD** 
+                      package will run the NestedPSO algorithm in @chen2015minimax.  
+
+`LBFGS_RETRY`         The integer number of total trials of L-BFGS in computing the 
+                      minimal distance with randomly generated initial values. 
+                      The default is 1.
+
+`LBFGS_MAXIT`         The integer number of maximal iteration of L-BFGS algorithm. 
+                      The default is 0 and L-BFGS stops when it converges.
+
+`LBFGS_LM`            The integer number of corrections to approximate the inverse 
+                      hessian matrix. The default is 6.
+
+`FVAL_EPS`            The tolerance value, $\varepsilon_f$, of the stopping criterion 
+                      on objective function value, $|f'-f|/f<\varepsilon_f$ where 
+                      $f'$ and $f$ are the objective function values in the previous 
+                      and current iterations, respectively. 
+                      The default is 0 and L-BFGS ignores this stopping criterion.
+
+`GRAD_EPS`            The tolerance value, $\varepsilon_g$, of the stopping criterion on 
+                      gradients, $\|g\|/\|x\|<\varepsilon_g$ where $g$ is the gradient, $x$ is 
+                      the current position and $\|a\|=\sqrt{a^\top a}$.
+                      The default is `1e-5`.
+
+`LINESEARCH_MAXTRIAL` The integer number of maximal trial of More-Thuente line search 
+                      routine The default is 20.
+
+`LINESEARCH_MAX`      The maximal step size in the line search routine. 
+                      The default is 1e20.
+
+`LINESEARCH_MIN`      The minimal step size in the line search routine. 
+                      The default is 1e-20.
+
+`LINESEARCH_ARMIJO`   A parameter to control the accuracy of the line search routine. 
+                      The default value is `1e-4`. This parameter should be greater 
+                      than zero and smaller than 0.5.
+
+`LINESEARCH_WOLFE`    A coefficient for the Wolfe condition in the line search routine. 
+                      The default value is 0.9. This parameter should be greater than
+                      `LINESEARCH_ARMIJO` parameter and smaller than 1.0.
+                      
+`FD_DELTA`            A small value for the gap of finite difference method for 
+                      computing the gradient. The default is `1e-3`.
+--------------------- -----------------------------------------------------------------
+
+: The L-BFGS algorithm settings in the **DiscrimOD** package. {#tbl:lbfgsopt}
+
 
 # Appendix C: Codes for Distance Functions in R and C++ {-}
 
@@ -809,7 +1048,7 @@ heter_norm_cpp <- cppFunction('Rcpp::NumericVector heter_norm(SEXP xt, SEXP xr) 
 }', depends = "RcppArmadillo")
 ```
 
-Log-normal distribution (A)
+Log-normal distribution (A) in @lopez2007optimal
 ```{r, cache=F, eval=F, echo=T}
 # R Code
 log_norm_A <- function(xt, xr) {
@@ -835,7 +1074,7 @@ log_norm_A_cpp <- cppFunction('Rcpp::NumericVector log_norm_A(SEXP xt, SEXP xr) 
 }', depends = "RcppArmadillo")
 ```
 
-Log-normal distribution (B)
+Log-normal distribution (B) in @lopez2007optimal
 ```{r, cache=F, eval=F, echo=T}
 # R Code
 log_norm_B <- function(xt, xr) {
@@ -860,7 +1099,7 @@ log_norm_B_cpp <- cppFunction('Rcpp::NumericVector log_norm_B(SEXP xt, SEXP xr) 
 }', depends = "RcppArmadillo")
 ```
 
-Log-normal distribution (C)
+Log-normal distribution (C) in @lopez2007optimal
 ```{r, cache=F, eval=F, echo=T}
 # R Code
 log_norm_C <- function(xt, xr) {

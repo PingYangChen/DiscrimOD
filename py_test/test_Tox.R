@@ -26,13 +26,22 @@ MODEL_INFO <- list(
 )
 DISTANCE <- function(xt, xr) (xt - xr)^2
 
+DISTANCE <- function(xt, xr) {
+  sigsq <- 1.0 # nuisance parameter
+  var_t <- (exp(sigsq) - 1.0)*(xt^2) # variance (true mdoel)
+  var_r <- (exp(sigsq) - 1.0)*(xr^2) # variance (rival model)
+  mu_t <- log(xt) - 0.5*log(1.0 + (var_t/(xt^2))) # mean (true model)
+  mu_r <- log(xr) - 0.5*log(1.0 + (var_r/(xr^2))) # mean (rival model)
+  ((mu_r - mu_t)^2)/(2*sigsq) # KL-divergence
+}
+
 #
 PSO_INFO <- getPSOInfo(nSwarm = c(16, 128),
                        maxIter = c(100, 200))
 LBFGS_INFO <- getLBFGSInfo(LBFGS_RETRY = 2)
 #
 dsLower <- 0
-dsUpper <- 1250
+dsUpper <- 1600
 
 TWO_M_N <- c(3, 4, 3, 2)
 
@@ -46,7 +55,7 @@ TWO_M_INFO <- list(
 
 outALL <- NULL
 outAll <- lapply(1:length(TWO_M_INFO), function(CaseID) {
-  CaseID <- 1
+  CaseID <- 2
   out <- DiscrimOD(TWO_M_INFO[[CaseID]], DISTANCE, TWO_M_N[CaseID], dsLower, dsUpper,
                    crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
                    PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO,
@@ -64,6 +73,7 @@ outAll <- lapply(1:length(TWO_M_INFO), function(CaseID) {
   points(out$BESTDESIGN[,1], rep(0, nrow(out$BESTDESIGN)), pch = 16)
   DESIGN1 <- out$BESTDESIGN
   #DESIGN1 <- cbind(c(0, 468.186, 1064.179), c(.249, .498, .253))
+  DESIGN1 <- cbind(seq(dsLower, dsUpper, length = TWO_M_N[CaseID]), 1/TWO_M_N[CaseID])
   designCriterion(DESIGN1, TWO_M_INFO[[CaseID]], DISTANCE, dsLower, dsUpper,
                   crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
                   PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)

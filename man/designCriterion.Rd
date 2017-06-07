@@ -2,7 +2,7 @@
 % Please edit documentation in R/DiscrimOD.R
 \name{designCriterion}
 \alias{designCriterion}
-\title{Calculate Design Criterion Values}
+\title{Function of criterion value computing}
 \usage{
 designCriterion(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper,
   crit_type = "pair_fixed_true", MaxMinStdVals = NULL, PSO_INFO = NULL,
@@ -38,5 +38,5 @@ An List.
 }
 }
 \description{
-Please follow the instruction.
+Computes the discrimination design criterion value
 }

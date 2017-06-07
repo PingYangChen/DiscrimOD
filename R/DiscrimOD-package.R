@@ -1,14 +1,14 @@
 #' Finding Optimal Discrimination Designs by Hybirdizing Particle Swarm and L-BFGS Algorithms
 #'
-#' This package adopts a hybrid algorithm
-#' to search for optimal discrimination designs
+#' The **DiscrimOD** package adopts a hybrid algorithm
+#' to search for the optimal discrimination designs
 #' when there are two or more than two competing models
 #' under normal or non-normal error assumption.
 #' This hybrid algorithm is chosen to efficiently solve the maximin design criteria
 #' in the optimal discrimination design problem which is usually a challenging task.
 #' It combines the particle swarm optimization (PSO) algorithm and the L-BFGS algorithm
 #' to tackle the outer and inner objectives of the maximin design criterion, respectively.
-#' The equivalence theorems for various discriminaiton criteria are also available for
+#' The equivalence theorems for various discrimination criteria are also available for
 #' verifying the optimal discrimination designs.
 #'
 #' @details
