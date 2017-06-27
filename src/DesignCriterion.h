@@ -24,7 +24,7 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PA
 	int d_type = OBJ.d_type;
 	//Rprintf("get design\n");
 
-  double val = 0.0;
+  double val = 1e20;
   if (LOOPID == 0) {
   	switch (d_type) {
   		// Exact Design Module
@@ -102,10 +102,11 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PA
 
     arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size(), false);
 
-    val = arma::accu(WT % DIV);
+    if ((!DIV.has_inf()) & (!DIV.has_nan())) val = arma::accu(WT % DIV);
 
-    if (std::isnan(val)) { val = 1e20; }
-    if (!(arma::is_finite(val))) { val = 1e20; }
+    //val = arma::accu(WT % DIV);
+    //if (std::isnan(val)) { val = 1e20; }
+    //if (!(arma::is_finite(val))) { val = 1e20; }
   }
 	return val;
 }
