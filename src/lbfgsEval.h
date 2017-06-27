@@ -81,7 +81,7 @@ double f_fn(const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const arma::
   arma::rowvec R_PARA_OS(R_PARA.n_elem, fill::zeros);
   for (uword i = 0; i < R_PARA.n_elem; i++) { R_PARA_OS(i) = domainMapping(1, R_PARA(i), R_NBD(i), R_UPPER(i), R_LOWER(i)); }
 
-  double fvalTmp = 1e20;
+  double fvalTmp = 1e10;
 
   if ((!R_PARA_OS.has_nan()) & (!R_PARA_OS.has_inf())) {
     Rcpp::EvalBase *m1_func = (Rcpp::EvalBase *) func_input->M1_FUNC;
@@ -96,13 +96,11 @@ double f_fn(const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const arma::
 
     arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size(), false);
 
-    if ((!DIV.has_inf()) & (!DIV.has_nan())) {
-      fvalTmp = arma::accu(WT % DIV);
-    }
+    if ((!DIV.has_inf()) & (!DIV.has_nan())) fvalTmp = arma::accu(WT % DIV);
   }
 
-  //if (std::isnan(fvalTmp)) { fvalTmp = 1e20; }
-  //if (!(arma::is_finite(fvalTmp))) { fvalTmp = 1e20; }
+  //if (std::isnan(fvalTmp)) { fvalTmp = 1e10; }
+  //if (!(arma::is_finite(fvalTmp))) { fvalTmp = 1e10; }
   //Rprintf("%4.4f\n", fvalTmp);
   return fvalTmp;
 }
@@ -154,7 +152,7 @@ lbfgsfloatval_t evaluate(void *ex, const lbfgsfloatval_t *x, lbfgsfloatval_t *g,
   arma::rowvec R_PARA(n);
   for (int i = 0; i < n; i++) { R_PARA(i) = x[i]; }
 
-  double fx = 1e20;
+  double fx = 1e10;
   arma::rowvec gr(n, fill::zeros);
 
   if ((!R_PARA.has_nan()) & (!R_PARA.has_inf())) {

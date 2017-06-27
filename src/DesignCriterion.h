@@ -24,7 +24,7 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PA
 	int d_type = OBJ.d_type;
 	//Rprintf("get design\n");
 
-  double val = 1e20;
+  double val = 1e10;
   if (LOOPID == 0) {
   	switch (d_type) {
   		// Exact Design Module
@@ -105,8 +105,8 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PA
     if ((!DIV.has_inf()) & (!DIV.has_nan())) val = arma::accu(WT % DIV);
 
     //val = arma::accu(WT % DIV);
-    //if (std::isnan(val)) { val = 1e20; }
-    //if (!(arma::is_finite(val))) { val = 1e20; }
+    //if (std::isnan(val)) { val = 1e10; }
+    //if (!(arma::is_finite(val))) { val = 1e10; }
   }
 	return val;
 }
@@ -121,7 +121,7 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARA
   int LBFGS = LBFGS_OPTION.IF_INNER_LBFGS;
 
   R_PARA.reset(); R_PARA.set_size(OBJ.dParas.n_elem, OBJ.dParas.max()); R_PARA.zeros();
-	double val = 1e20;
+	double val = 1e10;
 	switch (crit_type) {
 		case 0: // Fixed True
 		{
@@ -310,7 +310,7 @@ arma::rowvec distCalc(const OBJ_INFO &OBJ, const arma::mat &x, const arma::mat &
   eta_R = (arma::rowvec) m2_func->eval(Rcpp::wrap(x), Rcpp::wrap(PARA_SET.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1)));
   DIV = (arma::rowvec) distFunc->eval(Rcpp::wrap(eta_T), Rcpp::wrap(eta_R));
 
-  DIV.elem(find_nonfinite(DIV)).fill(1e20);
+  DIV.elem(find_nonfinite(DIV)).fill(1e10);
 
   return DIV;
 }
