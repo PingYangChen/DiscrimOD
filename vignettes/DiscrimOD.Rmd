@@ -54,23 +54,23 @@ Throughout this article, the probability distribution function
 of the response variable, $y$, is represented by $f(y \mid x, \theta, \sigma^2)$
 with mean function $\eta(x, \theta)$,
 where $x$ is the independent variable in a pre-specified experimental
-region $\mathcal{X}$, $\theta$ is a unknown parameter vector and
+region ${X}$, $\theta$ is a unknown parameter vector and
 $\sigma^2$ is nuisance parameter.  
 Usually $\sigma^2$ is used to represent the variance of the assumed probability distribution.
 Suppose there are several possible models with different underlying probability distributions,
-$f_1(y\mid x,\theta_1,\sigma^2), \ldots, f_K(y\mid x,\theta_K,\sigma^2)$, 
+\(f_1(y\mid x,\theta_1,\sigma^2), \ldots, f_K(y\mid x,\theta_K,\sigma^2)\), 
 where $\theta_i\in\Theta_i\subseteq R^{m_i}$, for some positive integers $m_i$.
 The goal is to find the optimal design to discriminate among these competing models.
 
 We consider the approximate design.
 An approximate design is a measure on trails over the experimental
-region $\mathcal{X}$ which has the form
+region ${X}$ which has the form
 
 $$
   \xi = \left\{s_1, s_2, \ldots, s_n; p_1, p_2, \ldots, p_n\right\}
 $${#eq:approxDesign}
 
-where $s_1, s_2, \ldots, s_n$ are $n$ distinct support points in $\mathcal{X}$, and,
+where $s_1, s_2, \ldots, s_n$ are $n$ distinct support points in ${X}$, and,
 $p_i$ is corresponding measure at the $i$th support point satisfying $\sum_ip_i=1$.
 In practice, suppose the total budget is $N$ runs. Then based on the design $\xi$, roughly $p_iN$ observations are taken at each support point of the design $\xi$.
 For this type of experimental design, usually we can appraise the
@@ -358,9 +358,9 @@ based on max-min $T$-optimal design criterion
 which is different from the work in @atkinson1975optimal.
 Consider three linear and homoscedastic models with mean responses given by
 \begin{align}
-\eta_1(x,\theta_1) & = \theta_{10} + \theta_{11}e^x + \theta_{12}e^{-x},  \label{eq:af1}  \\
-\eta_2(x,\theta_2) & = \theta_{20} + \theta_{21}x + \theta_{22}x^2,       \label{eq:af2}  \\
-\eta_3(x,\theta_3) & = \theta_{30} + \theta_{31}\sin{\left(\frac{\pi x}{2}\right)} + \theta_{32}\cos{\left(\frac{\pi x}{2}\right)} + \theta_{33}\sin{\left(\pi x\right)}. \label{eq:af3}
+\eta_1(x,\theta_1) & = \theta_{10} + \theta_{11}e^x + \theta_{12}e^{-x},  \\
+\eta_2(x,\theta_2) & = \theta_{20} + \theta_{21}x + \theta_{22}x^2,         \\
+\eta_3(x,\theta_3) & = \theta_{30} + \theta_{31}\sin{\left(\frac{\pi x}{2}\right)} + \theta_{32}\cos{\left(\frac{\pi x}{2}\right)} + \theta_{33}\sin{\left(\pi x\right)}.
 \end{align}
 In addition to the normal error assumption, they also set the first model, 
 $\eta_1(x,\theta_1)$, as the true model with parameters 

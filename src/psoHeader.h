@@ -21,12 +21,12 @@ namespace Rcpp {
         unsigned long int neval;
   };
 
-  class EvalStandard : public EvalBase { 
-    public: 
+  class EvalStandard : public EvalBase {
+    public:
         EvalStandard(SEXP fcall_, SEXP env_) : fcall(fcall_), env(env_) {}
         Rcpp::NumericVector eval(SEXP x, SEXP p) {
           //neval++;
-          return defaultfun(x, p); 
+          return defaultfun(x, p);
         }
         ~EvalStandard() {};
     private:
@@ -236,7 +236,7 @@ void psoCheckParticle(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const PSO_DYN &
 void psoUpdateDynPara(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const int iter, PSO_DYN &PSO_DYN,
                       const arma::mat &swarm, const arma::mat &PBest, const arma::rowvec &GBest,
                       const arma::vec &fSwarm, const arma::vec &fPBest, const double &fGBest);
-void psoFuncEval(const bool &IF_PARALLEL, const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, 
+void psoFuncEval(const bool &IF_PARALLEL, const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ,
                  const PSO_DYN &PSO_DYN, model_diff_func *MODEL_COLLECTOR[], void *external, const mat &swarm, vec &fSwarm);
 
 #include "psoFuncEval.h"
@@ -318,7 +318,7 @@ void getInfoStruct(OBJ_INFO &OBJ, const Rcpp::List OBJ_INFO_LIST)
 void getNewtonStruct(LBFGS_PARAM &LFBGS_OPT, const Rcpp::List LBFGS_INFO_LIST)
 {
   LFBGS_OPT.IF_INNER_LBFGS      = as<int>(LBFGS_INFO_LIST["IF_INNER_LBFGS"]);
-  LFBGS_OPT.LBFGS_RETRY         = as<int>(LBFGS_INFO_LIST["LBFGS_RETRY"]); 
+  LFBGS_OPT.LBFGS_RETRY         = as<int>(LBFGS_INFO_LIST["LBFGS_RETRY"]);
   LFBGS_OPT.LBFGS_MAXIT         = as<int>(LBFGS_INFO_LIST["LBFGS_MAXIT"]);
   LFBGS_OPT.LBFGS_LM            = as<int>(LBFGS_INFO_LIST["LBFGS_LM"]);
   LFBGS_OPT.FVAL_EPS            = as<double>(LBFGS_INFO_LIST["FVAL_EPS"]);
