@@ -83,18 +83,25 @@ double f_fn(const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const arma::
 
   double fvalTmp = 1e10;
 
-  if ((!R_PARA_OS.has_nan()) & (!R_PARA_OS.has_inf())) {
+  if (R_PARA_OS.is_finite()) {
     Rcpp::EvalBase *m1_func = (Rcpp::EvalBase *) func_input->M1_FUNC;
     Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC;
     Rcpp::EvalBase *distFunc = (Rcpp::EvalBase *) func_input->DISTFUNC;
 
-    arma::rowvec eta_T(WT.n_elem), eta_R(WT.n_elem), DIV(WT.n_elem);
-    eta_T = (arma::rowvec) m1_func->eval(as<Rcpp::NumericMatrix>(Rcpp::wrap(DESIGN)), as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA)));
-    if (eta_T.is_finite()) {
-      eta_R = (arma::rowvec) m2_func->eval(as<Rcpp::NumericMatrix>(Rcpp::wrap(DESIGN)), as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA_OS)));
-      if (eta_R.is_finite()) {
-        DIV = (arma::rowvec) distFunc->eval(as<Rcpp::NumericVector>(Rcpp::wrap(eta_T)), as<Rcpp::NumericVector>(Rcpp::wrap(eta_R)));
-        if (DIV.is_finite()) { fvalTmp = arma::accu(WT % DIV); }
+    Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(DESIGN));
+    Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA));
+    Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA_OS));
+
+    Rcpp::NumericVector eta_T_Rform((int)WT.n_elem), eta_R_Rform((int)WT.n_elem), DIV_Rform((int)WT.n_elem);
+    eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(T_PARA_Rform));
+    if (Rcpp::all(Rcpp::is_finite(eta_T_Rform))) {
+      eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(R_PARA_Rform));
+      if (Rcpp::all(Rcpp::is_finite(eta_R_Rform))) {
+        DIV_Rform = (arma::rowvec) distFunc->eval(Rcpp::wrap(eta_T_Rform), Rcpp::wrap(eta_R_Rform));
+        if (Rcpp::all(Rcpp::is_finite(DIV_Rform))) {
+          arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size(), false);
+          fvalTmp = arma::accu(WT % DIV); 
+        }
       }
     }
   }

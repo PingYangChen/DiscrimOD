@@ -23,6 +23,7 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PA
 	int dSupp = OBJ.dSupp;
 	int d_type = OBJ.d_type;
 	//Rprintf("get design\n");
+  arma::rowvec swarm = x;
 
   double val = 1e10;
   if (LOOPID == 0) {
@@ -31,7 +32,7 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PA
   		case 0:
   		{
         arma::mat DESIGN(nSupp, dSupp, fill::zeros);
-        for (int i = 0; i < nSupp; i++) { DESIGN.row(i) = x.subvec(i*dSupp, (i+1)*dSupp - 1); }
+        for (int i = 0; i < nSupp; i++) { DESIGN.row(i) = swarm.subvec(i*dSupp, (i+1)*dSupp - 1); }
         arma::rowvec WT(nSupp, fill::zeros);
   			WT.fill(1.0/(double)nSupp);
         val = criterionList(LOOPID, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, DESIGN, WT, R_PARA);
@@ -42,10 +43,10 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PA
   		case 1:
   		{
         arma::mat DESIGN(nSupp, dSupp, fill::zeros);
-        for (int i = 0; i < nSupp; i++) { DESIGN.row(i) = x.subvec(i*dSupp, (i+1)*dSupp - 1); }
+        for (int i = 0; i < nSupp; i++) { DESIGN.row(i) = swarm.subvec(i*dSupp, (i+1)*dSupp - 1); }
         arma::rowvec WT(nSupp);
   			// Get Design Weight
-  			arma::rowvec ang = x.subvec(nSupp*dSupp, nSupp*dSupp + nSupp - 2);
+  			arma::rowvec ang = swarm.subvec(nSupp*dSupp, nSupp*dSupp + nSupp - 2);
   			arma::rowvec wcumsin(nSupp, fill::zeros), wcos(nSupp, fill::zeros);
   			arma::rowvec wsin = arma::sin(ang);
   			wcumsin(0) = 1.0;
@@ -64,9 +65,9 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PA
         arma::mat DESIGN = EXT.DESIGN;
         double CRIT_VAL = EXT.CRIT_VAL;
 
-        int n_model = (int)x.n_elem;
+        int n_model = (int)swarm.n_elem;
         arma::rowvec alpha(n_model + 1, fill::zeros);
-        arma::rowvec ang = x;
+        arma::rowvec ang = swarm;
         arma::rowvec wcumsin(n_model + 1, fill::zeros), wcos(n_model + 1, fill::zeros);
         arma::rowvec wsin = arma::sin(ang);
         wcumsin(0) = 1.0;
@@ -95,16 +96,23 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PA
     Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC; 
     Rcpp::EvalBase *distFunc = (Rcpp::EvalBase *) func_input->DISTFUNC;
 
-    arma::rowvec eta_T(WT.n_elem), eta_R(WT.n_elem), DIV(WT.n_elem);
-    eta_T = (arma::rowvec) m1_func->eval(as<Rcpp::NumericMatrix>(Rcpp::wrap(DESIGN)), as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA)));
+    Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(DESIGN));
+    Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA));
+    Rcpp::NumericVector R_PARA_Rform  = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(swarm));
+
+    Rcpp::NumericVector eta_T_Rform((int)WT.n_elem), eta_R_Rform((int)WT.n_elem), DIV_Rform((int)WT.n_elem);
+    eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(T_PARA_Rform));
     //Rprintf("T:"); rvecPrintf(eta_T);
-    if (eta_T.is_finite()) {
-      eta_R = (arma::rowvec) m2_func->eval(as<Rcpp::NumericMatrix>(Rcpp::wrap(DESIGN)), as<Rcpp::NumericVector>(Rcpp::wrap(x)));
+    if (Rcpp::all(Rcpp::is_finite(eta_T_Rform))) {
+      eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(R_PARA_Rform));
       //Rprintf("R:"); rvecPrintf(eta_R);
-      if (eta_R.is_finite()) {
-        DIV = (arma::rowvec) distFunc->eval(as<Rcpp::NumericVector>(Rcpp::wrap(eta_T)), as<Rcpp::NumericVector>(Rcpp::wrap(eta_R)));
+      if (Rcpp::all(Rcpp::is_finite(eta_R_Rform))) {
+        DIV_Rform = (arma::rowvec) distFunc->eval(Rcpp::wrap(eta_T_Rform), Rcpp::wrap(eta_R_Rform));
         //Rprintf("D:"); rvecPrintf(DIV);
-        if (DIV.is_finite()) { val = arma::accu(WT % DIV); }
+        if (Rcpp::all(Rcpp::is_finite(DIV_Rform))) {
+          arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size(), false);
+          val = arma::accu(WT % DIV); 
+        }
       }
     }
     
@@ -317,13 +325,19 @@ arma::rowvec distCalc(const OBJ_INFO &OBJ, const arma::mat &x, const arma::mat &
   int tmID = MODEL_PAIR(PAIRID, 0);
   int rmID = MODEL_PAIR(PAIRID, 1);
 
-  arma::rowvec eta_T(x.n_rows, fill::zeros), eta_R(x.n_rows, fill::zeros), DIV(x.n_rows, fill::zeros);
-  eta_T = (arma::rowvec) m1_func->eval(as<Rcpp::NumericMatrix>(Rcpp::wrap(x)), 
-                                       as<Rcpp::NumericVector>(Rcpp::wrap(PARA_SET.submat(tmID, 0, tmID, OBJ.dParas(tmID) - 1))));
-  eta_R = (arma::rowvec) m2_func->eval(as<Rcpp::NumericMatrix>(Rcpp::wrap(x)), 
-                                       as<Rcpp::NumericVector>(Rcpp::wrap(PARA_SET.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1))));
-  DIV = (arma::rowvec) distFunc->eval(as<Rcpp::NumericVector>(Rcpp::wrap(eta_T)), as<Rcpp::NumericVector>(Rcpp::wrap(eta_R)));
+  arma::rowvec T_PARA = PARA_SET.submat(tmID, 0, tmID, OBJ.dParas(tmID) - 1);
+  arma::rowvec R_PARA = PARA_SET.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
 
+  Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(x));
+  Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA));
+  Rcpp::NumericVector R_PARA_Rform  = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA));
+
+  Rcpp::NumericVector eta_T_Rform((int)x.n_rows), eta_R_Rform((int)x.n_rows), DIV_Rform((int)x.n_rows);
+  eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(T_PARA_Rform));  
+  eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(R_PARA_Rform));
+  DIV_Rform = (arma::rowvec) distFunc->eval(Rcpp::wrap(eta_T_Rform), Rcpp::wrap(eta_R_Rform));
+    
+  arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size(), false);  
   DIV.elem(find_nonfinite(DIV)).fill(1e10);
 
   return DIV;
