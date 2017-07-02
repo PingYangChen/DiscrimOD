@@ -154,6 +154,8 @@
 DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
 											PSO_INFO = NULL, LBFGS_INFO = NULL, seed = NULL, verbose = TRUE, environment, ...) {
 
+	gctorture(on = FALSE)
+
   stopifnot(nSupp >= 2L, all(is.finite(dsLower)), all(is.finite(dsUpper)),
             length(dsLower) == length(dsUpper), all(dsUpper > dsLower),
             all(names(PSO_INFO) == names(getPSOInfo())),
@@ -215,6 +217,8 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, crit_type =
 
 	BESTDESIGN <- designM2V(psoOut$GBest, D_INFO)
 
+	gctorture(on = TRUE)
+
 	list(BESTDESIGN = BESTDESIGN, BESTVAL = -psoOut$fGBest, GBESTHIST = -psoOut$fGBestHist,
 	     CPUTIME = cputime)
 }
@@ -246,6 +250,8 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, crit_type =
 #' @export
 designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
 														PSO_INFO = NULL, LBFGS_INFO = NULL, environment, ...) {
+
+	gctorture(on = FALSE)
 
 	stopifnot(all(is.finite(dsLower)), all(is.finite(dsUpper)),
             length(dsLower) == length(dsUpper), all(dsUpper > dsLower))
@@ -284,6 +290,8 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 	cri_1 <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MODEL_LIST, 0, environment, DESIGN1_M)
 	rownames(cri_1$theta2) <- paste0("model_", 1:length(MODEL_INFO))
 
+	gctorture(on = TRUE)
+
   return(list(cri_val = -cri_1$val, theta2 = cri_1$theta2))
 }
 
@@ -318,6 +326,8 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 												MODEL_INFO, DISTANCE, dsLower, dsUpper, crit_type = "pair_fixed_true",
 												MaxMinStdVals = NULL, PSO_INFO = NULL, LBFGS_INFO = NULL,
 												ALPHA_PSO_INFO = NULL, environment, ...) {
+
+	gctorture(on = FALSE)
 
 	stopifnot(all(is.finite(dsLower)), all(is.finite(dsUpper)),
             length(dsLower) == length(dsUpper), all(dsUpper > dsLower))
@@ -385,6 +395,8 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	equiv <- cppEquivalence(D_INFO, MODEL_LIST, -CRIT_VAL$val, PARA_SET, ALPHA, environment, ngrid)
 
 	if (crit_type == "maxmin_fixed_true") { equiv$alpha <- ALPHA }
+
+	gctorture(on = TRUE)
 
 	return(equiv)
 }
