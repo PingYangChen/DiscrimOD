@@ -95,15 +95,16 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PA
     Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC;
     Rcpp::EvalBase *distFunc = (Rcpp::EvalBase *) func_input->DISTFUNC;
 
-    Rcpp::NumericVector eta_T_Rform, eta_R_Rform, DIV_Rform;
-    eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(Rcpp::wrap(DESIGN), Rcpp::wrap(T_PARA));
-    eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(Rcpp::wrap(DESIGN), Rcpp::wrap(x));
-    DIV_Rform = (Rcpp::NumericVector) distFunc->eval(Rcpp::wrap(eta_T_Rform), Rcpp::wrap(eta_R_Rform));
-
-    arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size(), false);
-
-    if ((!DIV.has_inf()) & (!DIV.has_nan())) val = arma::accu(WT % DIV);
-
+    arma::rowvec eta_T(WT.n_elem), eta_R(WT.n_elem), DIV(WT.n_elem);
+    eta_T = (arma::rowvec) m1_func->eval(Rcpp::wrap(DESIGN), Rcpp::wrap(T_PARA));
+    if (eta_T.is_finite()) {
+      eta_R = (arma::rowvec) m2_func->eval(Rcpp::wrap(DESIGN), Rcpp::wrap(x));
+      if (eta_R.is_finite()) {
+        DIV = (arma::rowvec) distFunc->eval(Rcpp::wrap(eta_T), Rcpp::wrap(eta_R));    
+        if (DIV.is_finite()) { val = arma::accu(WT % DIV); }
+      }
+    }
+    
     //val = arma::accu(WT % DIV);
     //if (std::isnan(val)) { val = 1e10; }
     //if (!(arma::is_finite(val))) { val = 1e10; }
@@ -134,9 +135,13 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARA
         external.DESIGN = DESIGN;
         external.WT = WT;
 
-        PSO_OPTS[LOOPID + 1].dSwarm = OBJ.dParas(1);
-        PSO_OPTS[LOOPID + 1].varUpper.reset(); PSO_OPTS[1].varUpper = OBJ.parasUpper.submat(1, 0, 1, OBJ.dParas(1) - 1);
-        PSO_OPTS[LOOPID + 1].varLower.reset(); PSO_OPTS[1].varLower = OBJ.parasLower.submat(1, 0, 1, OBJ.dParas(1) - 1);
+        int rmID = OBJ.MODEL_PAIR(0, 1);
+
+        PSO_OPTS[LOOPID + 1].dSwarm = OBJ.dParas(rmID);
+        PSO_OPTS[LOOPID + 1].varUpper.reset(); PSO_OPTS[LOOPID + 1].varUpper.set_size(1, OBJ.dParas(rmID)); 
+        PSO_OPTS[LOOPID + 1].varUpper = OBJ.parasUpper.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
+        PSO_OPTS[LOOPID + 1].varLower.reset(); PSO_OPTS[LOOPID + 1].varLower.set_size(1, OBJ.dParas(rmID)); 
+        PSO_OPTS[LOOPID + 1].varLower = OBJ.parasLower.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
 
         PSO_Result InnerResult = {};
         PSO_MAIN(LOOPID + 1, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, &external, FALSE, FALSE, &InnerResult);
@@ -163,9 +168,13 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARA
           external.DESIGN = DESIGN;
           external.WT = WT;
 
-          PSO_OPTS[LOOPID + 1].dSwarm = OBJ.dParas(i);
-          PSO_OPTS[LOOPID + 1].varUpper.reset(); PSO_OPTS[1].varUpper = OBJ.parasUpper.submat(i, 0, i, OBJ.dParas(i) - 1);
-          PSO_OPTS[LOOPID + 1].varLower.reset(); PSO_OPTS[1].varLower = OBJ.parasLower.submat(i, 0, i, OBJ.dParas(i) - 1);
+          int rmID = OBJ.MODEL_PAIR(i, 1);
+
+          PSO_OPTS[LOOPID + 1].dSwarm = OBJ.dParas(rmID);
+          PSO_OPTS[LOOPID + 1].varUpper.reset(); PSO_OPTS[LOOPID + 1].varUpper.set_size(1, OBJ.dParas(rmID)); 
+          PSO_OPTS[LOOPID + 1].varUpper = OBJ.parasUpper.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
+          PSO_OPTS[LOOPID + 1].varLower.reset(); PSO_OPTS[LOOPID + 1].varLower.set_size(1, OBJ.dParas(rmID)); 
+          PSO_OPTS[LOOPID + 1].varLower = OBJ.parasLower.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
 
           PSO_Result InnerResult = {};
           PSO_MAIN(LOOPID + 1, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, &external, FALSE, FALSE, &InnerResult);

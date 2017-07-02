@@ -88,17 +88,16 @@ double f_fn(const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const arma::
     Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC;
     Rcpp::EvalBase *distFunc = (Rcpp::EvalBase *) func_input->DISTFUNC;
 
-    Rcpp::NumericVector eta_T_Rform, eta_R_Rform, DIV_Rform;
-
-    eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(Rcpp::wrap(DESIGN), Rcpp::wrap(T_PARA));
-    eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(Rcpp::wrap(DESIGN), Rcpp::wrap(R_PARA_OS));
-    DIV_Rform = (Rcpp::NumericVector) distFunc->eval(Rcpp::wrap(eta_T_Rform), Rcpp::wrap(eta_R_Rform));
-
-    arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size(), false);
-
-    if ((!DIV.has_inf()) & (!DIV.has_nan())) fvalTmp = arma::accu(WT % DIV);
+    arma::rowvec eta_T(WT.n_elem), eta_R(WT.n_elem), DIV(WT.n_elem);
+    eta_T = (arma::rowvec) m1_func->eval(Rcpp::wrap(DESIGN), Rcpp::wrap(T_PARA));
+    if (eta_T.is_finite()) {
+      eta_R = (arma::rowvec) m2_func->eval(Rcpp::wrap(DESIGN), Rcpp::wrap(R_PARA_OS));
+      if (eta_R.is_finite()) {
+        DIV = (arma::rowvec) distFunc->eval(Rcpp::wrap(eta_T), Rcpp::wrap(eta_R));
+        if (DIV.is_finite()) { fvalTmp = arma::accu(WT % DIV); }
+      }
+    }
   }
-
   //if (std::isnan(fvalTmp)) { fvalTmp = 1e10; }
   //if (!(arma::is_finite(fvalTmp))) { fvalTmp = 1e10; }
   //Rprintf("%4.4f\n", fvalTmp);
