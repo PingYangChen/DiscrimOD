@@ -107,7 +107,7 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PA
       eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(R_PARA_Rform));
       //Rprintf("R:"); rvecPrintf(eta_R);
       if (Rcpp::all(Rcpp::is_finite(eta_R_Rform))) {
-        DIV_Rform = (arma::rowvec) distFunc->eval(Rcpp::wrap(eta_T_Rform), Rcpp::wrap(eta_R_Rform));
+        DIV_Rform = (Rcpp::NumericVector) distFunc->eval(Rcpp::wrap(eta_T_Rform), Rcpp::wrap(eta_R_Rform));
         //Rprintf("D:"); rvecPrintf(DIV);
         if (Rcpp::all(Rcpp::is_finite(DIV_Rform))) {
           arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size(), false);
@@ -335,7 +335,7 @@ arma::rowvec distCalc(const OBJ_INFO &OBJ, const arma::mat &x, const arma::mat &
   Rcpp::NumericVector eta_T_Rform((int)x.n_rows), eta_R_Rform((int)x.n_rows), DIV_Rform((int)x.n_rows);
   eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(T_PARA_Rform));  
   eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(R_PARA_Rform));
-  DIV_Rform = (arma::rowvec) distFunc->eval(Rcpp::wrap(eta_T_Rform), Rcpp::wrap(eta_R_Rform));
+  DIV_Rform = (Rcpp::NumericVector) distFunc->eval(Rcpp::wrap(eta_T_Rform), Rcpp::wrap(eta_R_Rform));
     
   arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size(), false);  
   DIV.elem(find_nonfinite(DIV)).fill(1e10);

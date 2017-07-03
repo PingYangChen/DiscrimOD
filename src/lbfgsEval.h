@@ -97,7 +97,7 @@ double f_fn(const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const arma::
     if (Rcpp::all(Rcpp::is_finite(eta_T_Rform))) {
       eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(R_PARA_Rform));
       if (Rcpp::all(Rcpp::is_finite(eta_R_Rform))) {
-        DIV_Rform = (arma::rowvec) distFunc->eval(Rcpp::wrap(eta_T_Rform), Rcpp::wrap(eta_R_Rform));
+        DIV_Rform = (Rcpp::NumericVector) distFunc->eval(Rcpp::wrap(eta_T_Rform), Rcpp::wrap(eta_R_Rform));
         if (Rcpp::all(Rcpp::is_finite(DIV_Rform))) {
           arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size(), false);
           fvalTmp = arma::accu(WT % DIV); 
