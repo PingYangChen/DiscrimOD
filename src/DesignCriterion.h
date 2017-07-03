@@ -102,13 +102,10 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PA
 
     Rcpp::NumericVector eta_T_Rform((int)WT.n_elem), eta_R_Rform((int)WT.n_elem), DIV_Rform((int)WT.n_elem);
     eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(T_PARA_Rform));
-    //Rprintf("T:"); rvecPrintf(eta_T);
     if (Rcpp::all(Rcpp::is_finite(eta_T_Rform))) {
       eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(R_PARA_Rform));
-      //Rprintf("R:"); rvecPrintf(eta_R);
       if (Rcpp::all(Rcpp::is_finite(eta_R_Rform))) {
         DIV_Rform = (Rcpp::NumericVector) distFunc->eval(Rcpp::wrap(eta_T_Rform), Rcpp::wrap(eta_R_Rform));
-        //Rprintf("D:"); rvecPrintf(DIV);
         if (Rcpp::all(Rcpp::is_finite(DIV_Rform))) {
           arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size(), false);
           val = arma::accu(WT % DIV); 
