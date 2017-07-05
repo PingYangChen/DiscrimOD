@@ -127,7 +127,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // cppEquivalence
-List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, const double GBEST_VAL, const arma::mat PARA_SET, const arma::rowvec alpha, const SEXP env, const int nGrid);
+Rcpp::List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, const double GBEST_VAL, const arma::mat PARA_SET, const arma::rowvec alpha, const SEXP env, const int nGrid);
 RcppExport SEXP DiscrimOD_cppEquivalence(SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP GBEST_VALSEXP, SEXP PARA_SETSEXP, SEXP alphaSEXP, SEXP envSEXP, SEXP nGridSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;

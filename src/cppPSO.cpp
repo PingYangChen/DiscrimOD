@@ -3,7 +3,7 @@
 
 // RCPP FUNCTIONS
 //[[Rcpp::export]]
-Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, 
+Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LIST,
                   Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
                   Rcpp::List EXTERNAL_LIST, const SEXP env, const bool IF_PARALLEL, const bool VERBOSE)
 {
@@ -59,10 +59,10 @@ Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_I
   if (OBJ.d_type == 1001) {
     external.DESIGN = as<arma::mat>(EXTERNAL_LIST["DESIGN"]);
     external.CRIT_VAL = as<double>(EXTERNAL_LIST["CRIT_VAL"]);
-  } 
+  }
 
   PSO_Result Result = {};
-  if (VERBOSE) Rprintf("\n Calling Cpp PSO Kernel... ");
+  if (VERBOSE) Rprintf("\nCalling Cpp PSO Kernel... ");
   PSO_MAIN(LOOPID, PSO_OPT, LBFGS_OPTION, OBJ, model_diff_ptr, &external, IF_PARALLEL, VERBOSE, &Result);
   if (VERBOSE) Rprintf("Done.\n");
 
@@ -75,7 +75,7 @@ Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_I
 
 
 //[[Rcpp::export]]
-Rcpp::List cppDesignCriterion(Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, 
+Rcpp::List cppDesignCriterion(Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LIST,
                               Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
                               Rcpp::List EXTERNAL_LIST, SEXP env, arma::rowvec DESIGN)
 {
@@ -130,8 +130,8 @@ Rcpp::List cppDesignCriterion(Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LI
 }
 
 //[[Rcpp::export]]
-List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
-                    const double GBEST_VAL, const arma::mat PARA_SET, const arma::rowvec alpha, const SEXP env, const int nGrid)
+Rcpp::List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
+                          const double GBEST_VAL, const arma::mat PARA_SET, const arma::rowvec alpha, const SEXP env, const int nGrid)
 {
   SEXP DIST_FUNC_SEXP = as<SEXP>(OBJ_INFO_LIST["dist_func"]);
   OBJ_INFO OBJ = {}; getInfoStruct(OBJ, OBJ_INFO_LIST);
@@ -202,3 +202,65 @@ List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
                       Named("DirDeriv") = wrap(DISPVALS),
                       Named("MAX_DD") = wrap(MAX_DISP));
 }
+
+/*
+Rcpp::List cppFedorovWynn(Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
+                          Rcpp::List EXTERNAL_LIST, const SEXP env, const bool VERBOSE)
+{
+  //arma_rng::set_seed_random();
+  int NCPU = omp_get_max_threads();
+  if (NCPU < 3) NCPU = 2;
+  omp_set_num_threads(NCPU - 1);
+
+  SEXP DIST_FUNC_SEXP = as<SEXP>(OBJ_INFO_LIST["dist_func"]);
+  OBJ_INFO OBJ = {}; getInfoStruct(OBJ, OBJ_INFO_LIST);
+
+  // WRAP FUNCTIONS (INSPIRED BY R PACKAGE 'lbfgs')
+  Rcpp::EvalBase *dfnc = NULL;
+  if (TYPEOF(DIST_FUNC_SEXP) == EXTPTRSXP) {
+    dfnc = new Rcpp::EvalCompiled(DIST_FUNC_SEXP, env);
+  } else {
+    dfnc = new Rcpp::EvalStandard(DIST_FUNC_SEXP, env);
+  }
+
+  int N_PAIR = OBJ.N_PAIR;
+  arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
+
+  model_diff_func *model_diff_ptr[N_PAIR];
+  model_diff_func model_diff_collect[N_PAIR];
+
+  for (int i = 0; i < N_PAIR; i++) {
+    int tmID = MODEL_PAIR(i, 0); int rmID = MODEL_PAIR(i, 1);
+
+    Rcpp::EvalBase *m1 = NULL;
+    SEXP tmp1 = as<SEXP>(MODEL_INFO_LIST[tmID]);
+    if (TYPEOF(tmp1) == EXTPTRSXP) {
+      m1 = new Rcpp::EvalCompiled(tmp1, env);
+    } else {
+      m1 = new Rcpp::EvalStandard(tmp1, env);
+    }
+
+    Rcpp::EvalBase *m2 = NULL;
+    SEXP tmp2 = as<SEXP>(MODEL_INFO_LIST[rmID]);
+    if (TYPEOF(tmp2) == EXTPTRSXP) {
+      m2 = new Rcpp::EvalCompiled(tmp2, env);
+    } else {
+      m2 = new Rcpp::EvalStandard(tmp2, env);
+    }
+
+    model_diff_collect[i] = model_diff_func(m1, m2, dfnc);
+    model_diff_ptr[i] = &model_diff_collect[i];
+  }
+
+  LBFGS_PARAM LBFGS_OPTION = {}; getNewtonStruct(LBFGS_OPTION, LBFGS_INFO_LIST);
+
+  FED_Result Result = {};
+  if (VERBOSE) Rprintf("\nCalling Cpp Fedorov-Wynn Kernel... ");
+  //PSO_MAIN(LOOPID, PSO_OPT, LBFGS_OPTION, OBJ, model_diff_ptr, &external, IF_PARALLEL, VERBOSE, &Result);
+  if (VERBOSE) Rprintf("Done.\n");
+
+  return List::create(Named("design") = wrap(Result.design),
+                      Named("fval") = wrap(Result.fval),
+                      Named("fvalHist") = wrap(Result.fvalHist));
+}
+*/

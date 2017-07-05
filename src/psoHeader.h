@@ -208,6 +208,15 @@ typedef struct LBFGS_PARAM {
   double FD_DELTA; // 1e-3
 } LBFGS_PARAM, *Ptr_LBFGS_PARAM;
 
+typedef struct FED_PARAM {
+  // FEDOROV OPTIONS
+  int FED_MAXIT; // 100
+  int FED_TRIM; // 5
+  double FED_TRIM_EPS; // 1e-4
+  // -- STOPPING CRITERION SETTING
+  double FED_EPS; // 0.0   (1e-8)
+} FED_PARAM, *Ptr_FED_PARAM;
+
 // DEFINE PSO RESULTS
 typedef struct {
   arma::rowvec GBest;
@@ -216,6 +225,13 @@ typedef struct {
   arma::mat PBest;
   arma::vec fPBest;
 } PSO_Result, *Ptr_PSO_Result;
+
+// DEFINE FEDOROV RESULTS
+typedef struct {
+  arma::rowvec design;
+  double fval;
+  arma::rowvec fvalHist;
+} FED_Result, *Ptr_FED_Result;
 
 
 // DECLARE FUNCTIONS
@@ -393,6 +409,14 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &PSO_INFO_LIST)
     //PSO_OPT[i].LcRi_L     = LcRi_L_Tmp[i];
   }
 }
+
+/*
+// FEDOROV-WYNN OPTIONS
+void getFedorovStruct(LBFGS_PARAM &FED_OPT, const Rcpp::List FED_INFO_LIST)
+{
+
+}
+*/
 
 /*
 void getTopology(const int &LOOPID, PSO_OPTIONS PSO_OPT[]) {
