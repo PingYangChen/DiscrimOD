@@ -191,7 +191,6 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARA
         } else {
           eff_vals(i) = minDistCalc(LBFGS_OPTION, OBJ, MODEL_COLLECTOR, i, DESIGN, WT, R_PARA_tmp);
         }
-
         R_PARA.submat(i+1, 0, i+1, OBJ.dParas(i+1) - 1) = R_PARA_tmp;
 			}
 			eff_vals = eff_vals/std_vals;
@@ -224,9 +223,9 @@ double minDistCalc(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_d
 
   lbfgs_eval LBFGS_EVAL = {};
   LBFGS_EVAL.func_input = func_input;
-  LBFGS_EVAL.R_UPPER    = OBJ.parasUpper.submat(rmID, 0, rmID, dParas - 1);
-  LBFGS_EVAL.R_LOWER    = OBJ.parasLower.submat(rmID, 0, rmID, dParas - 1);
-  LBFGS_EVAL.R_NBD      = R_NBD;
+  LBFGS_EVAL.UPPER    = OBJ.parasUpper.submat(rmID, 0, rmID, dParas - 1);
+  LBFGS_EVAL.LOWER    = OBJ.parasLower.submat(rmID, 0, rmID, dParas - 1);
+  LBFGS_EVAL.NBD      = R_NBD;
   LBFGS_EVAL.T_PARA     = T_PARA;
   LBFGS_EVAL.DESIGN     = DESIGN;
   LBFGS_EVAL.WT         = WT;

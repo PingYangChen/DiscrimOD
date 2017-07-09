@@ -19,7 +19,7 @@ para_mmm_2 <- c(1, 1, 1)
 # Create the model list
 model_mmm <- list(
   list(model = enzyme2, para = para_mmm_2),
-  list(model = enzyme1, paraLower = c(-20, -20), paraUpper = c(20, 20))
+  list(model = enzyme1, paraLower = c(1e-4, 1e-4), paraUpper = c(20, 20))
 )
 
 # Define the distance functions

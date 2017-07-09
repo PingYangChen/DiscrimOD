@@ -1,12 +1,12 @@
 ---
 title: "DiscrimOD: Finding Optimal Discrimination Designs by Hybridizing Particle Swarm and L-BFGS Algorithms"
 author: 
-  - name: Ping-Yang Chen
-    affiliation: Department of Statistics, National Cheng Kung University
-    address:
-    - 1 University Road,
-    - Tainan 70101, Taiwan.
-    email:  pychen.ping@gmail.com
+  name: Ping-Yang Chen
+  affiliation: Department of Statistics, National Cheng Kung University
+  address:
+  - 1 University Road,
+  - Tainan 70101, Taiwan.
+  email:  pychen.ping@gmail.com
 date: "`r Sys.Date()`"
 bibliography: maxMinKLref.bib
 output: 
@@ -21,7 +21,7 @@ vignette: >
   %\VignetteIndexEntry{DiscrimOD\: Finding Optimal Discrimination Designs by Hybridizing Particle Swarm and L-BFGS Algorithms}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-abstract: >
+abstract: > 
   The **DiscrimOD** package adopts a hybrid algorithm
   to search for the optimal discrimination designs
   when there are two or more than two competing models
@@ -37,14 +37,24 @@ abstract: >
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(cache = 2, cache.lazy = FALSE, tidy = FALSE, warning = FALSE)
 library(knitcitations)
+set.seed(round(runif(1, 1, 1e4)))
 ```
 
 # Introduction
 
-The **DiscrimOD** package is currently in the *alpha* testing stage which means we only open this package for a few people to test it and hopefully we can have some responses and suggestions on the computational issues.
+The **DiscrimOD** package is designed for generating optimal designs for model discrimination.
+For the cases of two competing models, we consider the $T$- and $KL$-optimal criteria which are based on 
+evaluating the distance between two models.
+For the cases of more than two competing models, we work on the max-min approach that 
+maximizes the worst efficiency over all pairs of competing models in the model class.
 
+We hybridize two types of optimization algorithms to tackle the maximin problem in this distance-measure-based design criterion.  In this supplementary, we provide the complete instruction in how to use our **DiscrimOD** package.
+We also revisit several examples in the literature and show our algorithms work succcessfully.
+
+The remaining parts are organized as follows.
+In this section, we will briefly review the $T$- and $KL$-optimal criteria and introduce our proposed algorithms.
 Section [2](#pkg) is the complete user guide for implementing the **DiscrimOD** package.
-Section [3](#af) is an example from @atkinson1975optimal. We show how to use **DiscrimOD** to find the max-min $T$-optimal design.
+Section [3](#examples) consists of 3 examples from the literature. We show how to use **DiscrimOD** to find the optimal discrimination designs under various setps for the competing models.
 Section [4](#tox) shows a real application in toxicology and find the max-min $KL$-optimal design when the models have non-normal errors.
 Section [5](#vs) extends an example in @atkinson1975design and compare the newly proposed algorithm with the NestedPSO in @chen2015minimax. We show the new algorithm is more efficient in tackling the optimal discrimination design search problems.
 
@@ -65,9 +75,8 @@ The goal is to find the optimal design to discriminate among these competing mod
 We consider the approximate design.
 An approximate design is a measure on trails over the experimental
 region ${X}$ which has the form
-
 $$
-  \xi = \left\{s_1, s_2, \ldots, s_n; p_1, p_2, \ldots, p_n\right\}
+\xi = \left\{s_1, s_2, \ldots, s_n; p_1, p_2, \ldots, p_n\right\}
 $${#eq:approxDesign}
 
 where $s_1, s_2, \ldots, s_n$ are $n$ distinct support points in ${X}$, and,
@@ -97,15 +106,15 @@ To measure the difference between two competing models,
 the Kullback--Leibler ($KL$) divergence ([@eq:kldiv]) is used, i.e.,
 
 $$
-  \mathcal{I}(f_t, f_2, x, \theta_2) = 
-    \int f_t(y\mid x,\sigma^2)\log{\left\{\frac{f_t(y\mid x,\sigma^2)}{f_2(y\mid x,\theta_2,\sigma^2)}\right\}}~dy, ~\forall~x\in\mathcal{X}.
+\mathcal{I}(f_t, f_2, x, \theta_2) = 
+\int f_t(y\mid x,\sigma^2)\log{\left\{\frac{f_t(y\mid x,\sigma^2)}{f_2(y\mid x,\theta_2,\sigma^2)}\right\}}~dy, ~\forall~x\in\mathcal{X}.
 $${#eq:kldiv}
 
 The $KL$-optimal criterion is the minimal value of 
 $\mathcal{I}(f_t, f_2, x, \theta_2)$ over $\theta_2\in\Theta_2$, i.e.
 
 $$
-  I_{2,t}(\xi) = \underset{\theta_2\in\Theta_2}{\min}\left\{ \int_\mathcal{X} \mathcal{I}(f_t, f_2, x, \theta_2)~\xi(dx) \right\},
+I_{2,t}(\xi) = \underset{\theta_2\in\Theta_2}{\min}\left\{ \int_\mathcal{X} \mathcal{I}(f_t, f_2, x, \theta_2)~\xi(dx) \right\},
 $${#eq:klCri} 
 
 and the design $\xi^*_{KL}$ is $KL$-optimal if it maximizes $I_{2,t}(\xi)$.
@@ -115,7 +124,7 @@ the design $\xi^*_{KL}$ is the $KL$-optimal design if and only if
 the directional derivative, $\psi_{KL}(x,\xi^*_{KL})$,
 
 $$
-  \psi_{KL}\left(x,\xi^*_{KL}\right) = \mathcal{I}(f_t, f_2, x, \hat{\theta}_2(\xi^*_{KL})) - I_{2,t}(\xi^*_{KL}) \leq 0
+\psi_{KL}\left(x,\xi^*_{KL}\right) = \mathcal{I}(f_t, f_2, x, \hat{\theta}_2(\xi^*_{KL})) - I_{2,t}(\xi^*_{KL}) \leq 0
 $${#eq:klDisp}
 
 for all $x \in \mathcal{X}$, where $\hat{\theta}_2(\xi)$ minimizes the $KL$ divergence in ([@eq:kldiv]) at $\xi^*_{KL}$.  The equality of ([@eq:klDisp]) holds at each support point of $\xi^*_{KL}$.
@@ -129,7 +138,7 @@ Consider a two-step procedure.  First, we need to identify the $KL$-optimal desi
 Given a design $\xi$, define the $KL$-efficiency of $\xi$ with respect to $\xi^*_{KL,i}$ as
 
 $$
-  \mbox{Eff}_i(\xi) = \frac{I_{i,t}(\xi)}{I_{i,t}(\xi^*_{KL,i})}~, i = 2, \ldots, K,
+\mbox{Eff}_i(\xi) = \frac{I_{i,t}(\xi)}{I_{i,t}(\xi^*_{KL,i})}~, i = 2, \ldots, K,
 $${#eq:klEff}
 
 where $I_{i,t}(\xi)$ can be found in ([@eq:klEff]).  The idea of finding the optimal discrimination designs for more than 2 competing models is to maximize all the $KL$-efficiencies as possible as one can.  Thus finding the optimal discriminate designs can be transferred as a multiple objective optimization problem.
@@ -140,7 +149,7 @@ On the other hand, due to the lack of prior knowledge to $\alpha$,
 @tommasi2016max considered the worst case of the $KL$-efficiencies.  Their idea is to maximize the minimal $KL$-efficiency among $\mbox{Eff}_i(\xi)$, $i = 2,\ldots,K$, that is to maximize
 
 $$
-  I_m(\xi) = \underset{2\leq i\leq K}{\min}\mbox{Eff}_i(\xi).
+I_m(\xi) = \underset{2\leq i\leq K}{\min}\mbox{Eff}_i(\xi).
 $${#eq:mmklCri}
 
 The design that maximizes ([@eq:mmklCri]) is called the max-min $KL$-optimal design.
@@ -152,7 +161,7 @@ $$
 \mbox{Eff}_i(\xi^*_{mmKL}) < \mbox{Eff}_j(\xi^*_{mmKL}), ~i\in\mathcal{C}\left(\xi^*_{mmKL}\right), j\notin\mathcal{C}\left(\xi^*_{mmKL}\right).
 $${#eq:mmModelSet}
 
-\cite{tommasi2016max} showed that there exists a weight vector in $[0,1]^{K-1}$, $\tilde\alpha = (\tilde\alpha_2, \ldots, \tilde\alpha_K)$ satisfying
+@tommasi2016max showed that there exists a weight vector in $[0,1]^{K-1}$, $\tilde\alpha = (\tilde\alpha_2, \ldots, \tilde\alpha_K)$ satisfying
 
 $$
 \sum_{i=2}^K \tilde\alpha_i = 1~\mbox{ and }~ \tilde\alpha_i = 0~\mbox{ if }~i\notin\mathcal{C}\left(\xi^*_{mmKL}\right)
@@ -165,14 +174,14 @@ adopting the equivalence theorem for generalized $KL$-optimal design, we have
 $$
 \psi_{mmKL}\left(x,\xi^*_{mmKL}\right) =
 \sum_{i=2}^K \tilde\alpha_i~\frac{\mathcal{I}\left(f_t,f_i,x,\hat{\theta}_i\left(\xi^*_{mmKL}\right)\right) }
-    {I_{i,t}\left(\xi^*_{KL,i}\right)} - I_m(\xi^*_{mmKL}) \leq 0
+{I_{i,t}\left(\xi^*_{KL,i}\right)} - I_m(\xi^*_{mmKL}) \leq 0
 $${#eq:mmklDisp}
 
 for all $x \in \mathcal{X}$, where
 
 $$
 \hat{\theta}_i\left(\xi\right) =
-  \underset{\theta_i\in\Theta_i}{\arg\min} \int_\mathcal{X} \mathcal{I}(f_t,f_i,x,\theta_i)~\xi(dx),
+\underset{\theta_i\in\Theta_i}{\arg\min} \int_\mathcal{X} \mathcal{I}(f_t,f_i,x,\theta_i)~\xi(dx),
 $$
 
 and the equality holds at all support points of $\xi^*_{mmKL}$.
@@ -181,11 +190,52 @@ and the equality holds at all support points of $\xi^*_{mmKL}$.
 
 ### PSO-QN Algorithm
 
-PY: Will be filled.
+For the cases of two competing models,
+We propose to combine the particle swarm optimization [PSO, @eberhart1995new] and the L-BFGS algorithm to tackle the maximin problem in ([@eq:klCri]).
+The PSO algorithm focuses on search for the optimal design on the design space.
+The criterion value of a design itslef is a minization problem, and because of its differentiability,
+the L-BFGS algorithm can be used.
+We call this proposed algorithm by the PSO-QN algorithm.
+
+The PSO algorithm starts with initializing a flock of particles and each particle is a design, $\xi$, and we represent it as a vector, $(s_1, \ldots, s_n, p_1, \ldots, p_{n-1})^\top$. 
+Let $\xi_i^{(t)}$ be $i$th particle at the $t$th iteration.  Define $\xi_{i^*}^{(t-1)}$ to be the design with the maximal design criterion value discovered by the $i$th particle before the $t$th iteration, and $\xi_g^{(t-1)}$ to be the design of the best value found by the whole swarm before the $t$th iteration.
+Let $V_i^{(t)}$ be the velocity of the $i$th particle at the $t$th iteration, PSO updates its position by
+$$
+V_i^{(t)} = \omega^{(t)} V_i^{(t-1)} + c_1 R_1 \otimes \left[\xi_{i^*}^{(t-1)} - \xi_i^{(t-1)}\right] +
+c_2 R_2 \otimes \left[\xi_g^{(t-1)} - \xi_i^{(t-1)}\right],  
+$${#eq:psov} 
+$$
+\xi_i^{(t)} = \xi_i^{(t-1)} + V_i^{(t)}~\mbox{ for }~i=1,\ldots,N. 
+$${#eq:psou} 
+The notation $\otimes$ indicates the componentwise product.
+The PSO parameters in ([@eq:psov]), such as $c_1$, $c_2$ and $\omega^{(t)}$ , are illustrated in the Appendix A. 
+
+The following table show the updating procedure of the PSO algorithm and our proposed PSO-QN algorithm follows the same procedure except that the calculation for design criterion values in Step (2.3) is accomplished by the L-BFGS algorithm.
+
+------- ----------------------------------------------------------------------------------------------------------
+1:      Define the design criterion function $\Phi(\xi, \theta)$, e.g. ([@eq:klCri]), and **initialize** particles
+- (1.1) Choose initial particles (designs) $\xi_i^{(0)}$ and velocities $V_i^{(0)}$, $i = 1, \ldots, N$.
+- (1.2) Calculate design criterion values $\Phi(\xi_i^{(0)}, \theta)$ for each $i$.
+- (1.3) Determine the local and global best designs, $\xi_{i^*}^{(0)}$ and $\xi_g^{(0)}$.
+2:      At the $t$th iteration, **do**
+- (2.1) Calculate particles' velocities $V_i^{(t)}$ by ([@eq:psov]).
+- (2.2) Update particles $\xi_i^{(t)}$ by ([@eq:psou])
+- (2.3) Calculate design criterion values $\Phi(\xi_i^{(t)}, \theta)$.
+- (2.4) Update the local and global best designs $\xi_{i^*}^{(t)}$ and $\xi_g^{(t)}$.
+3:      **Output** the final global best design $\xi_g$ and $\Phi(\xi_g, \theta)$.
+------- ---------------------------------------------------------------------------------------------------------
+: The PSO algorithm for optimal design search problems. {#tbl:pso}
+
 
 ### PSO-S-QN Algorithm
 
-PY: Will be filled.
+According the max-min $KL$-optimal criterion, we need to identify the $KL$-optimal designs, $\xi^*_{KL, i}$, for the $i$th model and the pre-specified true model, and then we can transfer the max-min $KL$ optimal design search problem as a nested optimization problem with three layers. To deal with max-min $KL$-optimal criterion, we can slightly modify the PSO-QN algorithm by extending it as a three layer optimization algorithm.
+Instead of directly using L-BFGS algorithm to obtain the fitness value, the Step (2.3) is modified as following two steps.
+
+(2.3a) Use L-BFGS algorithm to compute $\mbox{Eff}_i(\xi)$ with respect to the parameter $\theta_i$ in ([@eq:klEff]) for each $i$.
+
+(2.3b) Identify the minimal value of $\mbox{Eff}_i(\xi)$ as the fitness value.
+
 
 # Implementation {#pkg}
 
@@ -242,7 +292,7 @@ PSO_INFO <- getPSOInfo(nSwarm = 32, maxIter = 200)
 LBFGS_INFO <- getLBFGSInfo(LBFGS_RETRY = 2)
 ```
 
-Second, for more than 2 models, we use the PSO-S-QN algorithm to search for the max-min type design. This type of optimal design problem is considered to be harder. Therefore we may use more particles and iterations than the PSO-QN algorithm.  Here, we set 32 particles and 400 iterations and use `LBFGS_INFO` as the settings for L-BFGS in the PSO-S-QN algorithm.
+Second, for more than 2 competing models, we use the PSO-S-QN algorithm to search for the max-min type design. This type of optimal design problem is considered to be harder. Therefore we may use more particles and iterations than the PSO-QN algorithm.  Here, we set 32 particles and 400 iterations and use `LBFGS_INFO` as the settings for L-BFGS in the PSO-S-QN algorithm.
 
 ```{r ALG_SETTING_MAXMIN, cache=T}
 PSO_INFO_MAXMIN <- getPSOInfo(nSwarm = 32, maxIter = 400)
@@ -268,11 +318,12 @@ Base on the considered optimal design criterion, we need to define the distance 
 The distance function has two inputs. 
 The first input must be the mean vector of the true model and the second input must be the mean vector of the rival model. 
 The output is the vector of distance measurements with the same length of the inputs.
- 
+
 ```{r, cache = FALSE, eval = FALSE, echo = TRUE}
 # xt is the vector of mean values of the true model at each support point
 # xr is the vector of mean values of the rival model at each support point
-DISTANCE <- function(xt, xr) "write the R codes for the distance measure between 'xt' and 'xr'"
+DISTANCE <- function(xt, xr) 
+  "write the R codes for the distance measure between 'xt' and 'xr'"
 ```
 
 For example, the distance measure in the $T$-optimal design criterion is the L2-distance, $[\eta_t(x) - \eta_r(x, \theta_r)]^2$,
@@ -346,12 +397,18 @@ designCriterion(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper,
 
 # Selected Examples in the Literature {#examples}
 
+In this section, to show that our **DiscrimOD** package can identify the $T$-, $KL$-optimal and max-min optimal designs,
+we revisit some examples in the literature.
+We select 4 papers.
+@atkinson1975design and @atkinson1975optimal worked on the $T$-optimal design for linear models.
+@lopez2007optimal is the first to proposed the $KL$-optimal criterion to construct the discrimination design for non-norm competing models. They found the $KL$-optimal design for two nonlinear competing models under different error assumptions.
+@tommasi2016max proposed the max-min $KL$-optimal criterion for discriminating more than two competing models.
+They illustrated their approach by an example with four logistic regression models.
+
 ## Atkison and Fedorov's Example {#af}
 
-We revisit an example in @atkinson1975optimal but find a new result of optimal design
-based on max-min $T$-optimal design criterion
-which is different from the work in @atkinson1975optimal.
-Consider three linear and homoscedastic models with mean responses given by
+In @atkinson1975design and @atkinson1975optimal, 
+there are three linear and homoscedastic models with mean responses given by
 \begin{align}
 \eta_1(x,\theta_1) & = \theta_{10} + \theta_{11}e^x + \theta_{12}e^{-x},  \\
 \eta_2(x,\theta_2) & = \theta_{20} + \theta_{21}x + \theta_{22}x^2,         \\
@@ -362,7 +419,17 @@ $\eta_1(x,\theta_1)$, as the true model with parameters
 $\theta_1=(\theta_{10}, \theta_{11}, \theta_{12}) = (4.5, -1.5, -2)$.
 The design space is $x\in[-1,1]$.
 
-To use the **DiscrimOD** package to find the optimal design for discriminating these 3 models, we first write the R functions, `af1` to `af3` for $\eta_1$ to $\eta_3$, respectively.  
+We illustrate how to use the **DiscrimOD** package to identify the $T$-optiaml design 
+and show our result is simmilar to those in @atkinson1975design.
+For discriminating all three models, @atkinson1975optimal used a sequency procedure
+to find a design that balances the $T$-optimal criterion values between two cases of pairwise discrimination.
+However, they approach does not guarantee that the result is $T$-optimal.
+Here, we find a new result of optimal design
+based on the max-min $T$-optimal design criterion
+which is different from the work in @atkinson1975optimal.
+
+To use the **DiscrimOD** package to find the optimal design for discriminating these 3 models, 
+we first write the R function objects, `af1` to `af3`, for $\eta_1$ to $\eta_3$, respectively.  
 
 ```{r AF1975b_MODEL, cache=T}
 af1 <- function(x, p) p[1] + p[2]*exp(x) + p[3]*exp(-x)
@@ -370,16 +437,20 @@ af2 <- function(x, p) p[1] + p[2]*x + p[3]*x^2
 af3 <- function(x, p) p[1] + p[2]*sin(0.5*pi*x) + p[3]*cos(0.5*pi*x) + p[4]*sin(pi*x)
 ```
 
-Before we search for the max-min $T$-optimal design, we need to identify the $T$-optimal designs for pairwisely discrimination between true model $\eta_1$ and rival models $\eta_2$, and $\eta_3$, respectively.  Thus, we define two model lists for each discrimination case. 
+Before we search for the max-min $T$-optimal design, we need to identify the $T$-optimal designs for pairwise discrimination between the true model $\eta_1$ and rival models $\eta_2$, and $\eta_3$, respectively.
+Thus, we define two model lists for each discrimination case. 
+It is worth to noting that, the parameter space of the rival model parameters must be a finite space.
+One can set it with wide ranges for each parameter or 
+based on the prior knowledge on where the minimal distance would occur.
 The codes are shown below.
-
 ```{r AF1975b_CASE_PAIR, cache=T}
-AF_para_af1 <- c(4.5, -1.5, -2)
+# Set the nominal values for the true model
+AF_para_af1 <- c(4.5, -1.5, -2.0)
 # The first pair: \eta_1 vs \eta_2
 af_info_12 <- list(
   # The first list should be the true model and the specified nominal values
   list(model = af1, para = AF_para_af1),
-  # Then the rival models are listed accordingly. We also need to specify the model space.
+  # Then the rival models are listed accordingly. We also need to specify the model space
   list(model = af2, paraLower = rep(-10, 3), paraUpper = rep(10, 3))
 )
 # The second pair: \eta_1 vs \eta_3
@@ -389,7 +460,7 @@ af_info_13 <- list(
 )
 ```
 
-For $T$-optimal design, we specify the distance measure, 
+For $T$-optimal designs, we specify the distance measure, 
 squared difference between two means, in R.
 ```{r T_OPTIMAL, cache=T}
 # xt is the mean values of the true model
@@ -397,18 +468,17 @@ squared difference between two means, in R.
 sq_diff <- function(xt, xr) (xt - xr)^2
 ```
 
-Next, we use `DiscrimOD` function to run the PSO-QN algorithm for both cases of pairwise discrimination.
-
-We use the first case, $\eta_1$ versus $\eta_2$, to illustrate the details.
+Next, we implement `DiscrimOD` function and call the PSO-QN algorithm 
+to identify the $T$-optimal designs for both cases of pairwise discrimination.
+Use the first case, $\eta_1$ versus $\eta_2$, to illustrate the details.
 In addition to the model list, distance function and the algorithm settings, 
-we need to input the type of discrimination criterion for pairwise discrimination by 
-`crit_type = "pair_fixed_true"`, 
-the number of support points (here, `nSupp = 4`) and the lower and upper bound of the design space, `dsLower = -1` and `dsUpper = 1`, respecitvely.
-
+we need to input the type of discrimination criterion for pairwise discrimination 
+by `crit_type = "pair_fixed_true"`, the number of support points (here, `nSupp = 4`) and 
+the lower and upper bound of the design space, `dsLower = -1` and `dsUpper = 1`, respecitvely.
 ```{r AF1975b_RESULT_PAIR_12, cache=T}
 # Run PSO-QN Algorithm for discriminating \eta_1 and \eta_2
 af_res_12 <- DiscrimOD(MODEL_INFO = af_info_12, DISTANCE = sq_diff,
-                       nSupp = 4, dsLower = -1, dsUpper = 1, 
+                       nSupp = 4, dsLower = -1, dsUpper = 1,
                        crit_type = "pair_fixed_true",
                        PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, 
                        seed = NULL, verbose = FALSE)
@@ -416,42 +486,44 @@ af_res_12 <- DiscrimOD(MODEL_INFO = af_info_12, DISTANCE = sq_diff,
 
 The output of `DiscrimOD` consists of the best design and its criterion value. 
 It also reports the search path of the global best particle and computing time.
+```{r AF1975b_RESNAMES_PAIR_12, cache=T}
+names(af_res_12)
+```
 
 The best design found by the PSO-QN algorithm is stored in the tag `$BESTDESIGN`.
-The output is a matrix with `nSupp` rows and 2 columns.
-The first column consists of 4 support points and the second one is the weight vector for each support point. In this case, the best design is
-$$\{-1.000, -0.669, 0.144, 0.957; 0.253, 0.428, 0.247, 0.072\}.$$
-
 ```{r AF1975b_DESIGN_PAIR_12, cache=T}
 round(af_res_12$BESTDESIGN, 3) 
 ```
+The resulting design is a matrix with `nSupp` rows and 2 columns.
+The first column consists of 4 support points and the second is the weight vector for each support point. 
+In this case, the best design is
+$$\{-1.000, -0.669, 0.144, 0.957; 0.253, 0.428, 0.247, 0.072\}.$$
 
 The design criterion value of the best design can be found in the `$BESTVAL` tag.
 In this case, the value is 0.001087 after rounding.
-
 ```{r AF1975b_VAL_PAIR_12, cache=T}
 af_res_12$BESTVAL 
 ```
 
 The computing time in seconds is in the `$CPUTIME` tag.
-
 ```{r AF1975b_CPU_PAIR_12, cache=T}
 af_res_12$CPUTIME 
 ```
 
 To verify whether the resulting design is optimal or not, we use the equivalence theorem.
-In the **DiscrimOD** package, we implement the `equivalence` function to this end. 
-In this function, we need to input the numerical result, `af_res_12`, obtain by `DiscrimOD`.
-Based on the numerical result, the `equivalence` function computes the values of directional derivative function on the grid of length `ngrid`.
-One can draw the plot for the directional derivative function by R utility function `plot`.
+In the **DiscrimOD** package, we implement the `equivalence` function. 
+In this function, we need to input the numerical result object, `af_res_12`, obtain by the `DiscrimOD` function.
+Based on the numerical result, the `equivalence` function computes the values of 
+directional derivative function on the grid of length `ngrid`.
+One can plot the curve of the directional derivative function by R utility function `plot`.
 The x-axis is the grid vector of design space which can be found in the `$Grid_1` tag.
 The y-axis is the values of directional derivative function in `$DirDeriv` tag.
-Also, we can pin the support points on the plot by `points` function.
-We use the horizontal line at $y=0$ to show the resulting design is $T$-optimal, that is,
+We can also pin the support points on the curve by `points` function.
+To make a better visualization, we use the horizontal line at $y=0$ to show the 
+resulting design is $T$-optimal, that is,
 the values of directional derivative function are smaller than zero, and at the support points,
 the values should be zero (at least close to zero).
-
-```{r AF1975b_EQUV_PAIR_12, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='Directional derivative function of T-optimal design in the case \'af_res_12\'.'}
+```{r AF1975b_EQUV_PAIR_12, cache=T, fig.align='center', fig.height = 4, fig.width = 4}
 af_eqv_12 <- equivalence(ngrid = 100, PSO_RESULT = af_res_12, 
                          MODEL_INFO = af_info_12, DISTANCE = sq_diff, 
                          dsLower = -1, dsUpper = 1,
@@ -463,8 +535,10 @@ plot(af_eqv_12$Grid_1, af_eqv_12$DirDeriv, type = "l", col = "blue",
 points(af_res_12$BESTDESIGN[,1], rep(0, nrow(af_res_12$BESTDESIGN)), pch = 16)
 ```
 
-For the second case of pairwise discrimination, $\eta_1$ versus $\eta_3$, the implementation of the PSO-QN algorithm is similar.  We input the model list for this case, `af_info_13`, which has been constructed earlier. In this case, we are looking for 5-point design.
-
+For the second case of pairwise discrimination, $\eta_1$ versus $\eta_3$, 
+the implementation of the PSO-QN algorithm is similar.  
+We input the model list for this case, `af_info_13`, which has been created earlier. 
+In this case, we are searching for the 5-point design.
 ```{r AF1975b_RESULT_PAIR_13, cache=T}
 # Run PSO-QN Algorithm for discriminating \eta_1 and \eta_3
 af_res_13 <- DiscrimOD(MODEL_INFO = af_info_13, DISTANCE = sq_diff, 
@@ -474,23 +548,14 @@ af_res_13 <- DiscrimOD(MODEL_INFO = af_info_13, DISTANCE = sq_diff,
                        seed = NULL, verbose = FALSE)
 ```
 
-The resulting design is
-$$\{-1.000, -0.741, -0.104, 0.634, 1.000; 0.192, 0.323, 0.227, 0.177, 0.081\}.$$
-
+The value of design criterion is 0.005715 after rounding and the resulting design is
 ```{r AF1975b_DESIGN_PAIR_13, cache=T}
 round(af_res_13$BESTDESIGN, 3)
 ```
 
-The value of design criterion is 0.005715 after rounding.
-
-```{r AF1975b_VAL_PAIR_13, cache=T}
-af_res_13$BESTVAL
-```
-
 By using the `equivalence` function and plot the directional derivative function, 
 the equivalence theorem shows the resulting design for the second case is $T$-optimal. 
-
-```{r AF1975b_EQUV_PAIR_13, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='FIGURE. Directional derivative function of T-optimal design in the case \'af_res_13\'.'}
+```{r AF1975b_EQUV_PAIR_13, cache=T, fig.align='center', fig.height = 4, fig.width = 4}
 af_eqv_13 <- equivalence(ngrid = 100, PSO_RESULT = af_res_13, 
                          MODEL_INFO = af_info_13, DISTANCE = sq_diff, 
                          dsLower = -1, dsUpper = 1, 
@@ -502,19 +567,19 @@ plot(af_eqv_13$Grid_1, af_eqv_13$DirDeriv, type = "l", col = "blue",
 points(af_res_13$BESTDESIGN[,1], rep(0, nrow(af_res_13$BESTDESIGN)), pch = 16)
 ```
 
-Now, we concentrate on finding the max-min $T$-optimal design for 
+Now, we concentrate on finding the max-min $T$-optimal design for competing 
 models $\eta_1$, $\eta_2$ and $\eta_3$.
-Here, since we have already set the lists of information for these three models, 
-we can directly include them from previously defined lists to form 
-a new list for max-min approach.
+Since we have already set the lists of information for these three models, 
+we can directly include them from the previously defined lists to form 
+a new list for the max-min approach.
 
-An important information for the max-min approach is those previously identified
-criterion values. Be careful with the order of the criterion value vector.
+An important input for the max-min approach is those previously identified
+criterion values. One must be careful with the inputing order of the criterion value vector.
 Since we set the order of the rival models in the list by $\eta_2$ and then $\eta_3$, 
 we need to have the same order for the pairwise discrimination results, that is,
 `af_res_12$BESTVAL` and then `af_res_13$BESTVAL`.
-
 ```{r AF1975b_CASE_MAXMIN, cache=T}
+# Create model list for max-min approach
 af_info_maxmin <- list(af_info_12[[1]], af_info_12[[2]], af_info_13[[2]])
 # Define the vector of optimal criterion values for efficiency computations
 af_vals_pair <- c(af_res_12$BESTVAL, af_res_13$BESTVAL)
@@ -526,7 +591,6 @@ consists of all three models and necessary parameter information.
 We also need to specify the vector of 
 $T$-optimal criterion values in `MaxMinStdVals` for the algorithm 
 to compute the $T$-efficiencies.
-
 ```{r AF1975b_RESULT_MAXMIN, cache=T}
 af_res_maxmin <- DiscrimOD(MODEL_INFO = af_info_maxmin, DISTANCE = sq_diff, 
                            nSupp = 5, dsLower = -1, dsUpper = 1, 
@@ -537,96 +601,92 @@ af_res_maxmin <- DiscrimOD(MODEL_INFO = af_info_maxmin, DISTANCE = sq_diff,
 ```
 
 The resulting max-min design is
-$$\{-1.000, -0.703, -0.026, 0.561, 1.000; 0.230, 0.386, 0.214, 0.111, 0.059\}.$$
-
+$$\{-1.000, -0.704, -0.018, 0.570, 1.000; 0.227, 0.382, 0.216, 0.114, 0.061\}.$$
 ```{r AF1975b_DESIGN_MAXMIN, cache=T}
 round(af_res_maxmin$BESTDESIGN, 3)
 ```
 
 The criterion value is the minimum among the two $T$-efficiencies.  
-Here, the resulting minimal $T$-efficiency is 0.8061 after rounding.
-
+Here, the resulting minimal $T$-efficiency is 0.8062 after rounding.
 ```{r AF1975b_VAL_MAXMIN, cache=T}
 af_res_maxmin$BESTVAL
 ```
 
-The computational time of the PSO-S-QN algorithm is usually longer because 
-(1) we use more particles and iterations and 
-(2) the computation of the criterion value involves many times of L-BFGS algorithm depending on
-the number of rival models.
-
-```{r AF1975b_CPU_MAXMIN, cache=T}
-af_res_maxmin$CPUTIME
-```
-
 To check whether the resulting design is max-min optimal or not, we use the equivalence theorem.
-In the `equivalence` function, we input the numerical result `PSO_RESULT = af_res_maxmin`
+In the `equivalence` function, we input the numerical result object by `PSO_RESULT = af_res_maxmin`,
 and the vector of $T$-optimal criterion values, `MaxMinStdVals = af_vals_pair`.
-For max-min optimal design, the `equivalence` function first finds the 
-$\alpha$ vector in ([@eq:mmwt]) by an ordinary PSO algorithm and outputs the $\alpha$ vector in `$alpha` tag. In this case, $\alpha=(0.694, 0.306)$.
-
-Then it computes the directional derivative function values so that we can draw the
-equivalence plot with `plot` and `points` functions.
-In the plot, the equivalence theorem shows the resulting design is max-min $T$-optimal. 
-
-```{r AF1975b_EQUV_MAXMIN, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='FIGURE. Directional derivative function of max-min T-optimal design in the case af_res_maxmin.'}
+```{r AF1975b_EQUV_MAXMIN, cache=T, fig.align='center', fig.height = 4, fig.width = 4}
 af_eqv_maxmin <- equivalence(ngrid = 100, PSO_RESULT = af_res_maxmin, 
                              MODEL_INFO = af_info_maxmin, DISTANCE = sq_diff, 
                              dsLower = -1, dsUpper = 1, 
                              crit_type = "maxmin_fixed_true", 
                              MaxMinStdVals = af_vals_pair, 
                              PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO)
-# The weight of efficiency values
-af_eqv_maxmin$alpha
 # Draw the directional derivative curve
 plot(af_eqv_maxmin$Grid_1, af_eqv_maxmin$DirDeriv, type = "l", col = "blue", 
      main = "af_res_maxmin", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
 points(af_res_maxmin$BESTDESIGN[,1], rep(0, nrow(af_res_maxmin$BESTDESIGN)), pch = 16)
 ```
 
+For max-min optimal design, the `equivalence` function first finds the 
+$\alpha$ vector in ([@eq:mmwt]) by an ordinary PSO algorithm and 
+outputs the $\alpha$ vector in `$alpha` tag. In this case, $\alpha=(0.683, 0.317)$.
+```{r AF1975b_EQUV_MAXMIN_ALPHA, cache=T}
+# The weight of efficiency values
+af_eqv_maxmin$alpha
+```
+
+Then it computes the directional derivative function values so that we can draw the
+equivalence plot with `plot` and `points` functions.
+In the plot, the equivalence theorem shows the resulting design is max-min $T$-optimal. 
+
+
 ## Two Types of Michaelis-Menten Models {#mm}
 
-We revisit the $KL$-optimal design problem in @lopez2007optimal.
+In this section we show how to find the $KL$-optimal designs for different error assumptions by our **DiscrimOD** package with the examples in @lopez2007optimal.
 Two pharmacokinetic models, Michaelis-Menten (MM) model and modified Michaelis-Menten (MMM) model, are used to describe the velocity of chemical reaction whose mean functions are
 \begin{align}
-\mbox{MM:}\;  & \eta_1(x, \theta_1) = \frac{V_1x}{K_1+x}, \theta_1 = (V_1, K_1), \\
-\mbox{MMM:}\; & \eta_2(x, \theta_2) = \frac{V_2x}{K_2+x} + F_2x, \theta_2 = (V_2, K_2, F_2).
+\mbox{MM:}\;  & \eta_1(x, \theta_1) = \frac{V_1x}{K_1 + x}, \theta_1 = (V_1, K_1), \\
+\mbox{MMM:}\; & \eta_2(x, \theta_2) = \frac{V_2x}{K_2 + x} + F_2x, \theta_2 = (V_2, K_2, F_2).
 \end{align}
 The variable $x$ is the substrate concentration in an experimental range $\mathcal{X}=[0.1, 5]$.
-For $j=1,2$, the parameters $V_j, j = 1, 2$ are the reaction rate at maximal concentration level, and $K_j, j =1, 2$ are called Michaelis-Menten constant which represent the concentration at which half of the maximum velocity rate is reached.  The MMM models is a generalization of MM model by adding an additional linear term with coefficient $F_2$. Following @lindsey2001some,
-two distributions, log-normal distributed and gamma distributions, are considered.
-First the formula of the $KL$ divergence for each distribution assumption are shown in the following.
+For $j=1,2$, the parameters $V_j > 0, j = 1, 2$ are the reaction rate at maximal concentration level, and $K_j >0, j =1, 2$ are called Michaelis-Menten constant which represent the concentration at which half of the maximum velocity rate is reached. The MMM models is a generalization of MM model by adding an additional linear term with coefficient $F_2$. 
+
+Consider two error assumptions, log-normal distributed and gamma distributed errors.
+We briefly introduce the formula of the $KL$ divergence for each assumption.
 Let the continuous response variable, $Y_j$, has mean $\eta_j(x, \theta_j)$ and unknown variance $\nu_j^2(x, \theta_j)$, and we fix $\eta_2(x, \theta_2)$ to be the true model.
-First, suppose the response variable, $Y_j$, of each model follows the log-normal distribution.  The $KL$ divergence between two log-normal models is
+First, suppose the response variable, $Y_j$, follows the log-normal distribution.  
+The $KL$ divergence between two log-normal models is
 $$
 \mathcal{I}_{LN}(f_2, f_1, x, \theta_1)
- = \log{\left\{\frac{\sigma_1^2}{\sigma_2^2}\right\}} - \frac{\sigma_1^2 - \sigma_2^2 - \left(\mu_1^2 - \mu_2^2\right)^2}{2\sigma_1^2},
+= \log{\left\{\frac{\sigma_1^2}{\sigma_2^2}\right\}} - \frac{\sigma_1^2 - \sigma_2^2 - \left(\mu_1^2 - \mu_2^2\right)^2}{2\sigma_1^2},
 $${#eq:kllognorm}
 where $\mu_j$ and $\sigma_j^2$ are the mean and variance of $\log{(Y_j)}$, respectively, that are
 \begin{align}
 \mu_j      & = \mu_j(x, \theta_j)
-             = \log{\left\{\eta_j(x,\theta_j) \big/ \sqrt{1+\nu_j^2(x, \theta_j)\eta_j(x, \theta_j)^{-2}}\right\}}, \\
+= \log{\left\{\eta_j(x,\theta_j) \big/ \sqrt{1+\nu_j^2(x, \theta_j)\eta_j(x, \theta_j)^{-2}}\right\}}, \\
 \sigma_j^2 & = \sigma_j^2(x, \theta_j)
-             = \log{\left\{1+\nu_j^2(x, \theta_j)\eta_j(x, \theta_j)^{-2}\right\}}.
+= \log{\left\{1+\nu_j^2(x, \theta_j)\eta_j(x, \theta_j)^{-2}\right\}}.
 \end{align}
 
 Second, if $Y_j$ is gamma distributed, the $KL$ divergence between two gamma models is
-\begin{align} % suppose \eta_2 is true
-\mathcal{I}_{G}(f_2, f_1, x, \theta_1) & =
-  \delta_2\log{(\beta_2)} - \delta_1\log{(\beta_1)} + \log{(\delta_1 / \delta_2)} \notag \\
-  & + (\delta_2 - \delta_1)\left[\frac{\Gamma'(\delta_2)}{\Gamma(\delta_2)}-\log{(\beta_2)}\right] - \frac{\delta_2(\beta_2 - \beta_1)}{\beta_2} \label{eq:klgamma}
-\end{align}
-where $\Gamma(\cdot)$ denotes the Gamma function, and, $\delta_j$ and $\beta_j$ are shape and scale parameters of the gamma distribution, respectively, which can be formulated as
+$$ 
+\mathcal{I}_{G}(f_2, f_1, x, \theta_1) = \log{\left(\frac{\beta_2^{\delta_2} / \delta_2}{\beta_1^{\delta_1} / \delta_1}\right)}
+ + (\delta_2 - \delta_1)\left[\frac{\Gamma'(\delta_2)}{\Gamma(\delta_2)}-\log{(\beta_2)}\right] - \frac{\delta_2(\beta_2 - \beta_1)}{\beta_2}
+$${#eq:klgamma}
+where $\Gamma(\cdot)$ denotes the Gamma function, and, $\delta_j$ and $\beta_j$ are shape and scale parameters of the gamma distribution, respectively, which have the forms
 $$
 \delta_j = \delta_j(x,\theta_j) = \eta^2_j(x, \theta_j)/\nu^2_j(x,\theta_j) ~ \mbox{ and } ~
 \beta_j  = \beta_j(x,\theta_j) = \eta_j(x, \theta_j)/\nu^2_j(x,\theta_j).
 $$
-For log-normal and gamma distributed data, the common assumption of the nuisance parameters $\nu_1^2$ and $\nu_2^2$ is that, the response has a constant coefficient of variation @mccullagh1989generalized. This means that $\nu_j(x, \theta_j) / \eta_j(x, \theta_j)=C$, where $C$ is a constant.  Thus, @lopez2007optimal considered the two log-normal responses, $Y_1$ and $Y_2$, sharing a common and constant coefficient of variation, which indicates that $\sigma_1^2 = \sigma_2^2 = \sigma^2$.  For two gamma responses, having common and constant coefficient of variation implies that $\delta_1 = \delta_2 = \delta$ and $\beta_j = \eta_j(x, \theta_j)^{-1}$.  For more detail of the formula derivation, please refer to @lopez2007optimal.  Here, we assume $\sigma^2 = 1$ and $\delta = 1$.
 
-In this example, MMM model, $\eta_2(x, \theta_2)$, is treated as the true model with  $\theta_2 = (V_2, K_2, F_2) = (1, 1, 1)$.
+For log-normal and gamma distributed data, the common assumption of the nuisance parameters $\nu_1^2$ and $\nu_2^2$ is that, the responses have constant coefficient of variation [@mccullagh1989generalized]. This means that $\nu_j(x, \theta_j) / \eta_j(x, \theta_j)=C$, where $C$ is a constant.  
+Thus, for two log-normal responses, $Y_1$ and $Y_2$, sharing a common and constant coefficient of variation, we have $\sigma_1^2 = \sigma_2^2 = \sigma^2$.  For two gamma responses, having common and constant coefficient of variation implies that $\delta_1 = \delta_2 = \delta$ and $\beta_j = \eta_j(x, \theta_j)^{-1}$.  For more detail of the formula derivation, please refer to @lopez2007optimal.  Here, we assume $\sigma^2 = 1$ and $\delta = 1$.
 
+
+In @lopez2007optimal, MMM model, $\eta_2(x, \theta_2)$, is treated as the true model with nominal values $\theta_2 = (V_2, K_2, F_2) = (1, 1, 1)$.  To use our **DiscrimOD** package to find the $KL$-optimal designs, we first define the list object for the competing models.
 ```{r MM_MODEL}
-# 
+# Two types of Michaelise-Menten models
 enzyme2 <- function(x, p) p[1]*x/(p[2] + x) + p[3]*x  # Modified Michaelis-Menten
 enzyme1 <- function(x, p) p[1]*x/(p[2] + x)           # Michaelise-Menten
 # Specify the nominal value for the true model, 'linlogi4'.
@@ -634,12 +694,13 @@ para_mmm_2 <- c(1, 1, 1)
 # Create model list
 model_mmm <- list(
   list(model = enzyme2, para = para_mmm_2),
-  list(model = enzyme1, paraLower = c(-20, -20), paraUpper = c(20, 20))
+  list(model = enzyme1, paraLower = c(1e-4, 1e-4), paraUpper = c(20, 20))
 )
 ```
 
-
-```{r LOGNORM_B}
+Then we define the $KL$ divergence under log-nromal and gamma assumptions.
+```{r LOGNORM_B_GAMMA}
+# Log-normal model
 log_norm_B <- function(xt, xr) {
   sigsq <- 1 # nuisance parameter
   var_t <- (exp(sigsq) - 1.0)*(xt^2) # variance (true mdoel)
@@ -648,46 +709,70 @@ log_norm_B <- function(xt, xr) {
   mu_r <- log(xr) - 0.5*log(1.0 + (var_r/(xr^2))) # mean (rival model)
   ((mu_r - mu_t)^2)/(2*sigsq) # KL-divergence
 }
+# Gamma model
+gamma_diff <- function(xt, xr) log(xr/xt) + (xt - xr)/xr # KL-divergence
 ```
 
+Similar to the previous section, we use the `DiscrimOD` function to identify the $KL$-optimal design.
+For the log-normal case, we input the distance function by `DISTANCE = log_norm_B`.
+Other settings has been introduced in Section [3.1](#af).
 ```{r MM_RES_LOGNORM_B}
-# Run for finding max-min KL-optimal design 
-mmm_res_lognormB <- DiscrimOD(MODEL_INFO = model_mmm, DISTANCE = log_norm_B, 
-                              nSupp = 3, dsLower = 0.1, dsUpper = 5, 
-                              crit_type = "pair_fixed_true", 
-                              PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, 
-                              seed = NULL, verbose = FALSE)
+# Run for finding KL-optimal design under lognormal assumption
+mmm_res_lognB <- DiscrimOD(MODEL_INFO = model_mmm, DISTANCE = log_norm_B, 
+                           nSupp = 3, dsLower = 0.1, dsUpper = 5, 
+                           crit_type = "pair_fixed_true", 
+                           PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, 
+                           seed = NULL, verbose = FALSE)
 ```
 
-```{r MM_EQV_LOGNORM_B, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='FIGURE. Directional derivative function of KL-optimal design in the case \'mmm_res_lognormB\'.'}
-mmm_eqv_lognormB <- equivalence(ngrid = 100, PSO_RESULT = mmm_res_lognormB, 
-                                MODEL_INFO = model_mmm, DISTANCE = log_norm_B, 
-                                dsLower = 0.1, dsUpper = 5,  
-                                crit_type = "pair_fixed_true", 
-                                PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
-# Draw the directional derivative curve
-plot(mmm_eqv_lognormB$Grid_1, mmm_eqv_lognormB$DirDeriv, type = "l", col = "blue", 
-     main = "mmm_res_lognormB", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
-points(mmm_res_lognormB$BESTDESIGN[,1], rep(0, nrow(mmm_res_lognormB$BESTDESIGN)), pch = 16)
-```
-
+The algorithm shows the resulting $KL$-optimal design under log-normal assumption is
 ```{r MM_DEISGN_LOGNORM_B}
-round(mmm_res_lognormB$BESTDESIGN, 3) 
+round(mmm_res_lognB$BESTDESIGN, 3) 
 ```
 
-The minimal $KL$-efficiency among 4 efficiencies is 0.7676 after rounding.
-
-```{r MM_VAL_LOGNORM_B}
-mmm_res_lognormB$BESTVAL 
+For the gamma case, we simply change the input for the distance function by `DISTANCE = gamma_diff`.
+```{r MM_RES_GAMMA}
+# Run for finding KL-optimal design under lognormal assumption
+mmm_res_gamma <- DiscrimOD(MODEL_INFO = model_mmm, DISTANCE = gamma_diff, 
+                           nSupp = 3, dsLower = 0.1, dsUpper = 5, 
+                           crit_type = "pair_fixed_true", 
+                           PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, 
+                           seed = NULL, verbose = FALSE)
 ```
 
-The computational time is about 200 seconds (less than 4 minutes).
-
-```{r MM_CPU_LOGNORM_B}
-mmm_res_lognormB$CPUTIME 
+The resulting $KL$-optimal design under gamma assumption is
+```{r MM_DEISGN_GAMMA}
+round(mmm_res_gamma$BESTDESIGN, 3) 
 ```
 
-Table  shows the best designs found by the PSO-QN algorithm, $\xi^*_{KL}$, for two cases of underlying distribution.  In this table, we also show the corresponding results in @lopez2007optimal, denoted by $\xi_{LTT2007}$, as the comparison.  The results show that the PSO-generated designs are similar to those shown in @lopez2007optimal.
+We use the `equivalence` function to compute the directional derivative function values for both cases.
+The plots for the function curves are shown below which indicates the two resulting designs are $KL$-optimal.
+```{r MM_EQV}
+# Check equivalence theorem for KL-optimal design under lognormal error assumption
+mmm_eqv_lognB <- equivalence(ngrid = 100, PSO_RESULT = mmm_res_lognB, 
+                             MODEL_INFO = model_mmm, DISTANCE = log_norm_B, 
+                             dsLower = 0.1, dsUpper = 5,  
+                             crit_type = "pair_fixed_true", 
+                             PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
+# Check equivalence theorem for KL-optimal design under gamma error assumption
+mmm_eqv_gamma <- equivalence(ngrid = 100, PSO_RESULT = mmm_res_gamma, 
+                             MODEL_INFO = model_mmm, DISTANCE = gamma_diff, 
+                             dsLower = 0.1, dsUpper = 5,  
+                             crit_type = "pair_fixed_true", 
+                             PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
+```
+
+```{r MM_EQV_PLOT, cache=T, eval=T, echo=F, fig.align='center', fig.height = 4, fig.width = 7}
+# Draw the directional derivative curve
+lay <- layout(matrix(1:2, 1, 2))
+plot(mmm_eqv_lognB$Grid_1, mmm_eqv_lognB$DirDeriv, type = "l", col = "blue", 
+     main = "mmm_res_lognB", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
+points(mmm_res_lognB$BESTDESIGN[,1], rep(0, nrow(mmm_res_lognB$BESTDESIGN)), pch = 16)
+plot(mmm_eqv_gamma$Grid_1, mmm_eqv_gamma$DirDeriv, type = "l", col = "blue", 
+     main = "mmm_res_gamma", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
+points(mmm_res_gamma$BESTDESIGN[,1], rep(0, nrow(mmm_res_gamma$BESTDESIGN)), pch = 16)
+```
+
 
 ## Four Logistic Regression Models {#logit}
 
@@ -707,11 +792,10 @@ $$\pi_j = \pi_j(x, \theta_j) = \frac{\exp{\{\eta_j(x, \theta_j)\}}}{1 + \exp{\{\
 
 To find the max-min $KL$-optimal design, we firstly use PSO-QN to find $KL$-optimal designs
 for discriminating the true model $\eta_t = \eta_4$ and $\eta_i, i = 1, 2, 3$.
-
 ```{r LOGIT_MODEL}
 # Tommasi et al. (2016)
 linlogi4 <- function(x, p) p[1] + p[2]*x + p[3]*(x^2)  # Logistic 4
-linlogi3 <- function(x, p) x*(p[1] + p[2]*x)           #Logistic 3
+linlogi3 <- function(x, p) x*(p[1] + p[2]*x)           # Logistic 3
 linlogi2 <- function(x, p) p[1] + p[2]*x               # Logistic 2
 linlogi1 <- function(x, p) p[1]*x                      # Logistic 1
 # Specify the nominal value for the true model, 'linlogi4'.
@@ -724,6 +808,7 @@ model_logit <- list(
   list(model = linlogi1, paraLower = -10, paraUpper = 10)
 )
 ```
+
 
 ```{r LOGIT}
 logit_diff <- function(xt, xr) {
@@ -769,54 +854,49 @@ Then we use PSO-S-QN algorithm to find the max-min $KL$-optimal design, which we
 
 ```{r LOGIT_RES_MM}
 # Get criterion values from pairwise discrimination results
-logit_vals_pair <- sapply(1:length(logit_res_pair), function(i) logit_res_pair[[i]]$res$BESTVAL)
+logit_vals_pair <- sapply(1:length(logit_res_pair), function(i) {
+  logit_res_pair[[i]]$res$BESTVAL
+})
 # Run for finding max-min KL-optimal design 
-logit_res_maxmin <- DiscrimOD(MODEL_INFO = model_logit, DISTANCE = logit_diff, 
-                              nSupp = 4, dsLower = 0, dsUpper = 1, 
-                              crit_type = "maxmin_fixed_true", 
-                              MaxMinStdVals = logit_vals_pair,
-                              PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO, 
-                              seed = NULL, verbose = FALSE)
+logit_res_mxmn <- DiscrimOD(MODEL_INFO = model_logit, DISTANCE = logit_diff, 
+                            nSupp = 3, dsLower = 0, dsUpper = 1, 
+                            crit_type = "maxmin_fixed_true", 
+                            MaxMinStdVals = logit_vals_pair,
+                            PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO, 
+                            seed = NULL, verbose = FALSE)
 ```
 
 We also show the design, $\xi_{TML2016}$, found by @tommasi2016max and find that both results are similar.
 
-$$\{0.0000, 0.3599, 1.0000; 0.6184, 0.2392, 0.1424\}.$$
+$$\{0.000, 0.360, 1.000; 0.618, 0.239, 0.142\}.$$
+```{r LOGIT_DESIGN_MM}
+round(logit_res_mxmn$BESTDESIGN, 3) 
+```
 
 
 To check whether the resulting design is max-min optimal or not, we use the equivalence theorem.
-In the `equivalence` function, we input the numerical result `PSO_RESULT = logit_res_maxmin`
+In the `equivalence` function, we input the numerical result `PSO_RESULT = logit_res_mxmn`
 and the vector of $KL$-optimal criterion values, `MaxMinStdVals = logit_vals_pair`.
 
-```{r LOGIT_EQV_MM, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='FIGURE. Directional derivative function of max-min KL-optimal design in the case \'logit_res_maxmin\'.'}
-logit_eqv_maxmin <- equivalence(ngrid = 100, PSO_RESULT = logit_res_maxmin, 
-                                MODEL_INFO = model_logit, DISTANCE = logit_diff, 
-                                dsLower = 0, dsUpper = 1,  
-                                crit_type = "maxmin_fixed_true", 
-                                MaxMinStdVals = logit_vals_pair, 
-                                PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO)
-# The weight of efficiency values
-logit_eqv_maxmin$alpha
+```{r LOGIT_EQV_MM, cache=T, fig.align='center', fig.height = 4, fig.width = 4}
+logit_eqv_mxmn <- equivalence(ngrid = 100, PSO_RESULT = logit_res_mxmn, 
+                              MODEL_INFO = model_logit, DISTANCE = logit_diff, 
+                              dsLower = 0, dsUpper = 1,  
+                              crit_type = "maxmin_fixed_true", 
+                              MaxMinStdVals = logit_vals_pair, 
+                              PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO)
 # Draw the directional derivative curve
-plot(logit_eqv_maxmin$Grid_1, logit_eqv_maxmin$DirDeriv, type = "l", col = "blue", 
-     main = "logit_res_maxmin", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
-points(logit_res_maxmin$BESTDESIGN[,1], rep(0, nrow(logit_res_maxmin$BESTDESIGN)), pch = 16)
+plot(logit_eqv_mxmn$Grid_1, logit_eqv_mxmn$DirDeriv, type = "l", col = "blue", 
+     main = "logit_res_mxmn", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
+points(logit_res_mxmn$BESTDESIGN[,1], rep(0, nrow(logit_res_mxmn$BESTDESIGN)), pch = 16)
 ```
 
-```{r LOGIT_DESIGN_MM}
-round(logit_res_maxmin$BESTDESIGN, 3) 
-```
-
-The minimal $KL$-efficiency among 4 efficiencies is 0.7676 after rounding.
-
-```{r LOGIT_VAL_MM}
-logit_res_maxmin$BESTVAL 
-```
-
-The computational time is about 200 seconds (less than 4 minutes).
-
-```{r LOGIT_CPU_MM}
-logit_res_maxmin$CPUTIME 
+For max-min optimal design, the `equivalence` function first finds the 
+$\alpha$ vector in ([@eq:mmwt]) by an ordinary PSO algorithm and 
+outputs the $\alpha$ vector in `$alpha` tag. In this case, $\alpha=(0.591, 0.409, 0.000)$.
+```{r LOGIT_EQUV_MAXMIN_ALPHA, cache=T}
+# The weight of efficiency values
+logit_eqv_mxmn$alpha
 ```
 
 We draw the curve of directional derivative function by `plot` function.
@@ -879,7 +959,7 @@ According to @lopez2007optimal, the $KL$-divergence between two log-normal model
 
 \begin{equation}\label{eq:kllognorm}
 \mathcal{I}_{LN}(f_2, f_1, x, \theta_1)
- = \log{\left\{\frac{\sigma_1^2}{\sigma_2^2}\right\}} - \frac{\sigma_1^2 - \sigma_2^2 - \left(\mu_1^2 - \mu_2^2\right)^2}{2\sigma_1^2},
+= \log{\left\{\frac{\sigma_1^2}{\sigma_2^2}\right\}} - \frac{\sigma_1^2 - \sigma_2^2 - \left(\mu_1^2 - \mu_2^2\right)^2}{2\sigma_1^2},
 \end{equation}
 
 where $\mu_j$ and $\sigma_j^2$ are the mean and variance of $\log{(Y_j)}$, respectively, 
@@ -887,9 +967,9 @@ that are
 
 \begin{align*}
 \mu_j      & = \mu_j(x, \theta_j)
-             = \log{\left\{\eta_j(x,\theta_j) \big/ \sqrt{1+\nu_j^2(x, \theta_j)\eta_j(x, \theta_j)^{-2}}\right\}}, \\
+= \log{\left\{\eta_j(x,\theta_j) \big/ \sqrt{1+\nu_j^2(x, \theta_j)\eta_j(x, \theta_j)^{-2}}\right\}}, \\
 \sigma_j^2 & = \sigma_j^2(x, \theta_j)
-             = \log{\left\{1+\nu_j^2(x, \theta_j)\eta_j(x, \theta_j)^{-2}\right\}}.
+= \log{\left\{1+\nu_j^2(x, \theta_j)\eta_j(x, \theta_j)^{-2}\right\}}.
 \end{align*}
 
 The parameters $\nu_1^2$ and $\nu_2^2$ are considered as nuisance and
@@ -946,9 +1026,9 @@ for (CaseID in 1:4) {
 ```
 
 The resulting design for each case can be found in `tox_res_pair$res$BESTDESIGN` and we omit to show them here.  We directly draw the directional derivative function plots for each case.
-In some curves, the points might be visually greater than zero, but the maximal value of the directional derivative function is still smaller than $10^-4$.  This suggests that the PSO-QN algorithm finds the $KL$-optimal designs for all cases.
+In some curves, the points might be visually greater than zero, but the maximal value of the directional derivative function is still smaller than $10^{-4}$.  This suggests that the PSO-QN algorithm finds the $KL$-optimal designs for all cases.
 
-```{r TOX_PAIR_EQV, cache = T, eval = T, echo = F, fig.align='center', fig.height = 7, fig.width = 7, fig.cap='FIGURE. Directional derivative function of KL-optimal designs for four pairwise discrimination.'}
+```{r TOX_PAIR_EQV, cache = T, eval = T, echo = F, fig.align='center', fig.height = 7, fig.width = 7}
 lay <- layout(matrix(1:4, 2, 2, byrow = TRUE))
 for (i in 1:4) {
   tmp <- tox_res_pair[[i]] 
@@ -976,22 +1056,16 @@ tox_res_maxmin <- DiscrimOD(MODEL_INFO = tox_info, DISTANCE = log_norm_B,
 ```
 
 The resulting max-min discrimination design is
-$$\{0.000, 455.348, 1046.136, 1250.000; 0.219, 0.340, 0.254, 0.187\}.$$
+$$\{0.000, 450.437, 1042.138, 1250.000; 0.224, 0.342, 0.244, 0.189\}.$$
 
 ```{r TOX_DESIGN_MM}
 round(tox_res_maxmin$BESTDESIGN, 3) 
 ```
 
-The minimal $KL$-efficiency among 4 efficiencies is 0.7676 after rounding.
+The minimal $KL$-efficiency among 4 efficiencies is 0.7679 after rounding.
 
 ```{r TOX_VAL_MM}
 tox_res_maxmin$BESTVAL 
-```
-
-The computational time is about 200 seconds (less than 4 minutes).
-
-```{r TOX_CPU_MM}
-tox_res_maxmin$CPUTIME 
 ```
 
 
@@ -999,19 +1073,22 @@ To check whether the resulting design is max-min optimal or not, we use the equi
 In the `equivalence` function, we input the numerical result `PSO_RESULT = tox_res_maxmin`
 and the vector of $T$-optimal criterion values, `MaxMinStdVals = tox_vals_pair`.
 
-```{r TOX_EQV_MM, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='FIGURE. Directional derivative function of max-min KL-optimal design in the case \'tox_res_maxmin\'.'}
+```{r TOX_EQV_MM, cache=T, fig.align='center', fig.height = 4, fig.width = 4}
 tox_eqv_maxmin <- equivalence(ngrid = 100, PSO_RESULT = tox_res_maxmin, 
                               MODEL_INFO = tox_info, DISTANCE = log_norm_B, 
                               dsLower = 0, dsUpper = 1250,  
                               crit_type = "maxmin_fixed_true", 
                               MaxMinStdVals = tox_vals_pair, 
                               PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO)
-# The weight of efficiency values
-tox_eqv_maxmin$alpha
 # Draw the directional derivative curve
 plot(tox_eqv_maxmin$Grid_1, tox_eqv_maxmin$DirDeriv, type = "l", col = "blue", 
      main = "tox_res_maxmin", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
 points(tox_res_maxmin$BESTDESIGN[,1], rep(0, nrow(tox_res_maxmin$BESTDESIGN)), pch = 16)
+```
+
+```{r TOX_EQV_ALPHA, cache=T}
+# The weight of efficiency values
+tox_eqv_maxmin$alpha
 ```
 
 We draw the curve of directional derivative function by `plot` function.
@@ -1059,7 +1136,7 @@ afex_res <- DiscrimOD(afex_list, sq_diff, nSupp = 5, dsLower = -1, dsUpper = 1,
 ```
 
 The best design found by the PSO-QN algorithm is 
-$$\{-1.000, -0.710, -0.004, 0.706, 1.000; 0.127, 0.252, 0.250, 0.248, 0.124\}.$$
+$$\{-1.000, -0.709, -0.003, 0.706, 1.000; 0.127, 0.251, 0.250, 0.248, 0.124\}.$$
 and its criterion value is $1.331\times10^{-6}$ after rounding.
 
 ```{r AFEX_DESIGN_PSOQN, cache=T}
@@ -1076,7 +1153,7 @@ afex_npso <- DiscrimOD(afex_list, sq_diff, nSupp = 5, dsLower = -1, dsUpper = 1,
                        seed = NULL, verbose = FALSE)
 ```
 
-The best design found by the NestedPSO algorithm is shown below.
+The best design found by the NestedPSO algorithm is shown below
 and its criterion value is larger than the one obtained by the PSO-QN algorithm.
 
 ```{r AFEX_DESIGN_NPSO, cache=T}
@@ -1088,7 +1165,7 @@ The criterion value obtained by the NestedPSO algorithm seems to be larger than 
 We draw the curves of directional derivative function for both resulting designs found by each algorithm.  Surprisingly, The PSO-QN finds the $T$-optimal design whereas the NestedPSO does not.
 The reason is PSO might not performs well on solving the inner optimization problem in ([@eq:klCri]).
 
-```{r AFEX_EQV, cache = T, eval = T, echo = F, fig.align='center', fig.height = 4, fig.width = 7, fig.cap='FIGURE. Directional derivative functions of resulting designs obtained by PSO-QN and NestedPSO algorithms.'}
+```{r AFEX_EQV, cache = T, eval = T, echo = F, fig.align='center', fig.height = 4, fig.width = 7}
 eqv_psoqn <- equivalence(ngrid = 100, PSO_RESULT = afex_res, 
                          MODEL_INFO = afex_list, DISTANCE = sq_diff,
                          dsLower = -1, dsUpper = 1,
@@ -1239,7 +1316,7 @@ The complete details are shown in the list below.
 `LINESEARCH_WOLFE`    A coefficient for the Wolfe condition in the line search routine. 
                       The default value is 0.9. This parameter should be greater than
                       `LINESEARCH_ARMIJO` parameter and smaller than 1.0.
-                      
+
 `FD_DELTA`            A small value for the gap of finite difference method for 
                       computing the gradient. The default is `1e-3`.
 --------------------- -----------------------------------------------------------------

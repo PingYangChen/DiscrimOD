@@ -143,6 +143,38 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cppFedorovWynn
+Rcpp::List cppFedorovWynn(Rcpp::List FED_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, const SEXP env, const bool VERBOSE);
+RcppExport SEXP DiscrimOD_cppFedorovWynn(SEXP FED_INFO_LISTSEXP, SEXP LBFGS_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP envSEXP, SEXP VERBOSESEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type FED_INFO_LIST(FED_INFO_LISTSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type LBFGS_INFO_LIST(LBFGS_INFO_LISTSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type OBJ_INFO_LIST(OBJ_INFO_LISTSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type MODEL_INFO_LIST(MODEL_INFO_LISTSEXP);
+    Rcpp::traits::input_parameter< const SEXP >::type env(envSEXP);
+    Rcpp::traits::input_parameter< const bool >::type VERBOSE(VERBOSESEXP);
+    rcpp_result_gen = Rcpp::wrap(cppFedorovWynn(FED_INFO_LIST, LBFGS_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, env, VERBOSE));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cppUnifApprox
+Rcpp::List cppUnifApprox(Rcpp::List REMES_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, const SEXP env, const bool VERBOSE);
+RcppExport SEXP DiscrimOD_cppUnifApprox(SEXP REMES_INFO_LISTSEXP, SEXP LBFGS_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP envSEXP, SEXP VERBOSESEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type REMES_INFO_LIST(REMES_INFO_LISTSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type LBFGS_INFO_LIST(LBFGS_INFO_LISTSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type OBJ_INFO_LIST(OBJ_INFO_LISTSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type MODEL_INFO_LIST(MODEL_INFO_LISTSEXP);
+    Rcpp::traits::input_parameter< const SEXP >::type env(envSEXP);
+    Rcpp::traits::input_parameter< const bool >::type VERBOSE(VERBOSESEXP);
+    rcpp_result_gen = Rcpp::wrap(cppUnifApprox(REMES_INFO_LIST, LBFGS_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, env, VERBOSE));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"DiscrimOD_T_optimal", (DL_FUNC) &DiscrimOD_T_optimal, 2},
@@ -155,6 +187,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"DiscrimOD_cppPSO", (DL_FUNC) &DiscrimOD_cppPSO, 9},
     {"DiscrimOD_cppDesignCriterion", (DL_FUNC) &DiscrimOD_cppDesignCriterion, 7},
     {"DiscrimOD_cppEquivalence", (DL_FUNC) &DiscrimOD_cppEquivalence, 7},
+    {"DiscrimOD_cppFedorovWynn", (DL_FUNC) &DiscrimOD_cppFedorovWynn, 6},
+    {"DiscrimOD_cppUnifApprox", (DL_FUNC) &DiscrimOD_cppUnifApprox, 6},
     {NULL, NULL, 0}
 };
 

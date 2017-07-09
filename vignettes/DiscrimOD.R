@@ -1,6 +1,7 @@
 ## ----setup, include=FALSE------------------------------------------------
 knitr::opts_chunk$set(cache = 2, cache.lazy = FALSE, tidy = FALSE, warning = FALSE)
 library(knitcitations)
+set.seed(round(runif(1, 1, 1e4)))
 
 ## ---- eval=FALSE, echo=TRUE----------------------------------------------
 #  install.packages(c("devtools", "Rcpp", "RcppArmadillo"))
@@ -27,7 +28,8 @@ LBFGS_NOTRUN <- getLBFGSInfo(IF_INNER_LBFGS = FALSE)
 ## ---- cache = FALSE, eval = FALSE, echo = TRUE---------------------------
 #  # xt is the vector of mean values of the true model at each support point
 #  # xr is the vector of mean values of the rival model at each support point
-#  DISTANCE <- function(xt, xr) "write the R codes for the distance measure between 'xt' and 'xr'"
+#  DISTANCE <- function(xt, xr)
+#    "write the R codes for the distance measure between 'xt' and 'xr'"
 
 ## ---- cache = FALSE, eval = FALSE, echo = TRUE---------------------------
 #  # heteroscedastic Gaussian case
@@ -59,12 +61,13 @@ af2 <- function(x, p) p[1] + p[2]*x + p[3]*x^2
 af3 <- function(x, p) p[1] + p[2]*sin(0.5*pi*x) + p[3]*cos(0.5*pi*x) + p[4]*sin(pi*x)
 
 ## ----AF1975b_CASE_PAIR, cache=T------------------------------------------
-AF_para_af1 <- c(4.5, -1.5, -2)
+# Set the nominal values for the true model
+AF_para_af1 <- c(4.5, -1.5, -2.0)
 # The first pair: \eta_1 vs \eta_2
 af_info_12 <- list(
   # The first list should be the true model and the specified nominal values
   list(model = af1, para = AF_para_af1),
-  # Then the rival models are listed accordingly. We also need to specify the model space.
+  # Then the rival models are listed accordingly. We also need to specify the model space
   list(model = af2, paraLower = rep(-10, 3), paraUpper = rep(10, 3))
 )
 # The second pair: \eta_1 vs \eta_3
@@ -81,10 +84,13 @@ sq_diff <- function(xt, xr) (xt - xr)^2
 ## ----AF1975b_RESULT_PAIR_12, cache=T-------------------------------------
 # Run PSO-QN Algorithm for discriminating \eta_1 and \eta_2
 af_res_12 <- DiscrimOD(MODEL_INFO = af_info_12, DISTANCE = sq_diff,
-                       nSupp = 4, dsLower = -1, dsUpper = 1, 
+                       nSupp = 4, dsLower = -1, dsUpper = 1,
                        crit_type = "pair_fixed_true",
                        PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, 
                        seed = NULL, verbose = FALSE)
+
+## ----AF1975b_RESNAMES_PAIR_12, cache=T-----------------------------------
+names(af_res_12)
 
 ## ----AF1975b_DESIGN_PAIR_12, cache=T-------------------------------------
 round(af_res_12$BESTDESIGN, 3) 
@@ -95,7 +101,7 @@ af_res_12$BESTVAL
 ## ----AF1975b_CPU_PAIR_12, cache=T----------------------------------------
 af_res_12$CPUTIME 
 
-## ----AF1975b_EQUV_PAIR_12, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='Directional derivative function of T-optimal design in the case \'af_res_12\'.'----
+## ----AF1975b_EQUV_PAIR_12, cache=T, fig.align='center', fig.height = 4, fig.width = 4----
 af_eqv_12 <- equivalence(ngrid = 100, PSO_RESULT = af_res_12, 
                          MODEL_INFO = af_info_12, DISTANCE = sq_diff, 
                          dsLower = -1, dsUpper = 1,
@@ -117,10 +123,7 @@ af_res_13 <- DiscrimOD(MODEL_INFO = af_info_13, DISTANCE = sq_diff,
 ## ----AF1975b_DESIGN_PAIR_13, cache=T-------------------------------------
 round(af_res_13$BESTDESIGN, 3)
 
-## ----AF1975b_VAL_PAIR_13, cache=T----------------------------------------
-af_res_13$BESTVAL
-
-## ----AF1975b_EQUV_PAIR_13, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='FIGURE. Directional derivative function of T-optimal design in the case \'af_res_13\'.'----
+## ----AF1975b_EQUV_PAIR_13, cache=T, fig.align='center', fig.height = 4, fig.width = 4----
 af_eqv_13 <- equivalence(ngrid = 100, PSO_RESULT = af_res_13, 
                          MODEL_INFO = af_info_13, DISTANCE = sq_diff, 
                          dsLower = -1, dsUpper = 1, 
@@ -132,6 +135,7 @@ plot(af_eqv_13$Grid_1, af_eqv_13$DirDeriv, type = "l", col = "blue",
 points(af_res_13$BESTDESIGN[,1], rep(0, nrow(af_res_13$BESTDESIGN)), pch = 16)
 
 ## ----AF1975b_CASE_MAXMIN, cache=T----------------------------------------
+# Create model list for max-min approach
 af_info_maxmin <- list(af_info_12[[1]], af_info_12[[2]], af_info_13[[2]])
 # Define the vector of optimal criterion values for efficiency computations
 af_vals_pair <- c(af_res_12$BESTVAL, af_res_13$BESTVAL)
@@ -150,25 +154,24 @@ round(af_res_maxmin$BESTDESIGN, 3)
 ## ----AF1975b_VAL_MAXMIN, cache=T-----------------------------------------
 af_res_maxmin$BESTVAL
 
-## ----AF1975b_CPU_MAXMIN, cache=T-----------------------------------------
-af_res_maxmin$CPUTIME
-
-## ----AF1975b_EQUV_MAXMIN, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='FIGURE. Directional derivative function of max-min T-optimal design in the case af_res_maxmin.'----
+## ----AF1975b_EQUV_MAXMIN, cache=T, fig.align='center', fig.height = 4, fig.width = 4----
 af_eqv_maxmin <- equivalence(ngrid = 100, PSO_RESULT = af_res_maxmin, 
                              MODEL_INFO = af_info_maxmin, DISTANCE = sq_diff, 
                              dsLower = -1, dsUpper = 1, 
                              crit_type = "maxmin_fixed_true", 
                              MaxMinStdVals = af_vals_pair, 
                              PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO)
-# The weight of efficiency values
-af_eqv_maxmin$alpha
 # Draw the directional derivative curve
 plot(af_eqv_maxmin$Grid_1, af_eqv_maxmin$DirDeriv, type = "l", col = "blue", 
      main = "af_res_maxmin", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
 points(af_res_maxmin$BESTDESIGN[,1], rep(0, nrow(af_res_maxmin$BESTDESIGN)), pch = 16)
 
+## ----AF1975b_EQUV_MAXMIN_ALPHA, cache=T----------------------------------
+# The weight of efficiency values
+af_eqv_maxmin$alpha
+
 ## ----MM_MODEL------------------------------------------------------------
-# 
+# Two types of Michaelise-Menten models
 enzyme2 <- function(x, p) p[1]*x/(p[2] + x) + p[3]*x  # Modified Michaelis-Menten
 enzyme1 <- function(x, p) p[1]*x/(p[2] + x)           # Michaelise-Menten
 # Specify the nominal value for the true model, 'linlogi4'.
@@ -176,10 +179,11 @@ para_mmm_2 <- c(1, 1, 1)
 # Create model list
 model_mmm <- list(
   list(model = enzyme2, para = para_mmm_2),
-  list(model = enzyme1, paraLower = c(-20, -20), paraUpper = c(20, 20))
+  list(model = enzyme1, paraLower = c(1e-4, 1e-4), paraUpper = c(20, 20))
 )
 
-## ----LOGNORM_B-----------------------------------------------------------
+## ----LOGNORM_B_GAMMA-----------------------------------------------------
+# Log-normal model
 log_norm_B <- function(xt, xr) {
   sigsq <- 1 # nuisance parameter
   var_t <- (exp(sigsq) - 1.0)*(xt^2) # variance (true mdoel)
@@ -188,39 +192,59 @@ log_norm_B <- function(xt, xr) {
   mu_r <- log(xr) - 0.5*log(1.0 + (var_r/(xr^2))) # mean (rival model)
   ((mu_r - mu_t)^2)/(2*sigsq) # KL-divergence
 }
+# Gamma model
+gamma_diff <- function(xt, xr) log(xr/xt) + (xt - xr)/xr # KL-divergence
 
 ## ----MM_RES_LOGNORM_B----------------------------------------------------
-# Run for finding max-min KL-optimal design 
-mmm_res_lognormB <- DiscrimOD(MODEL_INFO = model_mmm, DISTANCE = log_norm_B, 
-                              nSupp = 3, dsLower = 0.1, dsUpper = 5, 
-                              crit_type = "pair_fixed_true", 
-                              PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, 
-                              seed = NULL, verbose = FALSE)
-
-## ----MM_EQV_LOGNORM_B, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='FIGURE. Directional derivative function of KL-optimal design in the case \'mmm_res_lognormB\'.'----
-mmm_eqv_lognormB <- equivalence(ngrid = 100, PSO_RESULT = mmm_res_lognormB, 
-                                MODEL_INFO = model_mmm, DISTANCE = log_norm_B, 
-                                dsLower = 0.1, dsUpper = 5,  
-                                crit_type = "pair_fixed_true", 
-                                PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
-# Draw the directional derivative curve
-plot(mmm_eqv_lognormB$Grid_1, mmm_eqv_lognormB$DirDeriv, type = "l", col = "blue", 
-     main = "mmm_res_lognormB", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
-points(mmm_res_lognormB$BESTDESIGN[,1], rep(0, nrow(mmm_res_lognormB$BESTDESIGN)), pch = 16)
+# Run for finding KL-optimal design under lognormal assumption
+mmm_res_lognB <- DiscrimOD(MODEL_INFO = model_mmm, DISTANCE = log_norm_B, 
+                           nSupp = 3, dsLower = 0.1, dsUpper = 5, 
+                           crit_type = "pair_fixed_true", 
+                           PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, 
+                           seed = NULL, verbose = FALSE)
 
 ## ----MM_DEISGN_LOGNORM_B-------------------------------------------------
-round(mmm_res_lognormB$BESTDESIGN, 3) 
+round(mmm_res_lognB$BESTDESIGN, 3) 
 
-## ----MM_VAL_LOGNORM_B----------------------------------------------------
-mmm_res_lognormB$BESTVAL 
+## ----MM_RES_GAMMA--------------------------------------------------------
+# Run for finding KL-optimal design under lognormal assumption
+mmm_res_gamma <- DiscrimOD(MODEL_INFO = model_mmm, DISTANCE = gamma_diff, 
+                           nSupp = 3, dsLower = 0.1, dsUpper = 5, 
+                           crit_type = "pair_fixed_true", 
+                           PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, 
+                           seed = NULL, verbose = FALSE)
 
-## ----MM_CPU_LOGNORM_B----------------------------------------------------
-mmm_res_lognormB$CPUTIME 
+## ----MM_DEISGN_GAMMA-----------------------------------------------------
+round(mmm_res_gamma$BESTDESIGN, 3) 
+
+## ----MM_EQV--------------------------------------------------------------
+# Check equivalence theorem for KL-optimal design under lognormal error assumption
+mmm_eqv_lognB <- equivalence(ngrid = 100, PSO_RESULT = mmm_res_lognB, 
+                             MODEL_INFO = model_mmm, DISTANCE = log_norm_B, 
+                             dsLower = 0.1, dsUpper = 5,  
+                             crit_type = "pair_fixed_true", 
+                             PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
+# Check equivalence theorem for KL-optimal design under gamma error assumption
+mmm_eqv_gamma <- equivalence(ngrid = 100, PSO_RESULT = mmm_res_gamma, 
+                             MODEL_INFO = model_mmm, DISTANCE = gamma_diff, 
+                             dsLower = 0.1, dsUpper = 5,  
+                             crit_type = "pair_fixed_true", 
+                             PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
+
+## ----MM_EQV_PLOT, cache=T, eval=T, echo=F, fig.align='center', fig.height = 4, fig.width = 7----
+# Draw the directional derivative curve
+lay <- layout(matrix(1:2, 1, 2))
+plot(mmm_eqv_lognB$Grid_1, mmm_eqv_lognB$DirDeriv, type = "l", col = "blue", 
+     main = "mmm_res_lognB", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
+points(mmm_res_lognB$BESTDESIGN[,1], rep(0, nrow(mmm_res_lognB$BESTDESIGN)), pch = 16)
+plot(mmm_eqv_gamma$Grid_1, mmm_eqv_gamma$DirDeriv, type = "l", col = "blue", 
+     main = "mmm_res_gamma", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
+points(mmm_res_gamma$BESTDESIGN[,1], rep(0, nrow(mmm_res_gamma$BESTDESIGN)), pch = 16)
 
 ## ----LOGIT_MODEL---------------------------------------------------------
 # Tommasi et al. (2016)
 linlogi4 <- function(x, p) p[1] + p[2]*x + p[3]*(x^2)  # Logistic 4
-linlogi3 <- function(x, p) x*(p[1] + p[2]*x)           #Logistic 3
+linlogi3 <- function(x, p) x*(p[1] + p[2]*x)           # Logistic 3
 linlogi2 <- function(x, p) p[1] + p[2]*x               # Logistic 2
 linlogi1 <- function(x, p) p[1]*x                      # Logistic 1
 # Specify the nominal value for the true model, 'linlogi4'.
@@ -272,37 +296,35 @@ for (CaseID in 1:3) {
 
 ## ----LOGIT_RES_MM--------------------------------------------------------
 # Get criterion values from pairwise discrimination results
-logit_vals_pair <- sapply(1:length(logit_res_pair), function(i) logit_res_pair[[i]]$res$BESTVAL)
+logit_vals_pair <- sapply(1:length(logit_res_pair), function(i) {
+  logit_res_pair[[i]]$res$BESTVAL
+})
 # Run for finding max-min KL-optimal design 
-logit_res_maxmin <- DiscrimOD(MODEL_INFO = model_logit, DISTANCE = logit_diff, 
-                              nSupp = 4, dsLower = 0, dsUpper = 1, 
-                              crit_type = "maxmin_fixed_true", 
-                              MaxMinStdVals = logit_vals_pair,
-                              PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO, 
-                              seed = NULL, verbose = FALSE)
-
-## ----LOGIT_EQV_MM, cache=T, fig.align='center', fig.height = 4, fig.width = 4, fig.cap='FIGURE. Directional derivative function of max-min KL-optimal design in the case \'logit_res_maxmin\'.'----
-logit_eqv_maxmin <- equivalence(ngrid = 100, PSO_RESULT = logit_res_maxmin, 
-                                MODEL_INFO = model_logit, DISTANCE = logit_diff, 
-                                dsLower = 0, dsUpper = 1,  
-                                crit_type = "maxmin_fixed_true", 
-                                MaxMinStdVals = logit_vals_pair, 
-                                PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO)
-# The weight of efficiency values
-logit_eqv_maxmin$alpha
-# Draw the directional derivative curve
-plot(logit_eqv_maxmin$Grid_1, logit_eqv_maxmin$DirDeriv, type = "l", col = "blue", 
-     main = "logit_res_maxmin", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
-points(logit_res_maxmin$BESTDESIGN[,1], rep(0, nrow(logit_res_maxmin$BESTDESIGN)), pch = 16)
+logit_res_mxmn <- DiscrimOD(MODEL_INFO = model_logit, DISTANCE = logit_diff, 
+                            nSupp = 3, dsLower = 0, dsUpper = 1, 
+                            crit_type = "maxmin_fixed_true", 
+                            MaxMinStdVals = logit_vals_pair,
+                            PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO, 
+                            seed = NULL, verbose = FALSE)
 
 ## ----LOGIT_DESIGN_MM-----------------------------------------------------
-round(logit_res_maxmin$BESTDESIGN, 3) 
+round(logit_res_mxmn$BESTDESIGN, 3) 
 
-## ----LOGIT_VAL_MM--------------------------------------------------------
-logit_res_maxmin$BESTVAL 
+## ----LOGIT_EQV_MM, cache=T, fig.align='center', fig.height = 4, fig.width = 4----
+logit_eqv_mxmn <- equivalence(ngrid = 100, PSO_RESULT = logit_res_mxmn, 
+                              MODEL_INFO = model_logit, DISTANCE = logit_diff, 
+                              dsLower = 0, dsUpper = 1,  
+                              crit_type = "maxmin_fixed_true", 
+                              MaxMinStdVals = logit_vals_pair, 
+                              PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO)
+# Draw the directional derivative curve
+plot(logit_eqv_mxmn$Grid_1, logit_eqv_mxmn$DirDeriv, type = "l", col = "blue", 
+     main = "logit_res_mxmn", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
+points(logit_res_mxmn$BESTDESIGN[,1], rep(0, nrow(logit_res_mxmn$BESTDESIGN)), pch = 16)
 
-## ----LOGIT_CPU_MM--------------------------------------------------------
-logit_res_maxmin$CPUTIME 
+## ----LOGIT_EQUV_MAXMIN_ALPHA, cache=T------------------------------------
+# The weight of efficiency values
+logit_eqv_mxmn$alpha
 
 ## ----TOX_MODEL-----------------------------------------------------------
 tox5_par <- c(4.282, 835.571, 0.739, 3.515)
@@ -337,4 +359,196 @@ log_norm_B <- function(xt, xr) {
   mu_r <- log(xr) - 0.5*log(1.0 + (var_r/(xr^2))) # mean (rival model)
   ((mu_r - mu_t)^2)/(2*sigsq) # KL-divergence
 }
+
+## ----TOX_PAIR------------------------------------------------------------
+# Cases of pairwise discrimination
+two_tox_info <- list(
+  list(tox_info[[1]], tox_info[[2]]), # tox_5 vs tox_4
+  list(tox_info[[1]], tox_info[[3]]), # tox_5 vs tox_3
+  list(tox_info[[1]], tox_info[[4]]), # tox_5 vs tox_2
+  list(tox_info[[1]], tox_info[[5]])  # tox_5 vs tox_1 
+)
+# Number of support points 
+two_tox_nSupp <- c(3, 4, 3, 2)
+# Run for each case
+tox_res_pair <- vector("list", 4)
+for (CaseID in 1:4) {
+  res <- DiscrimOD(MODEL_INFO = two_tox_info[[CaseID]], DISTANCE = log_norm_B, 
+                   nSupp = two_tox_nSupp[CaseID], dsLower = 0, dsUpper = 1250, 
+                   crit_type = "pair_fixed_true", 
+                   PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO,
+                   seed = NULL, verbose = FALSE) 
+  
+  eqv <- equivalence(ngrid = 100, PSO_RESULT = res, 
+                     MODEL_INFO = two_tox_info[[CaseID]], DISTANCE = log_norm_B,
+                     dsLower = 0, dsUpper = 1250, 
+                     crit_type = "pair_fixed_true", 
+                     PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
+  
+  tox_res_pair[[CaseID]] <- list(res = res, eqv = eqv)
+}
+
+## ----TOX_RES_MM----------------------------------------------------------
+# Get criterion values from pairwise discrimination results
+tox_vals_pair <- sapply(1:length(tox_res_pair), function(i) tox_res_pair[[i]]$res$BESTVAL)
+# Run for finding max-min KL-optimal design 
+tox_res_maxmin <- DiscrimOD(MODEL_INFO = tox_info, DISTANCE = log_norm_B, 
+                            nSupp = 4, dsLower = 0, dsUpper = 1250, 
+                            crit_type = "maxmin_fixed_true", 
+                            MaxMinStdVals = tox_vals_pair,
+                            PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO, 
+                            seed = NULL, verbose = FALSE)
+
+## ----TOX_DESIGN_MM-------------------------------------------------------
+round(tox_res_maxmin$BESTDESIGN, 3) 
+
+## ----TOX_VAL_MM----------------------------------------------------------
+tox_res_maxmin$BESTVAL 
+
+## ---- cache=F, eval=F, echo=T--------------------------------------------
+#  getPSOInfo(nSwarm, maxIter, checkConv = 0, freeRun = 0.25, tol = 1e-06,
+#             c1 = 2.05, c2 = 2.05, w0 = 0.95, w1 = 0.2, w_var = 0.8, vk = 4)
+
+## ----cache=F,eval=F,echo=T-----------------------------------------------
+#  getLBFGSInfo(IF_INNER_LBFGS = TRUE, LBFGS_RETRY = 1, LBFGS_MAXIT = 0,
+#               LBFGS_LM = 6, FVAL_EPS = 0, GRAD_EPS = 1e-05,
+#               LINESEARCH_MAXTRIAL = 20, LINESEARCH_MAX = 1e+20,
+#               LINESEARCH_MIN = 1e-20, LINESEARCH_ARMIJO = 1e-04,
+#               LINESEARCH_WOLFE = 0.9)
+
+## ---- cache=F, eval=F, echo=T--------------------------------------------
+#  # R Code
+#  l2_diff <- function(xt, xr) (xt - xr)^2
+#  # C++ Code
+#  l2_diff_cpp <- cppFunction('Rcpp::NumericVector l2_diff(SEXP xt, SEXP xr) {
+#    arma::rowvec eta_t = Rcpp::as<arma::rowvec>(xt);
+#    arma::rowvec eta_r = Rcpp::as<arma::rowvec>(xr);
+#    arma::rowvec div = (eta_t - eta_r) % (eta_t - eta_r);
+#    return Rcpp::wrap(div);
+#  }', depends = "RcppArmadillo")
+
+## ---- cache=F, eval=F, echo=T--------------------------------------------
+#  # R Code
+#  heter_norm <- function(xt, xr) {
+#    var_t <- xt^2
+#    var_r <- xr^2
+#    (var_t + (xt - xr)^2)/var_r - log(var_t/var_r)
+#  }
+#  # C++ Code
+#  heter_norm_cpp <- cppFunction('Rcpp::NumericVector heter_norm(SEXP xt, SEXP xr) {
+#    arma::rowvec eta_t = Rcpp::as<arma::rowvec>(xt);
+#    arma::rowvec eta_r = Rcpp::as<arma::rowvec>(xr);
+#    arma::rowvec var_t = eta_t % eta_t;
+#    arma::rowvec var_r = eta_r % eta_r;
+#    arma::rowvec div = (var_t + arma::pow(eta_t - eta_r, 2))/var_r - arma::log(var_t/var_r);
+#    return Rcpp::wrap(div);
+#  }', depends = "RcppArmadillo")
+
+## ---- cache=F, eval=F, echo=T--------------------------------------------
+#  # R Code
+#  log_norm_A <- function(xt, xr) {
+#    vSQ <- 1.0
+#    s_t <- log(1.0 + (vSQ/(xt^2)))
+#    s_r <- log(1.0 + (vSQ/(xr^2)))
+#    mu_t <- log(xt) - s_t
+#    mu_r <- log(xr) - s_r
+#    0.5*log(s_r/s_t) - (s_r - s_t - (mu_r - mu_t)^2)/(2*s_r)
+#  }
+#  # C++ Code
+#  log_norm_A_cpp <- cppFunction('Rcpp::NumericVector log_norm_A(SEXP xt, SEXP xr) {
+#    double vSQ = 1.0;
+#    arma::rowvec eta_t = Rcpp::as<arma::rowvec>(xt);
+#    arma::rowvec eta_r = Rcpp::as<arma::rowvec>(xr);
+#    arma::rowvec s_t = arma::log(1.0 + (vSQ/(eta_t % eta_t)));
+#    arma::rowvec s_r = arma::log(1.0 + (vSQ/(eta_r % eta_r)));
+#    arma::rowvec mu_t = arma::log(eta_t) - s_t;
+#    arma::rowvec mu_r = arma::log(eta_r) - s_r;
+#    arma::rowvec div = 0.5*arma::log(s_r/s_t) -
+#      (s_r - s_t - (mu_r - mu_t) % (mu_r - mu_t))/(2*s_r);
+#    return Rcpp::wrap(div);
+#  }', depends = "RcppArmadillo")
+
+## ---- cache=F, eval=F, echo=T--------------------------------------------
+#  # R Code
+#  log_norm_B <- function(xt, xr) {
+#    sigsq <- 1.0
+#    var_t <- (exp(sigsq) - 1.0)*(xt^2)
+#    var_r <- (exp(sigsq) - 1.0)*(xr^2)
+#    mu_t <- log(xt) - 0.5*log(1.0 + (var_t/(xt^2)))
+#    mu_r <- log(xr) - 0.5*log(1.0 + (var_r/(xr^2)))
+#    ((mu_r - mu_t)^2)/(2*sigsq)
+#  }
+#  # C++ Code
+#  log_norm_B_cpp <- cppFunction('Rcpp::NumericVector log_norm_B(SEXP xt, SEXP xr) {
+#    double sigsq = 1.0;
+#    arma::rowvec eta_t = Rcpp::as<arma::rowvec>(xt);
+#    arma::rowvec eta_r = Rcpp::as<arma::rowvec>(xr);
+#    arma::rowvec var_t = (std::exp(sigsq) - 1.0)*(eta_t % eta_t);
+#    arma::rowvec var_r = (std::exp(sigsq) - 1.0)*(eta_r % eta_r);
+#    arma::rowvec mu_t = arma::log(eta_t) - 0.5*arma::log(1.0 + (var_t/(eta_t % eta_t)));
+#    arma::rowvec mu_r = arma::log(eta_r) - 0.5*arma::log(1.0 + (var_r/(eta_r % eta_r)));
+#    arma::rowvec div = ((mu_r - mu_t) % (mu_r - mu_t))/(2*sigsq);
+#    return Rcpp::wrap(div);
+#  }', depends = "RcppArmadillo")
+
+## ---- cache=F, eval=F, echo=T--------------------------------------------
+#  # R Code
+#  log_norm_C <- function(xt, xr) {
+#    c <- 1; d <- 1
+#    var_t <- d*exp(c*xt)
+#    var_r <- d*exp(c*xr)
+#    s_t <- log(1.0 + (var_t/(xt^2)))
+#    s_r <- log(1.0 + (var_r/(xr^2)))
+#    mu_t <- log(xt) - s_t
+#    mu_r <- log(xr) - s_r
+#    0.5*log(s_r/s_t) - (s_r - s_t - (mu_r - mu_t)*(mu_r - mu_t))/(2*s_r)
+#  }
+#  # C++ Code
+#  log_norm_C_cpp <- cppFunction('Rcpp::NumericVector log_norm_C(SEXP xt, SEXP xr) {
+#    double c = 1.0; double d = 1.0;
+#    arma::rowvec eta_t = Rcpp::as<arma::rowvec>(xt);
+#    arma::rowvec eta_r = Rcpp::as<arma::rowvec>(xr);
+#    arma::rowvec var_t = d * arma::exp(c*eta_t);
+#    arma::rowvec var_r = d * arma::exp(c*eta_r);
+#    arma::rowvec s_t = arma::log(1.0 + (var_t/(eta_t % eta_t)));
+#    arma::rowvec s_r = arma::log(1.0 + (var_r/(eta_r % eta_r)));
+#    arma::rowvec mu_t = arma::log(eta_t) - s_t;
+#    arma::rowvec mu_r = arma::log(eta_r) - s_r;
+#    arma::rowvec div = 0.5*arma::log(s_r/s_t) -
+#      (s_r - s_t - (mu_r - mu_t) % (mu_r - mu_t))/(2*s_r);
+#    return Rcpp::wrap(div);
+#  }', depends = "RcppArmadillo")
+
+## ---- cache=F, eval=F, echo=T--------------------------------------------
+#  # R Code
+#  logit_diff <- function(xt, xr) {
+#    exp_t <- exp(xt)
+#    exp_r <- exp(xr)
+#    mu_t <- exp_t/(1 + exp_t)
+#    mu_r <- exp_r/(1 + exp_r)
+#    mu_t*(log(mu_t) - log(mu_r)) + (1 - mu_t)*(log(1.0 - mu_t) - log(1.0 - mu_r))
+#  }
+#  # C++ Code
+#  logit_diff_cpp <- cppFunction('Rcpp::NumericVector logit_diff(SEXP xt, SEXP xr) {
+#    arma::rowvec eta_t = Rcpp::as<arma::rowvec>(xt);
+#    arma::rowvec eta_r = Rcpp::as<arma::rowvec>(xr);
+#    arma::rowvec exp_t = arma::exp(eta_t);
+#    arma::rowvec exp_r = arma::exp(eta_r);
+#    arma::rowvec mu_t = exp_t/(1.0 + exp_t);
+#    arma::rowvec mu_r = exp_r/(1.0 + exp_r);
+#    arma::rowvec div = mu_t % (arma::log(mu_t) - arma::log(mu_r)) +
+#      (1.0 - mu_t) % (arma::log(1.0 - mu_t) - arma::log(1.0 - mu_r));
+#    return Rcpp::wrap(div);
+#  }', depends = "RcppArmadillo")
+
+## ---- cache=F, eval=F, echo=T--------------------------------------------
+#  # R Code
+#  gamma_diff <- function(xt, xr) log(xr/xt) + (xt - xr)/xr
+#  # C++ Code
+#  gamma_diff_cpp <- cppFunction('Rcpp::NumericVector gamma_diff(SEXP xt, SEXP xr) {
+#    arma::rowvec eta_t = Rcpp::as<arma::rowvec>(xt);
+#    arma::rowvec eta_r = Rcpp::as<arma::rowvec>(xr);
+#    arma::rowvec div = arma::log(eta_r/eta_t) + (eta_t - eta_r)/eta_r;
+#    return Rcpp::wrap(div);
+#  }', depends = "RcppArmadillo")
 

@@ -10,7 +10,7 @@ void PSO_MAIN(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM &LBFG
 	int dSwarm    = PSO_OPTS[LOOPID].dSwarm; 
   //int nGroup    = PSO_OPTS[LOOPID].nGroup;
 	int maxIter   = PSO_OPTS[LOOPID].maxIter; 
-	int checkConv = PSO_OPTS[LOOPID].checkConv; 
+	//int checkConv = PSO_OPTS[LOOPID].checkConv; 
 	double freeRun   = PSO_OPTS[LOOPID].freeRun; 
 	double tol       = PSO_OPTS[LOOPID].tol; 
   rowvec varUpper  = PSO_OPTS[LOOPID].varUpper;
@@ -79,7 +79,7 @@ void PSO_MAIN(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM &LBFG
     // SAVE CURRENT GLOBAL BEST VALUE
     fGBestHist(t+1) = fGBest; 
     // CHECK STOPPING CRITERION
-    if ((t > (int)(freeRun*maxIter)) && (checkConv == 1)) { 
+    if (t > (int)(freeRun*maxIter)) { 
       if (std::abs(fGBest - fGBestHist(t)) < tol) { 
         fGBestHist.subvec(t+1, maxIter).fill(fGBest); t = maxIter; 
         if (COUNTER_ON) Rprintf(" The updating procedure converges. \n");

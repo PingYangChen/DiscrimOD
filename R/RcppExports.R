@@ -56,3 +56,11 @@ cppEquivalence <- function(OBJ_INFO_LIST, MODEL_INFO_LIST, GBEST_VAL, PARA_SET, 
     .Call('DiscrimOD_cppEquivalence', PACKAGE = 'DiscrimOD', OBJ_INFO_LIST, MODEL_INFO_LIST, GBEST_VAL, PARA_SET, alpha, env, nGrid)
 }
 
+cppFedorovWynn <- function(FED_INFO_LIST, LBFGS_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, env, VERBOSE) {
+    .Call('DiscrimOD_cppFedorovWynn', PACKAGE = 'DiscrimOD', FED_INFO_LIST, LBFGS_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, env, VERBOSE)
+}
+
+cppUnifApprox <- function(REMES_INFO_LIST, LBFGS_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, env, VERBOSE) {
+    .Call('DiscrimOD_cppUnifApprox', PACKAGE = 'DiscrimOD', REMES_INFO_LIST, LBFGS_INFO_LIST, OBJ_INFO_LIST, MODEL_INFO_LIST, env, VERBOSE)
+}
+

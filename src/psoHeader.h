@@ -103,10 +103,11 @@ public:
 
 typedef struct lbfgs_eval {
   model_diff_func* func_input;
-  arma::rowvec R_UPPER;
-  arma::rowvec R_LOWER;
-  arma::irowvec R_NBD;
+  arma::rowvec UPPER;
+  arma::rowvec LOWER;
+  arma::irowvec NBD;
   arma::rowvec T_PARA;
+  arma::rowvec R_PARA;
   arma::mat DESIGN;
   arma::rowvec WT;
   double FD_DELTA;
@@ -140,9 +141,9 @@ struct PSO_OPTIONS {
   rowvec varUpper; // c(1,1)
   rowvec varLower; // c(0,0)
 	int maxIter; // 100
-	int checkConv; // 0
+	//int checkConv; // 0
 	//int typePSO; // 0
-  double freeRun; // 0.25
+  double freeRun; // 1
  	double tol; // 1e-6
  	// Basic PSO Parameters
  	double c1; // 2.05
@@ -214,8 +215,20 @@ typedef struct FED_PARAM {
   int FED_TRIM; // 5
   double FED_TRIM_EPS; // 1e-4
   // -- STOPPING CRITERION SETTING
+  double freeRun; // 1.0
   double FED_EPS; // 0.0   (1e-8)
+  // UPDATING PARAMETER
+  int FED_ALPHA_GRID; // 20
 } FED_PARAM, *Ptr_FED_PARAM;
+
+typedef struct REMES_PARAM {
+  // FEDOROV OPTIONS
+  int REMES_MAXIT; // 100
+  // -- STOPPING CRITERION SETTING
+  double freeRun; // 1.0
+  double REMES_EPS; // 0.0   (1e-8)
+} REMES_PARAM, *Ptr_REMES_PARAM;
+
 
 // DEFINE PSO RESULTS
 typedef struct {
@@ -226,12 +239,22 @@ typedef struct {
   arma::vec fPBest;
 } PSO_Result, *Ptr_PSO_Result;
 
-// DEFINE FEDOROV RESULTS
+// DEFINE FEDOROV-WYNN RESULTS
 typedef struct {
-  arma::rowvec design;
-  double fval;
+  arma::mat DESIGN;
+  arma::rowvec WT;
+  double F_VAL;
+  arma::rowvec R_PARA;
   arma::rowvec fvalHist;
 } FED_Result, *Ptr_FED_Result;
+
+// DEFINE 1DREMES RESULTS
+typedef struct {
+  arma::mat DESIGN;
+  arma::rowvec WT;
+  arma::rowvec R_PARA;
+  arma::rowvec CPolyVal;
+} REMES_Result, *Ptr_REMES_Result;
 
 
 // DECLARE FUNCTIONS
@@ -259,6 +282,8 @@ void psoFuncEval(const bool &IF_PARALLEL, const int LOOPID, PSO_OPTIONS PSO_OPTS
 #include "psoUpdateParticle.h"
 #include "psoUpdateDynPara.h"
 #include "psoKernel.h"
+#include "fedorovwynn.h"
+#include "remes.h"
 
 // BODY
 void matrixPrintf(const mat &m)
@@ -356,7 +381,7 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &PSO_INFO_LIST)
   Rcpp::NumericMatrix varLower_Tmp   = as<NumericMatrix>(PSO_INFO_LIST["varLower"]);
   arma::mat varLower(varLower_Tmp.begin(), varLower_Tmp.nrow(), varLower_Tmp.ncol(), false);
   Rcpp::IntegerVector maxIter_Tmp    = as<IntegerVector>(PSO_INFO_LIST["maxIter"]);
-  Rcpp::IntegerVector checkConv_Tmp  = as<IntegerVector>(PSO_INFO_LIST["checkConv"]);
+  //Rcpp::IntegerVector checkConv_Tmp  = as<IntegerVector>(PSO_INFO_LIST["checkConv"]);
   //Rcpp::IntegerVector typePSO_Tmp    = as<IntegerVector>(PSO_INFO_LIST["typePSO"]);
   Rcpp::NumericVector freeRun_Tmp    = as<NumericVector>(PSO_INFO_LIST["freeRun"]);
   Rcpp::NumericVector tol_Tmp        = as<NumericVector>(PSO_INFO_LIST["tol"]);
@@ -386,7 +411,7 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &PSO_INFO_LIST)
     PSO_OPT[i].varUpper   = varUpper.submat(i, 0, i, dSwarm_Tmp[i] - 1);
     PSO_OPT[i].varLower   = varLower.submat(i, 0, i, dSwarm_Tmp[i] - 1);
     PSO_OPT[i].maxIter    = maxIter_Tmp[i];
-    PSO_OPT[i].checkConv  = checkConv_Tmp[i];
+    //PSO_OPT[i].checkConv  = checkConv_Tmp[i];
     //PSO_OPT[i].typePSO    = typePSO_Tmp[i];
     PSO_OPT[i].freeRun    = freeRun_Tmp[i];
     PSO_OPT[i].tol        = tol_Tmp[i];
@@ -410,13 +435,30 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &PSO_INFO_LIST)
   }
 }
 
-/*
-// FEDOROV-WYNN OPTIONS
-void getFedorovStruct(LBFGS_PARAM &FED_OPT, const Rcpp::List FED_INFO_LIST)
-{
 
+// FEDOROV-WYNN OPTIONS
+void getFedorovStruct(FED_PARAM &FED_OPT, const Rcpp::List FED_INFO_LIST)
+{
+  // FEDOROV OPTIONS
+  FED_OPT.FED_MAXIT    = as<int>(FED_INFO_LIST["FED_MAXIT"]);
+  FED_OPT.FED_TRIM     = as<int>(FED_INFO_LIST["FED_TRIM"]);
+  FED_OPT.FED_TRIM_EPS = as<double>(FED_INFO_LIST["FED_TRIM_EPS"]);
+  // -- STOPPING CRITERION SETTING
+  FED_OPT.freeRun      = as<double>(FED_INFO_LIST["freeRun"]);
+  FED_OPT.FED_EPS      = as<double>(FED_INFO_LIST["FED_EPS"]);
+  // UPDATING PARAMETER
+  FED_OPT.FED_ALPHA_GRID = as<int>(FED_INFO_LIST["FED_ALPHA_GRID"]);
 }
-*/
+
+// REMES OPTIONS
+void getRemesStruct(REMES_PARAM &REMES_OPT, const Rcpp::List REMES_INFO_LIST)
+{
+  // FEDOROV OPTIONS
+  REMES_OPT.REMES_MAXIT    = as<int>(REMES_INFO_LIST["REMES_MAXIT"]);
+  // -- STOPPING CRITERION SETTING
+  REMES_OPT.freeRun      = as<double>(REMES_INFO_LIST["freeRun"]);
+  REMES_OPT.REMES_EPS      = as<double>(REMES_INFO_LIST["REMES_EPS"]);
+}
 
 /*
 void getTopology(const int &LOOPID, PSO_OPTIONS PSO_OPT[]) {

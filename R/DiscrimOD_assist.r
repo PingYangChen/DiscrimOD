@@ -8,8 +8,11 @@
 #' Specify \code{TRUE} for PSO to compute the stopping criterion \eqn{|f'-f|<\varepsilon}
 #' where \eqn{f'} and \eqn{f} are the objective function values in the previous and current iterations, respectively.
 #' The default is \code{FALSE}.
-#' @param freeRun A number between \eqn{[0,1]} that controls the percentage of PSO iterations which are free from examining the stopping criterion.
-#' If \code{checkConv = TRUE}, the default is 0.25. Otherwise, this value would not affect the algorithm.
+#' @param freeRun A number between \eqn{[0,1]} that controls the percentage of PSO iterations which are free from examining the 
+#' stopping criterion, \eqn{|f'-f|<\varepsilon}
+#' where \eqn{f'} and \eqn{f} are the objective function values in the previous and current iterations, respectively.
+#' The default is 1.00 implying the PSO will completely ignore the stopping criterion. 
+#' Otherwise, the PSO checks the stopping criterion after free iterations.
 #' @param tol A small value for the tolerance, \eqn{\varepsilon}, in the stopping criterion.
 #' If \code{checkConv = TRUE}, the default is \code{1e-6}. Otherwise, this value would not affect the algorithm.
 # @param typePSO integer. The type of PSO. In this package, we have the following types:
@@ -43,8 +46,8 @@
 #' @rdname getPSOInfo
 #' @export
 getPSOInfo <- function(nSwarm = 32, maxIter = 100,
-  #typePSO = 0, #dSwarm = NULL, varUpper = NULL, varLower = NULL,
-  checkConv = 0, freeRun = 0.25, tol = 1e-6, c1 = 2.05, c2 = 2.05,
+  #typePSO = 0, #dSwarm = NULL, varUpper = NULL, varLower = NULL, checkConv = 0, 
+  freeRun = 1.0, tol = 1e-6, c1 = 2.05, c2 = 2.05,
   w0 = 1.2, w1 = 0.2, w_var = 0.8, vk = 4 #, chi = NULL,
   #typeTopo = NULL, nGroup = NULL, GC_S_ROOF = 5, GC_F_ROOF = 15, GC_RHO = 1,
   #Q_cen_type = 1, Q_a0 = 1.7, Q_a1 = 0.7, Q_a_var = 0.8, LcRi_L = 0.01,
@@ -57,7 +60,7 @@ getPSOInfo <- function(nSwarm = 32, maxIter = 100,
   #if (length(varUpper))   varUpper   <- matrix(0, nLoop)
   #if (length(varLower))   varLower   <- matrix(0, nLoop)
   #if (length(maxIter))    maxIter    <- rep(100   , nLoop)
-  if (length(checkConv) < nLoop)  checkConv  <- rep(checkConv, nLoop)
+  #if (length(checkConv) < nLoop)  checkConv  <- rep(checkConv, nLoop)
   #if (length(typePSO)) < nLoop)    typePSO    <- rep(0     , nLoop)
   if (length(freeRun) < nLoop)    freeRun    <- rep(freeRun, nLoop)
   if (length(tol) < nLoop)        tol        <- rep(tol, nLoop)
@@ -79,8 +82,8 @@ getPSOInfo <- function(nSwarm = 32, maxIter = 100,
   #if (length(Q_a_var) < nLoop)    Q_a_var    <- rep(0.8   , nLoop)
   #if (length(LcRi_L) < nLoop)     LcRi_L     <- rep(0.01  , nLoop)
 
-  list(nSwarm = nSwarm, dSwarm = "autogen", varUpper = "autogen", varLower = "autogen", maxIter = maxIter, #typePSO = typePSO,
-    checkConv = checkConv, freeRun = freeRun, tol = tol, c1 = c1, c2 = c2, w0 = w0, w1 = w1, w_var = w_var, #chi = chi,
+  list(nSwarm = nSwarm, dSwarm = "autogen", varUpper = "autogen", varLower = "autogen", maxIter = maxIter, #typePSO = typePSO, checkConv = checkConv, 
+    freeRun = freeRun, tol = tol, c1 = c1, c2 = c2, w0 = w0, w1 = w1, w_var = w_var, #chi = chi,
     vk = vk #, #typeTopo = typeTopo, nGroup = nGroup, GC_S_ROOF = GC_S_ROOF, GC_F_ROOF = GC_F_ROOF,
     #GC_RHO = GC_RHO, Q_cen_type = Q_cen_type, Q_a0 = Q_a0, Q_a1 = Q_a1, Q_a_var = Q_a_var,
     #LcRi_L = LcRi_L,
@@ -127,7 +130,6 @@ getPSOInfo <- function(nSwarm = 32, maxIter = 100,
 #' # Also, disable the L-BFGS algorithm
 #' LBFGS_NOTRUN <- getLBFGSInfo(IF_INNER_LBFGS = FALSE)
 #'
-#' @references Chen, R.-B., Chang, S.-P., Wang, W., Tung, H.-C., and Wong, W. K. (2015). Minimax optimal designs via particle swarm optimization methods. Statistics and Computing, 25(5):975-988.
 #' @name getLBFGSInfo
 #' @rdname getLBFGSInfo
 #' @export
@@ -139,6 +141,29 @@ getLBFGSInfo <- function(IF_INNER_LBFGS = TRUE, LBFGS_RETRY = 1, LBFGS_MAXIT = 0
        FVAL_EPS = FVAL_EPS, GRAD_EPS = GRAD_EPS,
        LINESEARCH_MAXTRIAL = LINESEARCH_MAXTRIAL, LINESEARCH_MAX = LINESEARCH_MAX, LINESEARCH_MIN = LINESEARCH_MIN,
        LINESEARCH_ARMIJO = LINESEARCH_ARMIJO, LINESEARCH_WOLFE = LINESEARCH_WOLFE, FD_DELTA = FD_DELTA)
+}
+
+#' Generation function of Fedorov-Wynn algorithm parameter settings
+#'
+#' Create a list with Fedorov-Wynn algorithm parameters for optimal discrimination design search.
+#'
+#' @param freeRun A number between \eqn{[0,1]} that controls the percentage of updating iterations which are free from examining the 
+#' stopping criterion, \eqn{|f'-f|<\varepsilon}
+#' where \eqn{f'} and \eqn{f} are the objective function values in the previous and current iterations, respectively.
+#' The default is 1.00 implying the algorithm will completely ignore the stopping criterion. 
+#' Otherwise, the algorithm checks the stopping criterion after free iterations.
+#' @return The list of L-BFGS parameter settings.
+#' @examples
+#' # Get default settings for Fedorov-Wynn algorithm.
+#' FED_INFO <- getFEDInfo(FED_MAXIT = 200)
+#'
+#' @name getFEDInfo 
+#' @rdname getFEDInfo
+#' @export
+getFEDInfo <- function(FED_MAXIT = 200, FED_TRIM = 5, FED_TRIM_EPS = 1e-4, freeRun = 0.5, FED_EPS = 1e-6, FED_ALPHA_GRID = 20) {
+   
+  list(FED_MAXIT = FED_MAXIT, FED_TRIM = FED_TRIM, FED_TRIM_EPS = FED_TRIM_EPS, 
+       freeRun = freeRun, FED_EPS = FED_EPS, FED_ALPHA_GRID = FED_ALPHA_GRID)
 }
 
 #' @export

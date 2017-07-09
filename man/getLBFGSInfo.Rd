@@ -65,6 +65,3 @@ NESTEDPSO_INFO <- getPSOInfo(nSwarm = c(16, 32), maxIter = c(100, 200))
 LBFGS_NOTRUN <- getLBFGSInfo(IF_INNER_LBFGS = FALSE)
 
 }
-\references{
-Chen, R.-B., Chang, S.-P., Wang, W., Tung, H.-C., and Wong, W. K. (2015). Minimax optimal designs via particle swarm optimization methods. Statistics and Computing, 25(5):975-988.
-}

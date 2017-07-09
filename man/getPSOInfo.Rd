@@ -4,22 +4,19 @@
 \alias{getPSOInfo}
 \title{Generation function of PSO parameter settings}
 \usage{
-getPSOInfo(nSwarm = 32, maxIter = 100, checkConv = 0, freeRun = 0.25,
-  tol = 1e-06, c1 = 2.05, c2 = 2.05, w0 = 1.2, w1 = 0.2,
-  w_var = 0.8, vk = 4)
+getPSOInfo(nSwarm = 32, maxIter = 100, freeRun = 1, tol = 1e-06,
+  c1 = 2.05, c2 = 2.05, w0 = 1.2, w1 = 0.2, w_var = 0.8, vk = 4)
 }
 \arguments{
 \item{nSwarm}{A integer number of swarm size in PSO algorithm.}
 
 \item{maxIter}{A integer number of maximal PSO iterations.}
 
-\item{checkConv}{A logical value which controls whether PSO checks the stopping criterion during updating procedure.
-Specify \code{TRUE} for PSO to compute the stopping criterion \eqn{|f'-f|<\varepsilon}
+\item{freeRun}{A number between \eqn{[0,1]} that controls the percentage of PSO iterations which are free from examining the 
+stopping criterion, \eqn{|f'-f|<\varepsilon}
 where \eqn{f'} and \eqn{f} are the objective function values in the previous and current iterations, respectively.
-The default is \code{FALSE}.}
-
-\item{freeRun}{A number between \eqn{[0,1]} that controls the percentage of PSO iterations which are free from examining the stopping criterion.
-If \code{checkConv = TRUE}, the default is 0.25. Otherwise, this value would not affect the algorithm.}
+The default is 1.00 implying the PSO will completely ignore the stopping criterion. 
+Otherwise, the PSO checks the stopping criterion after free iterations.}
 
 \item{tol}{A small value for the tolerance, \eqn{\varepsilon}, in the stopping criterion.
 If \code{checkConv = TRUE}, the default is \code{1e-6}. Otherwise, this value would not affect the algorithm.}
@@ -36,6 +33,11 @@ If \code{checkConv = TRUE}, the default is \code{1e-6}. Otherwise, this value wo
 from \code{w0} to \code{w1}. The default is 0.8.}
 
 \item{vk}{The value of velocity clamping parameter. The default is 4.}
+
+\item{checkConv}{A logical value which controls whether PSO checks the stopping criterion during updating procedure.
+Specify \code{TRUE} for PSO to compute the stopping criterion \eqn{|f'-f|<\varepsilon}
+where \eqn{f'} and \eqn{f} are the objective function values in the previous and current iterations, respectively.
+The default is \code{FALSE}.}
 }
 \value{
 A list of PSO parameter settings.
