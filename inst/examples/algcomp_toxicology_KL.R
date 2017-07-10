@@ -1,12 +1,12 @@
 # Example: A and Fedorov (1975a, b)
 library(DiscrimOD)
-gdpath <- "D:/Ping_Yang/Google Drive/PYChen_Statistics_NCKU"
-projPath <- file.path(gdpath, "Researches/2015 min-max optimal discriminating designs")
-#projPath <- "./2017_PSOQN"
-outputPath <- file.path(projPath, "pkgOutput_algComp_af1975")
+#gdpath <- "D:/Ping_Yang/Google Drive/PYChen_Statistics_NCKU"
+#projPath <- file.path(gdpath, "Researches/2015 min-max optimal discriminating designs")
+projPath <- "./2017_PSOQN"
+outputPath <- file.path(projPath, "pkgOutput_algComp_toxicology_KL")
 if (!dir.exists(outputPath)) { dir.create(outputPath) }
 
-caseName <- "af1975"
+caseName <- "toxicology_KL"
 
 nIter <- 200; nRep <- 50
 # Set PSO options for pariwise discrimination design cases
@@ -20,46 +20,60 @@ FED_INFO <- getFEDInfo(FED_MAXIT = nIter, FED_TRIM = 3, FED_TRIM_EPS = 1e-2,
                        freeRun = 1.0, FED_EPS = 1e-6, FED_ALPHA_GRID = 20)
 
 # Create competing models
-af1975_1 <- function(x, p) p[1] + p[2]*exp(x) + p[3]*exp(-x)
-af1975_2 <- function(x, p) p[1] + p[2]*x + p[3]*x^2
-af1975_3 <- function(x, p) p[1] + p[2]*sin(0.5*pi*x) + p[3]*cos(0.5*pi*x) + p[4]*sin(pi*x)
-
+tox5 <- function(x, p) p[1]*(p[3] - (p[3] - 1)*exp(-(x/p[2])^p[4]))
+tox4 <- function(x, p) p[1]*(p[3] - (p[3] - 1)*exp(-(x/p[2])))
+tox3 <- function(x, p) p[1]*exp(-(x/p[2])^p[3])
+tox2 <- function(x, p) p[1]*exp(-(x/p[2]))
+tox1 <- function(x, p) rep(p[1], length(x))
 # Set the nominal values for the first model (null model)
-para_af1975_1 <- c(4.5, -1.5, -2)
-# Create the model list
-model_af1975 <- list(
-  list(model = af1975_1, para = para_af1975_1),
-  list(model = af1975_2, paraLower = rep(-10, 3), paraUpper = rep(10, 3)),
-  list(model = af1975_3, paraLower = rep(-10, 4), paraUpper = rep(10, 4))
+para_tox_5 <- c(4.282, 835.571, 0.739, 3.515)
+model_tox <- list(
+  list(model = tox5, para = para_tox_5),
+  list(model = tox4, paraLower = c(0, 0, 0), paraUpper = c(20, 5000, 1)),
+  list(model = tox3, paraLower = c(0, 0, 1), paraUpper = c(20, 5000, 15)),
+  list(model = tox2, paraLower = c(0, 0), paraUpper = c(20, 5000)),
+  list(model = tox1, paraLower = c(0), paraUpper = c(20))
 )
-
-DL <- -1; DU <- 1
+DL <- 0; DU <- 1250
 # Create the lists for pairwise discrimination designs
 two_model <- list(
-  list(model_af1975[[1]], model_af1975[[2]]),
-  list(model_af1975[[1]], model_af1975[[3]])
+  list(model_tox[[1]], model_tox[[2]]),
+  list(model_tox[[1]], model_tox[[3]]),
+  list(model_tox[[1]], model_tox[[4]]),
+  list(model_tox[[1]], model_tox[[5]])
 )
 # Specify the number fo support points for pairwise discrimination designs
-two_nSupp <- c(4, 5)
+two_nSupp <- c(3, 4, 3, 2)
 
 two_optimal <- list(
-  cbind(c(-1.0000, -0.6690, 0.1440, 0.9570), c(0.2530,  0.4280, 0.2470, 0.0720)),
-  cbind(c(-1.0000, -0.7405, -0.1044, 0.6340, 1.0000), c(0.1916, 0.3228, 0.2274, 0.1772, 0.0810))
+  cbind(c(0.000, 487.447, 1067.150), c(0.272, 0.500, 0.228)),
+  cbind(c(0.000, 498.898, 979.722, 1250.000), c(0.093, 0.290, 0.408, 0.210)),
+  cbind(c(0.000, 487.448, 1065.369), c(0.271, 0.500, 0.229)),
+  cbind(c(0.000, 1250.000), c(0.500, 0.500))
 )
 
 # Set distance function
-sq_diff <- function(xt, xr) (xt - xr)^2
+log_norm_B <- function(xt, xr) {
+  sigsq <- 0.01
+  var_t <- (exp(sigsq) - 1.0)*(xt^2)
+  var_r <- (exp(sigsq) - 1.0)*(xr^2)
+  mu_t <- log(xt) - 0.5*log(1.0 + (var_t/(xt^2)))
+  mu_r <- log(xr) - 0.5*log(1.0 + (var_r/(xr^2)))
+  ((mu_r - mu_t)^2)/(2*sigsq)
+}
+# Set the number of regeneration when the resulting design is not optimal
+nRep <- 50
 
 # Get optimal designs with two different approaches
 algCompRes <- lapply(1:length(two_model), function(i) {
   lapply(1:nRep, function(k) {
-    a <- vector("list", 4); names(a) <- c("PSOQN", "NESTEDPSO", "FEDWYNN", "REMES")
+    a <- vector("list", 3); names(a) <- c("PSOQN", "NESTEDPSO", "FEDWYNN")
     a
   })
 })
 
 # Start for each pairwise discrimination design
-DISTANCE <- sq_diff
+DISTANCE <- log_norm_B
 for (iC in 1:length(two_model)) {
 
   cat(paste0("Case: ", caseName, " ;Sub: ", iC, "\n"))
@@ -98,26 +112,19 @@ for (iC in 1:length(two_model)) {
 
     algCompRes[[iC]][[iR]][[3]] <- list(RES = out_f, EFF = eff_f)
 
-    # Remes
-    out_r <- DiscrimUnifApproxT(MODEL_INFO, two_nSupp[iC], dsLower = DL, dsUpper = DU,
-                                REMES_MAXIT = nIter, REMES_FreeRun = 1.0, REMES_EPS = 1e-2,
-                                LBFGS_INFO = LBFGS_INFO, verbose = TRUE)
-    eff_r <- -99
-    if (is.numeric(out_r$BESTVAL)) {
-      eff_r <- out_r$BESTVAL/OPT_VAL$cri_val
-    }
-    algCompRes[[iC]][[iR]][[4]] <- list(RES = out_r, EFF = eff_r)
+    # No Remes
+   
   }
 }
 
 for (iC in 1:length(two_model)) {
   tmp <- algCompRes[[iC]]
-  effvals <- matrix(0, nRep, 4*2)
-  colnames(effvals) <- paste0(rep(c("PSOQN", "NESTEDPSO", "FEDWYNN", "REMES"), 2), rep(c("EFF", "CPU"), each = 4))
+  effvals <- matrix(0, nRep, 3*2)
+  colnames(effvals) <- paste0(rep(c("PSOQN", "NESTEDPSO", "FEDWYNN"), 2), rep(c("EFF", "CPU"), each = 3))
   for (iR in 1:nRep) {
-    effvals[iR,] <- c(tmp[[iR]][[1]]$EFF, tmp[[iR]][[2]]$EFF, tmp[[iR]][[3]]$EFF, tmp[[iR]][[4]]$EFF,
-                      tmp[[iR]][[1]]$RES$CPUTIME, tmp[[iR]][[2]]$RES$CPUTIME, tmp[[iR]][[3]]$RES$CPUTIME, tmp[[iR]][[4]]$RES$CPUTIME)    
-  } 
+    effvals[iR,] <- c(tmp[[iR]][[1]]$EFF, tmp[[iR]][[2]]$EFF, tmp[[iR]][[3]]$EFF, 
+                      tmp[[iR]][[1]]$RES$CPUTIME, tmp[[iR]][[2]]$RES$CPUTIME, tmp[[iR]][[3]]$RES$CPUTIME)    
+  }
   write.csv(effvals, file.path(outputPath, paste0("algComp_Summary", caseName, "_", iC, ".csv")))
 }
 

@@ -1,12 +1,12 @@
 # Example: A and Fedorov (1975a, b)
 library(DiscrimOD)
-gdpath <- "D:/Ping_Yang/Google Drive/PYChen_Statistics_NCKU"
-projPath <- file.path(gdpath, "Researches/2015 min-max optimal discriminating designs")
-#projPath <- "./2017_PSOQN"
-outputPath <- file.path(projPath, "pkgOutput_algComp_af1975")
+#gdpath <- "D:/Ping_Yang/Google Drive/PYChen_Statistics_NCKU"
+#projPath <- file.path(gdpath, "Researches/2015 min-max optimal discriminating designs")
+projPath <- "./2017_PSOQN"
+outputPath <- file.path(projPath, "pkgOutput_algComp_toxicology")
 if (!dir.exists(outputPath)) { dir.create(outputPath) }
 
-caseName <- "af1975"
+caseName <- "toxicology"
 
 nIter <- 200; nRep <- 50
 # Set PSO options for pariwise discrimination design cases
@@ -20,31 +20,36 @@ FED_INFO <- getFEDInfo(FED_MAXIT = nIter, FED_TRIM = 3, FED_TRIM_EPS = 1e-2,
                        freeRun = 1.0, FED_EPS = 1e-6, FED_ALPHA_GRID = 20)
 
 # Create competing models
-af1975_1 <- function(x, p) p[1] + p[2]*exp(x) + p[3]*exp(-x)
-af1975_2 <- function(x, p) p[1] + p[2]*x + p[3]*x^2
-af1975_3 <- function(x, p) p[1] + p[2]*sin(0.5*pi*x) + p[3]*cos(0.5*pi*x) + p[4]*sin(pi*x)
-
+tox5 <- function(x, p) p[1]*(p[3] - (p[3] - 1)*exp(-(x/p[2])^p[4]))
+tox4 <- function(x, p) p[1]*(p[3] - (p[3] - 1)*exp(-(x/p[2])))
+tox3 <- function(x, p) p[1]*exp(-(x/p[2])^p[3])
+tox2 <- function(x, p) p[1]*exp(-(x/p[2]))
+tox1 <- function(x, p) rep(p[1], length(x))
 # Set the nominal values for the first model (null model)
-para_af1975_1 <- c(4.5, -1.5, -2)
-# Create the model list
-model_af1975 <- list(
-  list(model = af1975_1, para = para_af1975_1),
-  list(model = af1975_2, paraLower = rep(-10, 3), paraUpper = rep(10, 3)),
-  list(model = af1975_3, paraLower = rep(-10, 4), paraUpper = rep(10, 4))
+para_tox_5 <- c(4.282, 835.571, 0.739, 3.515)
+model_tox <- list(
+  list(model = tox5, para = para_tox_5),
+  list(model = tox4, paraLower = c(0, 0, 0), paraUpper = c(20, 5000, 1)),
+  list(model = tox3, paraLower = c(0, 0, 1), paraUpper = c(20, 5000, 15)),
+  list(model = tox2, paraLower = c(0, 0), paraUpper = c(20, 5000)),
+  list(model = tox1, paraLower = c(0), paraUpper = c(20))
 )
-
-DL <- -1; DU <- 1
+DL <- 0; DU <- 1250
 # Create the lists for pairwise discrimination designs
 two_model <- list(
-  list(model_af1975[[1]], model_af1975[[2]]),
-  list(model_af1975[[1]], model_af1975[[3]])
+  list(model_tox[[1]], model_tox[[2]]),
+  list(model_tox[[1]], model_tox[[3]]),
+  list(model_tox[[1]], model_tox[[4]]),
+  list(model_tox[[1]], model_tox[[5]])
 )
 # Specify the number fo support points for pairwise discrimination designs
-two_nSupp <- c(4, 5)
+two_nSupp <- c(3, 4, 3, 2)
 
 two_optimal <- list(
-  cbind(c(-1.0000, -0.6690, 0.1440, 0.9570), c(0.2530,  0.4280, 0.2470, 0.0720)),
-  cbind(c(-1.0000, -0.7405, -0.1044, 0.6340, 1.0000), c(0.1916, 0.3228, 0.2274, 0.1772, 0.0810))
+  cbind(c(0.000, 468.186, 1064.179), c(0.249, 0.498, 0.253)),
+  cbind(c(0.000, 484.213, 963.141, 1250.000), c(0.092, 0.280, 0.407, 0.221)),
+  cbind(c(0.000, 468.156, 1064.178), c(0.249, 0.498, 0.253)),
+  cbind(c(0.000, 1250.000), c(0.500, 0.500))
 )
 
 # Set distance function
@@ -117,7 +122,7 @@ for (iC in 1:length(two_model)) {
   for (iR in 1:nRep) {
     effvals[iR,] <- c(tmp[[iR]][[1]]$EFF, tmp[[iR]][[2]]$EFF, tmp[[iR]][[3]]$EFF, tmp[[iR]][[4]]$EFF,
                       tmp[[iR]][[1]]$RES$CPUTIME, tmp[[iR]][[2]]$RES$CPUTIME, tmp[[iR]][[3]]$RES$CPUTIME, tmp[[iR]][[4]]$RES$CPUTIME)    
-  } 
+  }
   write.csv(effvals, file.path(outputPath, paste0("algComp_Summary", caseName, "_", iC, ".csv")))
 }
 
