@@ -1,8 +1,8 @@
 # Example: A and Fedorov (1975a, b)
 library(DiscrimOD)
-#gdpath <- "D:/Ping_Yang/Google Drive/PYChen_Statistics_NCKU"
-#projPath <- file.path(gdpath, "Researches/2015 min-max optimal discriminating designs")
-projPath <- "./2017_PSOQN"
+gdpath <- "D:/Ping_Yang/Google Drive/PYChen_Statistics_NCKU"
+projPath <- file.path(gdpath, "Researches/2015 min-max optimal discriminating designs")
+#projPath <- "./2017_PSOQN"
 outputPath <- file.path(projPath, "pkgOutput_algComp_toxicology")
 if (!dir.exists(outputPath)) { dir.create(outputPath) }
 
@@ -76,7 +76,7 @@ for (iC in 1:length(two_model)) {
     OPTIMAL <- two_optimal[[iC]]
     OPT_VAL <- designCriterion(OPTIMAL, MODEL_INFO, DISTANCE, dsLower = DL, dsUpper = DU, 
                                crit_type = "pair_fixed_true", 
-                               PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
+                               PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_CRIT)
 
     eachRep <- vector("list", 4)
      # PSO-QN

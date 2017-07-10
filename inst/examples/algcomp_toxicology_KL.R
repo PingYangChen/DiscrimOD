@@ -1,8 +1,8 @@
 # Example: A and Fedorov (1975a, b)
 library(DiscrimOD)
-#gdpath <- "D:/Ping_Yang/Google Drive/PYChen_Statistics_NCKU"
-#projPath <- file.path(gdpath, "Researches/2015 min-max optimal discriminating designs")
-projPath <- "./2017_PSOQN"
+gdpath <- "D:/Ping_Yang/Google Drive/PYChen_Statistics_NCKU"
+projPath <- file.path(gdpath, "Researches/2015 min-max optimal discriminating designs")
+#projPath <- "./2017_PSOQN"
 outputPath <- file.path(projPath, "pkgOutput_algComp_toxicology_KL")
 if (!dir.exists(outputPath)) { dir.create(outputPath) }
 
