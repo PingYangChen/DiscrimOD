@@ -2,7 +2,7 @@
 // BODY
 // PSO MAIN FUNCTIONS
 void PSO_MAIN(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],
-              void *external, const bool &IF_PARALLEL, const bool COUNTER_ON, Ptr_PSO_Result Ptr_PSO_Result)
+              void *external, const bool &IF_PARALLEL, const bool COUNTER_ON, PSO_Result &PSO_Result)
 {
 	/* -- BEGIN -- */
   // GET PSO PARAMETERS
@@ -89,10 +89,10 @@ void PSO_MAIN(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM &LBFG
   /* -- FINISH PSO LOOP -- */
  
  	/* -- OUTPUT -- */
-  Ptr_PSO_Result->GBest = GBest;
-  Ptr_PSO_Result->fGBest = fGBest;
-  Ptr_PSO_Result->fGBestHist = fGBestHist;
-  Ptr_PSO_Result->PBest = PBest;
-  Ptr_PSO_Result->fPBest = fPBest;
+  PSO_Result.GBest = GBest;
+  PSO_Result.fGBest = fGBest;
+  PSO_Result.fGBestHist = fGBestHist;
+  PSO_Result.PBest = PBest;
+  PSO_Result.fPBest = fPBest;
   /* -- END -- */
 }

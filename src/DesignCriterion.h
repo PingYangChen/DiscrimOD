@@ -153,7 +153,7 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARA
         PSO_OPTS[LOOPID + 1].varLower = OBJ.parasLower.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
 
         PSO_Result InnerResult = {};
-        PSO_MAIN(LOOPID + 1, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, &external, FALSE, FALSE, &InnerResult);
+        PSO_MAIN(LOOPID + 1, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, &external, FALSE, FALSE, InnerResult);
         R_PARA_tmp = InnerResult.GBest;
         val = InnerResult.fGBest;
       } else {
@@ -186,7 +186,7 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARA
           PSO_OPTS[LOOPID + 1].varLower = OBJ.parasLower.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
 
           PSO_Result InnerResult = {};
-          PSO_MAIN(LOOPID + 1, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, &external, FALSE, FALSE, &InnerResult);
+          PSO_MAIN(LOOPID + 1, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, &external, FALSE, FALSE, InnerResult);
           R_PARA_tmp = InnerResult.GBest;
           eff_vals(i) = InnerResult.fGBest;
         } else {

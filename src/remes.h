@@ -194,7 +194,7 @@ arma::rowvec getRivalDev(const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[]
 
 // REMES MAIN FUNCTION
 void REMES_MAIN(const REMES_PARAM &REMES_OPTION, const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],
-                const bool COUNTER_ON, Ptr_REMES_Result Ptr_REMES_Result)
+                const bool COUNTER_ON, REMES_Result &REMES_Result)
 {
 	/* -- BEGIN -- */
   // GET FEDOROV PARAMETERS
@@ -290,10 +290,10 @@ void REMES_MAIN(const REMES_PARAM &REMES_OPTION, const LBFGS_PARAM &LBFGS_OPTION
   arma::vec WT = arma::pinv(DD_DEV) * ZEROS_ONE;
 
  	/* -- OUTPUT -- */
-  Ptr_REMES_Result->DESIGN = DESIGN;
-  Ptr_REMES_Result->WT = WT.t();
-  Ptr_REMES_Result->R_PARA = R_PARA;
-  Ptr_REMES_Result->CPolyVal = CPolyVal;
+  REMES_Result.DESIGN = DESIGN;
+  REMES_Result.WT = WT.t();
+  REMES_Result.R_PARA = R_PARA;
+  REMES_Result.CPolyVal = CPolyVal;
   /* -- END -- */
 }
 

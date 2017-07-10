@@ -63,7 +63,7 @@ Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_I
 
   PSO_Result Result = {};
   if (VERBOSE) Rprintf("\nCalling Cpp PSO Kernel... ");
-  PSO_MAIN(LOOPID, PSO_OPT, LBFGS_OPTION, OBJ, model_diff_ptr, &external, IF_PARALLEL, VERBOSE, &Result);
+  PSO_MAIN(LOOPID, PSO_OPT, LBFGS_OPTION, OBJ, model_diff_ptr, &external, IF_PARALLEL, VERBOSE, Result);
   if (VERBOSE) Rprintf("Done.\n");
 
   return List::create(Named("GBest") = wrap(Result.GBest),
@@ -253,7 +253,7 @@ Rcpp::List cppFedorovWynn(Rcpp::List FED_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, 
 
   FED_Result Result = {};
   if (VERBOSE) Rprintf("\nCalling Cpp Fedorov-Wynn Kernel... ");
-  FEDOROVWYNN_MAIN(FED_OPTION, LBFGS_OPTION, OBJ, model_diff_ptr, VERBOSE, &Result);
+  FEDOROVWYNN_MAIN(FED_OPTION, LBFGS_OPTION, OBJ, model_diff_ptr, VERBOSE, Result);
   if (VERBOSE) Rprintf("Done.\n");
 
   return List::create(Named("DESIGN") = wrap(Result.DESIGN),
@@ -313,7 +313,7 @@ Rcpp::List cppUnifApprox(Rcpp::List REMES_INFO_LIST, Rcpp::List LBFGS_INFO_LIST,
 
   REMES_Result Result = {};
   if (VERBOSE) Rprintf("\nCalling Cpp Remes Kernel... ");
-  REMES_MAIN(REMES_OPTION, LBFGS_OPTION, OBJ, model_diff_ptr, VERBOSE, &Result);
+  REMES_MAIN(REMES_OPTION, LBFGS_OPTION, OBJ, model_diff_ptr, VERBOSE, Result);
   if (VERBOSE) Rprintf("Done.\n");
 
   return List::create(Named("DESIGN") = wrap(Result.DESIGN),

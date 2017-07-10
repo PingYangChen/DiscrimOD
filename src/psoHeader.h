@@ -264,7 +264,7 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &PSO_INFO_LIST);
 void getNewtonStruct(LBFGS_PARAM &LFBGS_OPT, const Rcpp::List LBFGS_INFO_LIST);
 void getInfoStruct(OBJ_INFO &OBJ, const Rcpp::List OBJ_INFO_LIST);
 void PSO_MAIN(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],
-              void *external, const bool &IF_PARALLEL, const bool COUNTER_ON, Ptr_PSO_Result Ptr_PSO_Result);
+              void *external, const bool &IF_PARALLEL, const bool COUNTER_ON, PSO_Result &PSO_Result);
 void psoUpdateParticle(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const PSO_DYN &PSO_DYN,
                        const arma::mat &PBest, const arma::rowvec &GBest,
                        const arma::rowvec &velMax, const arma::rowvec &varUpper, const arma::rowvec &varLower,

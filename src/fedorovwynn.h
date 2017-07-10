@@ -139,7 +139,7 @@ double optAlpha(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff
 
 // FEDOROV-WYNN MAIN FUNCTION
 void FEDOROVWYNN_MAIN(const FED_PARAM &FED_OPTION, const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],
-                      const bool COUNTER_ON, Ptr_FED_Result Ptr_FED_Result)
+                      const bool COUNTER_ON, FED_Result &FED_Result)
 {
 	/* -- BEGIN -- */
   // GET FEDOROV PARAMETERS
@@ -239,11 +239,11 @@ void FEDOROVWYNN_MAIN(const FED_PARAM &FED_OPTION, const LBFGS_PARAM &LBFGS_OPTI
   /* -- FINISH FEDOROV LOOP -- */
 
  	/* -- OUTPUT -- */
-  Ptr_FED_Result->DESIGN = DESIGN;
-  Ptr_FED_Result->WT = WT;
-  Ptr_FED_Result->F_VAL = fval;
-  Ptr_FED_Result->R_PARA = R_PARA;
-  Ptr_FED_Result->fvalHist = fvalHist;
+  FED_Result.DESIGN = DESIGN;
+  FED_Result.WT = WT;
+  FED_Result.F_VAL = fval;
+  FED_Result.R_PARA = R_PARA;
+  FED_Result.fvalHist = fvalHist;
   /* -- END -- */
 }
 
