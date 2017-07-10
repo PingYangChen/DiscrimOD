@@ -98,7 +98,7 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PA
 
     Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(DESIGN));
     Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA));
-    Rcpp::NumericVector R_PARA_Rform  = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(swarm));
+    Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(swarm));
 
     Rcpp::NumericVector eta_T_Rform((int)WT.n_elem), eta_R_Rform((int)WT.n_elem), DIV_Rform((int)WT.n_elem);
     eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(DESIGN_Rform, T_PARA_Rform);
@@ -107,7 +107,7 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PA
       if (Rcpp::all(Rcpp::is_finite(eta_R_Rform))) {
         DIV_Rform = (Rcpp::NumericVector) distFunc->eval(eta_T_Rform, eta_R_Rform);
         if (Rcpp::all(Rcpp::is_finite(DIV_Rform))) {
-          arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size(), false);
+          arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size());
           val = 0;
           for (uword i = 0; i < WT.n_elem; i++) { val += WT(i)*DIV(i); }
           //val = arma::accu(WT % DIV); 
@@ -136,16 +136,15 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARA
 	switch (crit_type) {
 		case 0: // Fixed True
 		{
+      int rmID = OBJ.MODEL_PAIR(0, 1);
       R_PARA.submat(0, 0, 0, OBJ.dParas(0) - 1) = OBJ.paras.submat(0, 0, 0, OBJ.dParas(0) - 1);
-			arma::rowvec R_PARA_tmp(OBJ.dParas(1));
+			arma::rowvec R_PARA_tmp(OBJ.dParas(rmID));
 
-      if (LBFGS == 0) {
+      if (LBFGS == 0) { 
         inner_pso_info external = {};
         external.PAIRID = 0;
         external.DESIGN = DESIGN;
         external.WT = WT;
-
-        int rmID = OBJ.MODEL_PAIR(0, 1);
 
         PSO_OPTS[LOOPID + 1].dSwarm = OBJ.dParas(rmID);
         PSO_OPTS[LOOPID + 1].varUpper.set_size(OBJ.dParas(rmID)); 
@@ -161,7 +160,7 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARA
         val = minDistCalc(LBFGS_OPTION, OBJ, MODEL_COLLECTOR, 0, DESIGN, WT, R_PARA_tmp);
       }
 
-      R_PARA.submat(1, 0, 1, OBJ.dParas(1) - 1) = R_PARA_tmp;
+      R_PARA.submat(1, 0, 1, OBJ.dParas(rmID) - 1) = R_PARA_tmp;
 			break;
 		}
 		case 1: // Max-min, Fixed True
@@ -335,7 +334,7 @@ arma::rowvec distCalc(const OBJ_INFO &OBJ, const arma::mat &x, const arma::mat &
   eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(DESIGN_Rform, R_PARA_Rform);
   DIV_Rform = (Rcpp::NumericVector) distFunc->eval(eta_T_Rform, eta_R_Rform);
     
-  arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size(), false);  
+  arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size());  
   DIV.elem(find_nonfinite(DIV)).fill(1e10);
 
   return DIV;

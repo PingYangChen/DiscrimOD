@@ -312,45 +312,45 @@ void getInfoStruct(OBJ_INFO &OBJ, const Rcpp::List OBJ_INFO_LIST)
   OBJ.nSupp  = as<int>(OBJ_INFO_LIST["nSupp"]);
 
   Rcpp::NumericVector dsLower_Tmp = as<NumericVector>(OBJ_INFO_LIST["dsLower"]);
-  arma::rowvec dsLower(dsLower_Tmp.begin(), dsLower_Tmp.size(), false);
+  arma::rowvec dsLower(dsLower_Tmp.begin(), dsLower_Tmp.size());
   OBJ.dsLower = dsLower;
   Rcpp::NumericVector dsUpper_Tmp = as<NumericVector>(OBJ_INFO_LIST["dsUpper"]);
-  arma::rowvec dsUpper(dsUpper_Tmp.begin(), dsUpper_Tmp.size(), false);
+  arma::rowvec dsUpper(dsUpper_Tmp.begin(), dsUpper_Tmp.size());
   OBJ.dsUpper = dsUpper;
 
   OBJ.N_PAIR = as<int>(OBJ_INFO_LIST["N_PAIR"]);
 
   Rcpp::IntegerMatrix MODEL_PAIR_Tmp   = as<IntegerMatrix>(OBJ_INFO_LIST["MODEL_PAIR"]);
-  arma::imat MODEL_PAIR(MODEL_PAIR_Tmp.begin(), MODEL_PAIR_Tmp.nrow(), MODEL_PAIR_Tmp.ncol(), false);
+  arma::imat MODEL_PAIR(MODEL_PAIR_Tmp.begin(), MODEL_PAIR_Tmp.nrow(), MODEL_PAIR_Tmp.ncol());
   OBJ.MODEL_PAIR  = MODEL_PAIR;
 
   Rcpp::IntegerVector dParas_Tmp  = as<IntegerVector>(OBJ_INFO_LIST["dParas"]);
-  arma::irowvec dParas(dParas_Tmp.begin(), dParas_Tmp.size(), false);
+  arma::irowvec dParas(dParas_Tmp.begin(), dParas_Tmp.size());
   OBJ.dParas  = dParas;
 
   Rcpp::NumericMatrix paras_Tmp   = as<NumericMatrix>(OBJ_INFO_LIST["paras"]);
-  arma::mat paras(paras_Tmp.begin(), paras_Tmp.nrow(), paras_Tmp.ncol(), false);
+  arma::mat paras(paras_Tmp.begin(), paras_Tmp.nrow(), paras_Tmp.ncol());
   OBJ.paras  = paras;
 
   Rcpp::NumericMatrix parasInit_Tmp   = as<NumericMatrix>(OBJ_INFO_LIST["parasInit"]);
-  arma::mat parasInit(parasInit_Tmp.begin(), parasInit_Tmp.nrow(), parasInit_Tmp.ncol(), false);
+  arma::mat parasInit(parasInit_Tmp.begin(), parasInit_Tmp.nrow(), parasInit_Tmp.ncol());
   OBJ.parasInit  = parasInit;
 
   Rcpp::NumericMatrix parasUpper_Tmp   = as<NumericMatrix>(OBJ_INFO_LIST["parasUpper"]);
-  arma::mat parasUpper(parasUpper_Tmp.begin(), parasUpper_Tmp.nrow(), parasUpper_Tmp.ncol(), false);
+  arma::mat parasUpper(parasUpper_Tmp.begin(), parasUpper_Tmp.nrow(), parasUpper_Tmp.ncol());
   OBJ.parasUpper  = parasUpper;
 
   Rcpp::NumericMatrix parasLower_Tmp   = as<NumericMatrix>(OBJ_INFO_LIST["parasLower"]);
-  arma::mat parasLower(parasLower_Tmp.begin(), parasLower_Tmp.nrow(), parasLower_Tmp.ncol(), false);
+  arma::mat parasLower(parasLower_Tmp.begin(), parasLower_Tmp.nrow(), parasLower_Tmp.ncol());
   OBJ.parasLower  = parasLower;
 
   Rcpp::NumericMatrix parasBdd_Tmp   = as<NumericMatrix>(OBJ_INFO_LIST["parasBdd"]);
-  arma::mat parasBdd(parasBdd_Tmp.begin(), parasBdd_Tmp.nrow(), parasBdd_Tmp.ncol(), false);
+  arma::mat parasBdd(parasBdd_Tmp.begin(), parasBdd_Tmp.nrow(), parasBdd_Tmp.ncol());
   OBJ.parasBdd  = parasBdd;
 
   // Max-min Discrimination Design
   Rcpp::NumericVector std_vals_Tmp  = as<NumericVector>(OBJ_INFO_LIST["MaxMinStdVals"]);
-  arma::rowvec std_vals(std_vals_Tmp.begin(), std_vals_Tmp.size(), false);
+  arma::rowvec std_vals(std_vals_Tmp.begin(), std_vals_Tmp.size());
   OBJ.std_vals = std_vals;
 }
 
@@ -377,9 +377,9 @@ void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &PSO_INFO_LIST)
   Rcpp::IntegerVector nSwarm_Tmp     = as<IntegerVector>(PSO_INFO_LIST["nSwarm"]);
   Rcpp::IntegerVector dSwarm_Tmp     = as<IntegerVector>(PSO_INFO_LIST["dSwarm"]);
   Rcpp::NumericMatrix varUpper_Tmp   = as<NumericMatrix>(PSO_INFO_LIST["varUpper"]);
-  arma::mat varUpper(varUpper_Tmp.begin(), varUpper_Tmp.nrow(), varUpper_Tmp.ncol(), false);
+  arma::mat varUpper(varUpper_Tmp.begin(), varUpper_Tmp.nrow(), varUpper_Tmp.ncol());
   Rcpp::NumericMatrix varLower_Tmp   = as<NumericMatrix>(PSO_INFO_LIST["varLower"]);
-  arma::mat varLower(varLower_Tmp.begin(), varLower_Tmp.nrow(), varLower_Tmp.ncol(), false);
+  arma::mat varLower(varLower_Tmp.begin(), varLower_Tmp.nrow(), varLower_Tmp.ncol());
   Rcpp::IntegerVector maxIter_Tmp    = as<IntegerVector>(PSO_INFO_LIST["maxIter"]);
   //Rcpp::IntegerVector checkConv_Tmp  = as<IntegerVector>(PSO_INFO_LIST["checkConv"]);
   //Rcpp::IntegerVector typePSO_Tmp    = as<IntegerVector>(PSO_INFO_LIST["typePSO"]);

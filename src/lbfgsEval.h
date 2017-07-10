@@ -69,7 +69,7 @@ double f_fn(const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const arma::
       if (Rcpp::all(Rcpp::is_finite(eta_R_Rform))) {
         DIV_Rform = (Rcpp::NumericVector) distFunc->eval(eta_T_Rform, eta_R_Rform);
         if (Rcpp::all(Rcpp::is_finite(DIV_Rform))) {
-          arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size(), false);
+          arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size());
           fvalTmp = 0;
           for (uword i = 0; i < WT.n_elem; i++) { fvalTmp += WT(i)*DIV(i); }
           //fvalTmp = arma::accu(WT % DIV); 

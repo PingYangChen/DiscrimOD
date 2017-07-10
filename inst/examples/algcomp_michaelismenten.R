@@ -97,8 +97,6 @@ for (iC in 1:length(distFunSet)) {
     #algCompRes[[iC]][[iR]][[1]] <- list(RES = out_q, EFF = eff_q)
     eachRep[[1]] <- list(RES = out_q, EFF = eff_q)
 
-    algCompRes[[iC]][[iR]][[1]] <- list(RES = out_q, EFF = eff_q)
-
     # NestedPSO
     out_n <- DiscrimOD(MODEL_INFO, DISTANCE, two_nSupp, dsLower = DL, dsUpper = DU,
                        crit_type = "pair_fixed_true",
@@ -112,7 +110,6 @@ for (iC in 1:length(distFunSet)) {
 
     #algCompRes[[iC]][[iR]][[2]] <- list(RES = out_n, EFF = eff_n)
     eachRep[[2]] <- list(RES = out_n, EFF = eff_n)
-
 
     # Fedorov-Wynn
     out_f <- DiscrimFedWynn(MODEL_INFO, DISTANCE, dsLower = DL, dsUpper = DU,
