@@ -110,9 +110,7 @@ for (iC in 1:length(distFunSet)) {
     # No Remes
    
   }
-}
-
-for (iC in 1:length(distFunSet)) {
+  # SAVE RESULT
   tmp <- algCompRes[[iC]]
   effvals <- matrix(0, nRep, 3*2)
   colnames(effvals) <- paste0(rep(c("PSOQN", "NESTEDPSO", "FEDWYNN"), 2), rep(c("EFF", "CPU"), each = 3))
@@ -120,7 +118,7 @@ for (iC in 1:length(distFunSet)) {
     effvals[iR,] <- c(tmp[[iR]][[1]]$EFF, tmp[[iR]][[2]]$EFF, tmp[[iR]][[3]]$EFF, 
                       tmp[[iR]][[1]]$RES$CPUTIME, tmp[[iR]][[2]]$RES$CPUTIME, tmp[[iR]][[3]]$RES$CPUTIME)    
   }
-  write.csv(effvals, file.path(outputPath, paste0("algComp_Summary", caseName, "_", iC, ".csv")))
+  write.csv(effvals, file.path(outputPath, paste0("algComp_Summary_", caseName, "_", iC, ".csv")))
 }
 
 save.image(file.path(outputPath, paste0("algComp_", caseName, ".Rdata")))

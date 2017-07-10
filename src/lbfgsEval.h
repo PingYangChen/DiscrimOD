@@ -278,12 +278,13 @@ double cpoly(const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const arma:
   Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA));
   Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA));
 
-  Rcpp::NumericVector eta_T_Rform((int)DESIGN_PT.n_rows), eta_R_Rform((int)DESIGN_PT.n_rows);//, DIV_Rform((int)DESIGN_PT.n_rows);
+  Rcpp::NumericVector eta_T_Rform((int)DESIGN_PT.n_rows), eta_R_Rform((int)DESIGN_PT.n_rows), DIV_Rform((int)DESIGN_PT.n_rows);
   eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(T_PARA_Rform));
   if (Rcpp::all(Rcpp::is_finite(eta_T_Rform))) {
     eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(R_PARA_Rform));
     if (Rcpp::all(Rcpp::is_finite(eta_R_Rform))) {
-      cployVal = eta_T_Rform[0] - eta_R_Rform[0];
+      DIV_Rform = eta_T_Rform - eta_R_Rform;
+      if (Rcpp::all(Rcpp::is_finite(DIV_Rform))) { cployVal = (double)DIV_Rform[0]; }
     }
   }
   return cployVal;

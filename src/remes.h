@@ -38,11 +38,11 @@ double max_CPoly_x(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_d
 
   lbfgsfloatval_t *X_VEC   = lbfgs_malloc(dSupp);
   lbfgsfloatval_t *X_VEC1  = lbfgs_malloc(dSupp);
-  lbfgsfloatval_t fx, fx1; int CONV;
+  lbfgsfloatval_t fx, fx1; //int CONV;
 
   arma::rowvec X_INI = X_LOWER;
   for (int d = 0; d < dSupp; d++) { X_VEC[d] = (lbfgsfloatval_t)domainMapping(0, X_INI(d), X_NBD(d), X_UPPER(d), X_LOWER(d)); }
-  CONV = lbfgs(dSupp, X_VEC, &fx, evaluate_remes_x, NULL, &LBFGS_EVAL, &LBFGS_PAR);
+  lbfgs(dSupp, X_VEC, &fx, evaluate_remes_x, NULL, &LBFGS_EVAL, &LBFGS_PAR);
 
   //Rprintf("CONV: %d, f = %4.4f\n", CONV, fx);
 
@@ -50,7 +50,7 @@ double max_CPoly_x(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_d
   for (uword i = 0; i < (nSupp + 1); i++) {
     if (i < nSupp) { X_INI = DESIGN.row(i); } else { X_INI = X_UPPER; }
     for (int d = 0; d < dSupp; d++) { X_VEC1[d] = (lbfgsfloatval_t)domainMapping(0, X_INI(d), X_NBD(d), X_UPPER(d), X_LOWER(d)); }
-    CONV = lbfgs(dSupp, X_VEC1, &fx1, evaluate_remes_x, NULL, &LBFGS_EVAL, &LBFGS_PAR);
+    lbfgs(dSupp, X_VEC1, &fx1, evaluate_remes_x, NULL, &LBFGS_EVAL, &LBFGS_PAR);
     //Rprintf("CONV: %d, f = %4.4f\n", CONV, fx1);
     if (std::isfinite(fx1) & (!std::isnan(fx1))) {
       if ((!std::isfinite(fx)) | std::isnan(fx)) {

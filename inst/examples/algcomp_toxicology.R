@@ -113,9 +113,7 @@ for (iC in 1:length(two_model)) {
     }
     algCompRes[[iC]][[iR]][[4]] <- list(RES = out_r, EFF = eff_r)
   }
-}
-
-for (iC in 1:length(two_model)) {
+  # SAVE RESULT
   tmp <- algCompRes[[iC]]
   effvals <- matrix(0, nRep, 4*2)
   colnames(effvals) <- paste0(rep(c("PSOQN", "NESTEDPSO", "FEDWYNN", "REMES"), 2), rep(c("EFF", "CPU"), each = 4))
@@ -123,7 +121,7 @@ for (iC in 1:length(two_model)) {
     effvals[iR,] <- c(tmp[[iR]][[1]]$EFF, tmp[[iR]][[2]]$EFF, tmp[[iR]][[3]]$EFF, tmp[[iR]][[4]]$EFF,
                       tmp[[iR]][[1]]$RES$CPUTIME, tmp[[iR]][[2]]$RES$CPUTIME, tmp[[iR]][[3]]$RES$CPUTIME, tmp[[iR]][[4]]$RES$CPUTIME)    
   }
-  write.csv(effvals, file.path(outputPath, paste0("algComp_Summary", caseName, "_", iC, ".csv")))
+  write.csv(effvals, file.path(outputPath, paste0("algComp_Summary_", caseName, "_", iC, ".csv")))
 }
 
 save.image(file.path(outputPath, paste0("algComp_", caseName, ".Rdata")))
