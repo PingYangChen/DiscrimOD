@@ -62,8 +62,8 @@ DiscrimFedWynn <- function(MODEL_INFO, DISTANCE, dsLower, dsUpper,
 
 	if (verbose) message(paste0("CPU time: ", round(cputime, 2), " seconds."))
 
-	BESTDESIGN <- cbind(fedOut$DESIGN, t(fedOut$WT))
-	BESTDESIGN <- BESTDESIGN[which(BESTDESIGN[,ncol(BESTDESIGN)] > 1e-12),]
+	nonzero_wt <- which(fedOut$WT[1,] > 1e-12)
+	BESTDESIGN <- cbind(fedOut$DESIGN[nonzero_wt,], fedOut$WT[nonzero_wt])
 	BESTDESIGN <- BESTDESIGN[order(BESTDESIGN[,1]),]
 	dimnames(BESTDESIGN) <- list(paste0("obs_", 1:nrow(BESTDESIGN)), 
 															 c(paste0("dim_", 1:(ncol(BESTDESIGN) - 1)), "weight"))
