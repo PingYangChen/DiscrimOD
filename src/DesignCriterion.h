@@ -148,9 +148,9 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARA
         int rmID = OBJ.MODEL_PAIR(0, 1);
 
         PSO_OPTS[LOOPID + 1].dSwarm = OBJ.dParas(rmID);
-        PSO_OPTS[LOOPID + 1].varUpper.set_size(1, OBJ.dParas(rmID)); 
+        PSO_OPTS[LOOPID + 1].varUpper.set_size(OBJ.dParas(rmID)); 
         PSO_OPTS[LOOPID + 1].varUpper = OBJ.parasUpper.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
-        PSO_OPTS[LOOPID + 1].varLower.set_size(1, OBJ.dParas(rmID)); 
+        PSO_OPTS[LOOPID + 1].varLower.set_size(OBJ.dParas(rmID)); 
         PSO_OPTS[LOOPID + 1].varLower = OBJ.parasLower.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
 
         PSO_Result InnerResult = {};
@@ -181,9 +181,9 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARA
           int rmID = OBJ.MODEL_PAIR(i, 1);
 
           PSO_OPTS[LOOPID + 1].dSwarm = OBJ.dParas(rmID);
-          PSO_OPTS[LOOPID + 1].varUpper.set_size(1, OBJ.dParas(rmID)); 
+          PSO_OPTS[LOOPID + 1].varUpper.set_size(OBJ.dParas(rmID)); 
           PSO_OPTS[LOOPID + 1].varUpper = OBJ.parasUpper.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
-          PSO_OPTS[LOOPID + 1].varLower.set_size(1, OBJ.dParas(rmID)); 
+          PSO_OPTS[LOOPID + 1].varLower.set_size(OBJ.dParas(rmID)); 
           PSO_OPTS[LOOPID + 1].varLower = OBJ.parasLower.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
 
           PSO_Result InnerResult = {};
