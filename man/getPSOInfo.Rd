@@ -15,11 +15,11 @@ getPSOInfo(nSwarm = 32, maxIter = 100, freeRun = 1, tol = 1e-06,
 \item{freeRun}{A number between \eqn{[0,1]} that controls the percentage of PSO iterations which are free from examining the 
 stopping criterion, \eqn{|f'-f|<\varepsilon}
 where \eqn{f'} and \eqn{f} are the objective function values in the previous and current iterations, respectively.
-The default is 1.00 implying the PSO will completely ignore the stopping criterion. 
+The default is 1.0 implying the PSO will completely ignore the stopping criterion. 
 Otherwise, the PSO checks the stopping criterion after free iterations.}
 
 \item{tol}{A small value for the tolerance, \eqn{\varepsilon}, in the stopping criterion.
-If \code{checkConv = TRUE}, the default is \code{1e-6}. Otherwise, this value would not affect the algorithm.}
+For \code{freeRun} smaller than 1.0, the default is \code{1e-6}. Otherwise, this value would not affect the algorithm.}
 
 \item{c1}{The value of cognitive parameter in PSO updating procedure. The default is 2.05.}
 

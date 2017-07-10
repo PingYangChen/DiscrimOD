@@ -1,34 +1,4 @@
-/*
-arma::irowvec boxCheck(arma::rowvec &R_PARA, const arma::rowvec &R_UPPER, const arma::rowvec &R_LOWER, const arma::irowvec &R_NBD)
-{
-  int len = R_PARA.n_elem;
-  int nbd;
-  arma::irowvec BDD(len, fill::zeros); // 0: central; 1: forward; 2: backward
-  for (int i = 0; i < len; i++) {
-    nbd = R_NBD(i);
-    switch(nbd) {
-      case 1: { // Lower
-        if ((R_PARA(i) - 5e-4) < R_LOWER(i)) { BDD(i) = 1; }
-        if (R_PARA(i) < R_LOWER(i)) { R_PARA(i) = R_LOWER(i); }
-        break;
-      }
-      case 2: { // Both
-        if ((R_PARA(i) - 5e-4) < R_LOWER(i)) { BDD(i) = 1; }
-        if ((R_PARA(i) + 5e-4) > R_UPPER(i)) { BDD(i) = 2; }
-        if (R_PARA(i) < R_LOWER(i)) { R_PARA(i) = R_LOWER(i); }
-        if (R_PARA(i) > R_UPPER(i)) { R_PARA(i) = R_UPPER(i); }
-        break;
-      }
-      case 3: { // Upper
-        if ((R_PARA(i) + 5e-4) > R_UPPER(i)) { BDD(i) = 2; }
-        if (R_PARA(i) > R_UPPER(i)) R_PARA(i) = R_UPPER(i);
-        break;
-      }
-    }
-  }
-  return BDD;
-}
-*/
+
 double domainMapping(const int INV, const double par, const int nbd, const double upper, const double lower)
 {
   double tmp;
@@ -44,7 +14,7 @@ double domainMapping(const int INV, const double par, const int nbd, const doubl
       case 2: // Both
       {
         tmp = (par - lower)/(upper - lower);
-        if (tmp < 1e-12) { out = -1e8; } else if (tmp > (1 - 1e-12)) { out = 1e8; } else { out = std::log((tmp/(1-tmp))); } break;
+        if (tmp < 1e-12) { out = -1e8; } else if (tmp > (1 - 1e-12)) { out = 1e8; } else { out = std::log((tmp/(1.0 - tmp))); } break;
       }
       case 3: // Upper
       {
@@ -100,14 +70,13 @@ double f_fn(const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const arma::
         DIV_Rform = (Rcpp::NumericVector) distFunc->eval(Rcpp::wrap(eta_T_Rform), Rcpp::wrap(eta_R_Rform));
         if (Rcpp::all(Rcpp::is_finite(DIV_Rform))) {
           arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size(), false);
-          fvalTmp = arma::accu(WT % DIV); 
+          fvalTmp = 0;
+          for (uword i = 0; i < WT.n_elem; i++) { fvalTmp += WT(i)*DIV(i); }
+          //fvalTmp = arma::accu(WT % DIV); 
         }
       }
     }
   }
-  //if (std::isnan(fvalTmp)) { fvalTmp = 1e10; }
-  //if (!(arma::is_finite(fvalTmp))) { fvalTmp = 1e10; }
-  //Rprintf("%4.4f\n", fvalTmp);
   return fvalTmp;
 }
 
@@ -156,18 +125,17 @@ lbfgsfloatval_t evaluate(void *ex, const lbfgsfloatval_t *x, lbfgsfloatval_t *g,
   double FD_DELTA = EXT.FD_DELTA;
 
   arma::rowvec R_PARA(n);
-  for (int i = 0; i < n; i++) { R_PARA(i) = x[i]; }
+  for (int i = 0; i < n; i++) { R_PARA(i) = (double)(x[i]); }
 
   double fx = 1e10;
   arma::rowvec gr(n, fill::zeros);
 
-  if ((!R_PARA.has_nan()) & (!R_PARA.has_inf())) {
-    //arma::irowvec BDD = boxCheck(R_PARA, R_UPPER, R_LOWER, R_NBD);
+  if (R_PARA.is_finite()) {
     arma::irowvec BDD(n, fill::zeros);
     fx = f_fn(R_PARA, T_PARA, DESIGN, WT, func_input, R_UPPER, R_LOWER, R_NBD);
     gr = f_gr(fx, R_PARA, T_PARA, DESIGN, WT, func_input, BDD, R_UPPER, R_LOWER, R_NBD, FD_DELTA);
   }
-  for (int i = 0; i < n; i++) { g[i] = gr(i); }
+  for (int i = 0; i < n; i++) { g[i] = (lbfgsfloatval_t)(gr(i)); }
   return (lbfgsfloatval_t)fx;
 }
 
@@ -198,7 +166,7 @@ double dd_fn(const arma::mat &X_VEC, const arma::rowvec &R_PARA, const arma::row
       if (Rcpp::all(Rcpp::is_finite(eta_R_Rform))) {
         DIV_Rform = (Rcpp::NumericVector) distFunc->eval(Rcpp::wrap(eta_T_Rform), Rcpp::wrap(eta_R_Rform));
         if (Rcpp::all(Rcpp::is_finite(DIV_Rform))) {
-          fvalTmp = (-1.0)*DIV_Rform[0]; 
+          fvalTmp = (-1.0)*(double)DIV_Rform[0]; 
         }
       }
     }
@@ -251,17 +219,17 @@ lbfgsfloatval_t evaluate_dirdev(void *ex, const lbfgsfloatval_t *x, lbfgsfloatva
   double FD_DELTA = EXT.FD_DELTA;
 
   arma::mat X_VEC(1, n, fill::zeros);
-  for (int i = 0; i < n; i++) { X_VEC(0,i) = x[i]; }
+  for (int i = 0; i < n; i++) { X_VEC(0,i) = (double)(x[i]); }
 
   double fx = 1e10;
   arma::rowvec gr(n, fill::zeros);
 
-  if ((!X_VEC.has_nan()) & (!X_VEC.has_inf())) {
+  if (X_VEC.is_finite()) {
     arma::irowvec BDD(n, fill::zeros);
     fx = dd_fn(X_VEC, R_PARA, T_PARA, func_input, X_UPPER, X_LOWER, X_NBD);
     gr = dd_gr(fx, X_VEC, R_PARA, T_PARA, func_input, BDD, X_UPPER, X_LOWER, X_NBD, FD_DELTA);
   }
-  for (int i = 0; i < n; i++) { g[i] = gr(i); }
+  for (int i = 0; i < n; i++) { g[i] = (lbfgsfloatval_t)(gr(i)); }
   return (lbfgsfloatval_t)fx;
 }
 
@@ -284,7 +252,7 @@ double cpoly(const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const arma:
     eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(R_PARA_Rform));
     if (Rcpp::all(Rcpp::is_finite(eta_R_Rform))) {
       DIV_Rform = eta_T_Rform - eta_R_Rform;
-      if (Rcpp::all(Rcpp::is_finite(DIV_Rform))) { cployVal = (double)DIV_Rform[0]; }
+      if (Rcpp::all(Rcpp::is_finite(DIV_Rform))) { cployVal = (double)(DIV_Rform[0]); }
     }
   }
   return cployVal;
@@ -319,7 +287,7 @@ arma::rowvec rival_gr(const arma::rowvec &R_PARA, const arma::mat &DESIGN_PT,
     Rcpp::NumericVector bk_R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(bk_para));
     fr_eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(fr_R_PARA_Rform));
     bk_eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(Rcpp::wrap(DESIGN_Rform), Rcpp::wrap(bk_R_PARA_Rform));
-    fr_val = fr_eta_R_Rform[0]; bk_val = bk_eta_R_Rform[0];
+    fr_val = (double)(fr_eta_R_Rform[0]); bk_val = (double)(bk_eta_R_Rform[0]);
     gr(i) = fr_val*inv_delta - bk_val*inv_delta;
   }
   return gr;
@@ -433,18 +401,17 @@ lbfgsfloatval_t evaluate_remes_r(void *ex, const lbfgsfloatval_t *x, lbfgsfloatv
   double FD_DELTA = EXT.FD_DELTA;
 
   arma::rowvec R_PARA(n);
-  for (int i = 0; i < n; i++) { R_PARA(i) = x[i]; }
+  for (int i = 0; i < n; i++) { R_PARA(i) = (double)(x[i]); }
 
   double fx = 1e10;
   arma::rowvec gr(n, fill::zeros);
 
-  if ((!R_PARA.has_nan()) & (!R_PARA.has_inf())) {
-    //arma::irowvec BDD = boxCheck(R_PARA, R_UPPER, R_LOWER, R_NBD);
+  if (R_PARA.is_finite()) {
     arma::irowvec BDD(n, fill::zeros);
     fx = remes_r_fn(R_PARA, T_PARA, DESIGN, func_input, R_UPPER, R_LOWER, R_NBD);
     gr = remes_r_gr(fx, R_PARA, T_PARA, DESIGN, func_input, BDD, R_UPPER, R_LOWER, R_NBD, FD_DELTA);
   }
-  for (int i = 0; i < n; i++) { g[i] = gr(i); }
+  for (int i = 0; i < n; i++) { g[i] = (lbfgsfloatval_t)(gr(i)); }
   return (lbfgsfloatval_t)fx;
 }
 
@@ -463,16 +430,16 @@ lbfgsfloatval_t evaluate_remes_x(void *ex, const lbfgsfloatval_t *x, lbfgsfloatv
   double FD_DELTA = EXT.FD_DELTA;
 
   arma::mat X_VEC(1, n, fill::zeros);
-  for (int i = 0; i < n; i++) { X_VEC(0,i) = x[i]; }
+  for (int i = 0; i < n; i++) { X_VEC(0,i) = (double)(x[i]); }
 
   double fx = 1e10;
   arma::rowvec gr(n, fill::zeros);
 
-  if ((!X_VEC.has_nan()) & (!X_VEC.has_inf())) {
+  if (X_VEC.is_finite()) {
     arma::irowvec BDD(n, fill::zeros);
     fx = remes_x_fn(X_VEC, R_PARA, T_PARA, func_input, X_UPPER, X_LOWER, X_NBD);
     gr = remes_x_gr(fx, X_VEC, R_PARA, T_PARA, func_input, BDD, X_UPPER, X_LOWER, X_NBD, FD_DELTA);
   }
-  for (int i = 0; i < n; i++) { g[i] = gr(i); }
+  for (int i = 0; i < n; i++) { g[i] = (lbfgsfloatval_t)(gr(i)); }
   return (lbfgsfloatval_t)fx;
 }

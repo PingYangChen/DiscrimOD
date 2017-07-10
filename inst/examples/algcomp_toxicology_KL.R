@@ -12,7 +12,7 @@ nIter <- 200; nRep <- 50
 # Set PSO options for pariwise discrimination design cases
 PSO_INFO <- getPSOInfo(nSwarm = c(32, 32), maxIter = c(nIter, 100))
 # Set L-BFGS algorithm options
-LBFGS_INFO <- getLBFGSInfo(LBFGS_RETRY = 2)
+LBFGS_INFO <- getLBFGSInfo(LBFGS_RETRY = 2); LBFGS_CRIT <- getLBFGSInfo(LBFGS_RETRY = 8)
 # Set a NOT-RUN L-BFGS algorithm for trying NestedPSO (for fun)
 LBFGS_NOTRUN <- getLBFGSInfo(IF_INNER_LBFGS = FALSE)
 # Set Fedorov-Wynn options
@@ -76,53 +76,65 @@ algCompRes <- lapply(1:length(two_model), function(i) {
 DISTANCE <- log_norm_B
 for (iC in 1:length(two_model)) {
 
-  cat(paste0("Case: ", caseName, " ;Sub: ", iC, "\n"))
+  effvals <- matrix(0, nRep, 3*2)
+  colnames(effvals) <- paste0(rep(c("PSOQN", "NESTEDPSO", "FEDWYNN"), 2), rep(c("EFF", "CPU"), each = 3))
 
   for (iR in 1:nRep) {
-
+    cat(paste0("Case: ", caseName, "; Sub: ", iC, "; Rep: ", iR, "\n"))
     MODEL_INFO <- two_model[[iC]]
     OPTIMAL <- two_optimal[[iC]]
     OPT_VAL <- designCriterion(OPTIMAL, MODEL_INFO, DISTANCE, dsLower = DL, dsUpper = DU, 
                                crit_type = "pair_fixed_true", 
-                               PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
+                               PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_CRIT)
 
+    eachRep <- vector("list", 3)
     # PSO-QN
     out_q <- DiscrimOD(MODEL_INFO, DISTANCE, two_nSupp[iC], dsLower = DL, dsUpper = DU,
                        crit_type = "pair_fixed_true",
                        PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, verbose = TRUE)
-    eff_q <- out_q$BESTVAL/OPT_VAL$cri_val
 
-    algCompRes[[iC]][[iR]][[1]] <- list(RES = out_q, EFF = eff_q)
+    cri_q <- designCriterion(out_q$BESTDESIGN, MODEL_INFO, DISTANCE, dsLower = DL, dsUpper = DU, 
+                             crit_type = "pair_fixed_true", 
+                             PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_CRIT)
+
+    eff_q <- cri_q$cri_val/OPT_VAL$cri_val
+
+    #algCompRes[[iC]][[iR]][[1]] <- list(RES = out_q, EFF = eff_q)
+    eachRep[[1]] <- list(RES = out_q, EFF = eff_q)
 
     # NestedPSO
     out_n <- DiscrimOD(MODEL_INFO, DISTANCE, two_nSupp[iC], dsLower = DL, dsUpper = DU,
                        crit_type = "pair_fixed_true",
                        PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_NOTRUN, verbose = TRUE)
 
-    eff_n <- out_n$BESTVAL/OPT_VAL$cri_val
+    cri_n <- designCriterion(out_n$BESTDESIGN, MODEL_INFO, DISTANCE, dsLower = DL, dsUpper = DU, 
+                             crit_type = "pair_fixed_true", 
+                             PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_CRIT)
 
-    algCompRes[[iC]][[iR]][[2]] <- list(RES = out_n, EFF = eff_n)
+    eff_n <- cri_n$cri_val/OPT_VAL$cri_val
+
+    #algCompRes[[iC]][[iR]][[2]] <- list(RES = out_n, EFF = eff_n)
+    eachRep[[2]] <- list(RES = out_n, EFF = eff_n)
 
     # Fedorov-Wynn
     out_f <- DiscrimFedWynn(MODEL_INFO, DISTANCE, dsLower = DL, dsUpper = DU,
                             FED_INFO = FED_INFO, LBFGS_INFO = LBFGS_INFO, verbose = TRUE)
 
-    eff_f <- out_f$BESTVAL/OPT_VAL$cri_val
+    cri_f <- designCriterion(out_f$BESTDESIGN, MODEL_INFO, DISTANCE, dsLower = DL, dsUpper = DU, 
+                             crit_type = "pair_fixed_true", 
+                             PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_CRIT)
+
+    eff_f <- cri_f$cri_val/OPT_VAL$cri_val
 
 
-    algCompRes[[iC]][[iR]][[3]] <- list(RES = out_f, EFF = eff_f)
+    #algCompRes[[iC]][[iR]][[3]] <- list(RES = out_f, EFF = eff_f)
+    eachRep[[3]] <- list(RES = out_f, EFF = eff_f)
 
     # No Remes
-   
+    effvals[iR,] <- c(eachRep[[1]]$EFF, eachRep[[2]]$EFF, eachRep[[3]]$EFF, 
+                      eachRep[[1]]$RES$CPUTIME, eachRep[[2]]$RES$CPUTIME, eachRep[[3]]$RES$CPUTIME)
   }
   # SAVE RESULT
-  tmp <- algCompRes[[iC]]
-  effvals <- matrix(0, nRep, 3*2)
-  colnames(effvals) <- paste0(rep(c("PSOQN", "NESTEDPSO", "FEDWYNN"), 2), rep(c("EFF", "CPU"), each = 3))
-  for (iR in 1:nRep) {
-    effvals[iR,] <- c(tmp[[iR]][[1]]$EFF, tmp[[iR]][[2]]$EFF, tmp[[iR]][[3]]$EFF, 
-                      tmp[[iR]][[1]]$RES$CPUTIME, tmp[[iR]][[2]]$RES$CPUTIME, tmp[[iR]][[3]]$RES$CPUTIME)    
-  }
   write.csv(effvals, file.path(outputPath, paste0("algComp_Summary_", caseName, "_", iC, ".csv")))
 }
 

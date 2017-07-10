@@ -11,10 +11,10 @@
 #' @param freeRun A number between \eqn{[0,1]} that controls the percentage of PSO iterations which are free from examining the 
 #' stopping criterion, \eqn{|f'-f|<\varepsilon}
 #' where \eqn{f'} and \eqn{f} are the objective function values in the previous and current iterations, respectively.
-#' The default is 1.00 implying the PSO will completely ignore the stopping criterion. 
+#' The default is 1.0 implying the PSO will completely ignore the stopping criterion. 
 #' Otherwise, the PSO checks the stopping criterion after free iterations.
 #' @param tol A small value for the tolerance, \eqn{\varepsilon}, in the stopping criterion.
-#' If \code{checkConv = TRUE}, the default is \code{1e-6}. Otherwise, this value would not affect the algorithm.
+#' For \code{freeRun} smaller than 1.0, the default is \code{1e-6}. Otherwise, this value would not affect the algorithm.
 # @param typePSO integer. The type of PSO. In this package, we have the following types:
 # \itemize{
 # \item{0}{ Linearly Decreasing Weight PSO (Shi, Y. H.	and Eberhart, R. C., 1998)}
@@ -147,12 +147,21 @@ getLBFGSInfo <- function(IF_INNER_LBFGS = TRUE, LBFGS_RETRY = 1, LBFGS_MAXIT = 0
 #'
 #' Create a list with Fedorov-Wynn algorithm parameters for optimal discrimination design search.
 #'
+#' @param FED_MAXIT A integer number of maximal iterations. The default is 200.
+#' @param FED_TRIM A integer number that indicates the timing of design trimming (pruning). 
+#' The default is 5, meaning that, to trim the design every 5 iterations.
+#' @param FED_TRIM_EPS A small value \eqn{\delta} with default \eqn{\delta=10^{-3}}. 
+#' In the trimming process, when the distance between two design points is smaller than \eqn{\delta}, the process will merge these two points.
 #' @param freeRun A number between \eqn{[0,1]} that controls the percentage of updating iterations which are free from examining the 
 #' stopping criterion, \eqn{|f'-f|<\varepsilon}
 #' where \eqn{f'} and \eqn{f} are the objective function values in the previous and current iterations, respectively.
-#' The default is 1.00 implying the algorithm will completely ignore the stopping criterion. 
+#' The default is 1.0 implying the algorithm will completely ignore the stopping criterion. 
 #' Otherwise, the algorithm checks the stopping criterion after free iterations.
-#' @return The list of L-BFGS parameter settings.
+#' @param tol A small value for the tolerance, \eqn{\varepsilon}, in the stopping criterion. 
+#' For \code{freeRun} smaller than 1.0, the default is \code{1e-6}. Otherwise, this value would not affect the algorithm.
+#' @param FED_ALPHA_GRID A integer number that specifies the grid size of candidate weights in the update-one-point process of the Fedorov-Wynn algorithm. 
+#' The default is 20.
+#' @return The list of Fedorov-Wynn parameter settings.
 #' @examples
 #' # Get default settings for Fedorov-Wynn algorithm.
 #' FED_INFO <- getFEDInfo(FED_MAXIT = 200)
@@ -160,7 +169,7 @@ getLBFGSInfo <- function(IF_INNER_LBFGS = TRUE, LBFGS_RETRY = 1, LBFGS_MAXIT = 0
 #' @name getFEDInfo 
 #' @rdname getFEDInfo
 #' @export
-getFEDInfo <- function(FED_MAXIT = 200, FED_TRIM = 5, FED_TRIM_EPS = 1e-4, freeRun = 0.5, FED_EPS = 1e-6, FED_ALPHA_GRID = 20) {
+getFEDInfo <- function(FED_MAXIT = 200, FED_TRIM = 5, FED_TRIM_EPS = 1e-3, freeRun = 1.0, FED_EPS = 1e-6, FED_ALPHA_GRID = 20) {
    
   list(FED_MAXIT = FED_MAXIT, FED_TRIM = FED_TRIM, FED_TRIM_EPS = FED_TRIM_EPS, 
        freeRun = freeRun, FED_EPS = FED_EPS, FED_ALPHA_GRID = FED_ALPHA_GRID)

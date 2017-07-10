@@ -8,8 +8,6 @@ double minDirDev(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_dif
 
   arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
   int tmID = MODEL_PAIR(PAIRID, 0);
-  //int rmID = MODEL_PAIR(PAIRID, 1);
-
   arma::rowvec T_PARA = OBJ.paras.submat(tmID, 0, tmID, OBJ.dParas(tmID) - 1);
 
   int dSupp = OBJ.dSupp;
