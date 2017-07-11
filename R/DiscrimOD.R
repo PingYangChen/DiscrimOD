@@ -214,7 +214,7 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, crit_type =
 	if (verbose) message(paste0("CPU time: ", round(cputime, 2), " seconds."))
 
 	BESTDESIGN <- designM2V(psoOut$GBest, D_INFO)
-
+	gc()
 	list(BESTDESIGN = BESTDESIGN, BESTVAL = -psoOut$fGBest, GBESTHIST = -psoOut$fGBestHist,
 	     CPUTIME = cputime)
 }
@@ -283,7 +283,7 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 	DESIGN1_M <- designV2M(DESIGN1, D_INFO)
 	cri_1 <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MODEL_LIST, 0, environment, DESIGN1_M)
 	rownames(cri_1$theta2) <- paste0("model_", 1:length(MODEL_INFO))
-
+	gc()
   return(list(cri_val = -cri_1$val, theta2 = cri_1$theta2))
 }
 
@@ -385,7 +385,7 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	equiv <- cppEquivalence(D_INFO, MODEL_LIST, -CRIT_VAL$val, PARA_SET, ALPHA, environment, ngrid)
 
 	if (crit_type == "maxmin_fixed_true") { equiv$alpha <- ALPHA }
-
+	gc()
 	return(equiv)
 }
 

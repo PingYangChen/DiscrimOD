@@ -16,7 +16,7 @@ namespace Rcpp {
         EvalBase() : neval(0) {};
         virtual Rcpp::NumericVector eval(SEXP x, SEXP p) = 0;
         virtual ~EvalBase() {};
-        unsigned long getNbEvals() { return neval; }
+        //unsigned long getNbEvals() { return neval; }
     protected:
         unsigned long int neval;
   };
@@ -25,7 +25,7 @@ namespace Rcpp {
     public:
         EvalStandard(SEXP fcall_, SEXP env_) : fcall(fcall_), env(env_) {}
         Rcpp::NumericVector eval(SEXP x, SEXP p) {
-          neval++;
+          //neval++;
           return defaultfun(x, p);
         }
         ~EvalStandard() {};
@@ -53,7 +53,7 @@ namespace Rcpp {
           env = __env;
         };
         Rcpp::NumericVector eval(SEXP x, SEXP p) {
-          neval++;
+          //neval++;
           Rcpp::NumericVector f_result = funptr(x, p, env);
           return f_result;
         }

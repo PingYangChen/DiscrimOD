@@ -69,6 +69,6 @@ DiscrimUnifApproxT <- function(MODEL_INFO, nSupp, dsLower, dsUpper, REMES_MAXIT 
 		tmp <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MODEL_LIST, 0, environment, BESTDESIGN_M)
 		BESTVAL <- -tmp$val
 	} 
-
+	gc()
 	list(BESTDESIGN = BESTDESIGN, BESTVAL = BESTVAL, CPoly = remesOut$CPolyVal, CPUTIME = cputime)
 }

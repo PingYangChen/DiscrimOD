@@ -67,7 +67,7 @@ DiscrimFedWynn <- function(MODEL_INFO, DISTANCE, dsLower, dsUpper,
 	BESTDESIGN <- BESTDESIGN[order(BESTDESIGN[,1]),]
 	dimnames(BESTDESIGN) <- list(paste0("obs_", 1:nrow(BESTDESIGN)), 
 															 c(paste0("dim_", 1:(ncol(BESTDESIGN) - 1)), "weight"))
-
+	gc()
 	list(BESTDESIGN = BESTDESIGN, BESTVAL = fedOut$F_VAL, FVALHIST = fedOut$fvalHist,
 			 R_PARA = fedOut$R_PARA, CPUTIME = cputime)
 }
