@@ -13,7 +13,7 @@ Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_I
   omp_set_num_threads(NCPU - 1);*/
 
   SEXP DIST_FUNC_SEXP = as<SEXP>(OBJ_INFO_LIST["dist_func"]);
-  OBJ_INFO OBJ = {}; getInfoStruct(OBJ, OBJ_INFO_LIST);
+  OBJ_INFO OBJ; getInfoStruct(OBJ, OBJ_INFO_LIST);
 
   // WRAP FUNCTIONS (INSPIRED BY R PACKAGE 'lbfgs')
   Rcpp::EvalBase *dfnc = NULL;
@@ -53,7 +53,7 @@ Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_I
   }
 
   PSO_OPTIONS PSO_OPT[N_PSO_OPTS]; getAlgStruct(PSO_OPT, PSO_INFO_LIST);
-  LBFGS_PARAM LBFGS_OPTION = {}; getNewtonStruct(LBFGS_OPTION, LBFGS_INFO_LIST);
+  LBFGS_PARAM LBFGS_OPTION; getNewtonStruct(LBFGS_OPTION, LBFGS_INFO_LIST);
 
   best_alpha_info external = {};
   if (OBJ.d_type == 1001) {
@@ -61,7 +61,7 @@ Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_I
     external.CRIT_VAL = as<double>(EXTERNAL_LIST["CRIT_VAL"]);
   }
 
-  PSO_Result Result = {};
+  PSO_Result Result;
   if (VERBOSE) Rprintf("\nCalling Cpp PSO Kernel... ");
   PSO_MAIN(LOOPID, PSO_OPT, LBFGS_OPTION, OBJ, model_diff_ptr, &external, IF_PARALLEL, VERBOSE, Result);
   if (VERBOSE) Rprintf("Done.\n");
@@ -80,7 +80,7 @@ Rcpp::List cppDesignCriterion(Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LI
                               Rcpp::List EXTERNAL_LIST, SEXP env, arma::rowvec DESIGN)
 {
   SEXP DIST_FUNC_SEXP = as<SEXP>(OBJ_INFO_LIST["dist_func"]);
-  OBJ_INFO OBJ = {}; getInfoStruct(OBJ, OBJ_INFO_LIST);
+  OBJ_INFO OBJ; getInfoStruct(OBJ, OBJ_INFO_LIST);
 
   // WRAP FUNCTIONS (INSPIRED BY R PACKAGE 'lbfgs')
   Rcpp::EvalBase *dfnc = NULL;
@@ -120,7 +120,7 @@ Rcpp::List cppDesignCriterion(Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LI
   }
 
   PSO_OPTIONS PSO_OPT[N_PSO_OPTS]; getAlgStruct(PSO_OPT, PSO_INFO_LIST);
-  LBFGS_PARAM LBFGS_OPTION = {}; getNewtonStruct(LBFGS_OPTION, LBFGS_INFO_LIST);
+  LBFGS_PARAM LBFGS_OPTION; getNewtonStruct(LBFGS_OPTION, LBFGS_INFO_LIST);
 
   arma::mat R_PARA;
   double val = DesignCriterion(0, PSO_OPT, LBFGS_OPTION, OBJ, model_diff_ptr, NULL, DESIGN, R_PARA);
@@ -134,7 +134,7 @@ Rcpp::List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
                           const double GBEST_VAL, const arma::mat PARA_SET, const arma::rowvec alpha, const SEXP env, const int nGrid)
 {
   SEXP DIST_FUNC_SEXP = as<SEXP>(OBJ_INFO_LIST["dist_func"]);
-  OBJ_INFO OBJ = {}; getInfoStruct(OBJ, OBJ_INFO_LIST);
+  OBJ_INFO OBJ; getInfoStruct(OBJ, OBJ_INFO_LIST);
 
   // WRAP FUNCTIONS (INSPIRED BY R PACKAGE 'lbfgs')
   Rcpp::EvalBase *dfnc = NULL;
@@ -209,7 +209,7 @@ Rcpp::List cppFedorovWynn(Rcpp::List FED_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, 
 {
 
   SEXP DIST_FUNC_SEXP = as<SEXP>(OBJ_INFO_LIST["dist_func"]);
-  OBJ_INFO OBJ = {}; getInfoStruct(OBJ, OBJ_INFO_LIST);
+  OBJ_INFO OBJ; getInfoStruct(OBJ, OBJ_INFO_LIST);
 
   // WRAP FUNCTIONS (INSPIRED BY R PACKAGE 'lbfgs')
   Rcpp::EvalBase *dfnc = NULL;
@@ -248,10 +248,10 @@ Rcpp::List cppFedorovWynn(Rcpp::List FED_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, 
     model_diff_ptr[i] = &model_diff_collect[i];
   }
 
-  FED_PARAM FED_OPTION = {}; getFedorovStruct(FED_OPTION, FED_INFO_LIST);
-  LBFGS_PARAM LBFGS_OPTION = {}; getNewtonStruct(LBFGS_OPTION, LBFGS_INFO_LIST);
+  FED_PARAM FED_OPTION; getFedorovStruct(FED_OPTION, FED_INFO_LIST);
+  LBFGS_PARAM LBFGS_OPTION; getNewtonStruct(LBFGS_OPTION, LBFGS_INFO_LIST);
 
-  FED_Result Result = {};
+  FED_Result Result;
   if (VERBOSE) Rprintf("\nCalling Cpp Fedorov-Wynn Kernel... ");
   FEDOROVWYNN_MAIN(FED_OPTION, LBFGS_OPTION, OBJ, model_diff_ptr, VERBOSE, Result);
   if (VERBOSE) Rprintf("Done.\n");
@@ -269,7 +269,7 @@ Rcpp::List cppUnifApprox(Rcpp::List REMES_INFO_LIST, Rcpp::List LBFGS_INFO_LIST,
 {
 
   SEXP DIST_FUNC_SEXP = as<SEXP>(OBJ_INFO_LIST["dist_func"]);
-  OBJ_INFO OBJ = {}; getInfoStruct(OBJ, OBJ_INFO_LIST);
+  OBJ_INFO OBJ; getInfoStruct(OBJ, OBJ_INFO_LIST);
 
   // WRAP FUNCTIONS (INSPIRED BY R PACKAGE 'lbfgs')
   Rcpp::EvalBase *dfnc = NULL;
@@ -308,10 +308,10 @@ Rcpp::List cppUnifApprox(Rcpp::List REMES_INFO_LIST, Rcpp::List LBFGS_INFO_LIST,
     model_diff_ptr[i] = &model_diff_collect[i];
   }
 
-  REMES_PARAM REMES_OPTION = {}; getRemesStruct(REMES_OPTION, REMES_INFO_LIST);
-  LBFGS_PARAM LBFGS_OPTION = {}; getNewtonStruct(LBFGS_OPTION, LBFGS_INFO_LIST);
+  REMES_PARAM REMES_OPTION; getRemesStruct(REMES_OPTION, REMES_INFO_LIST);
+  LBFGS_PARAM LBFGS_OPTION; getNewtonStruct(LBFGS_OPTION, LBFGS_INFO_LIST);
 
-  REMES_Result Result = {};
+  REMES_Result Result;
   if (VERBOSE) Rprintf("\nCalling Cpp Remes Kernel... ");
   REMES_MAIN(REMES_OPTION, LBFGS_OPTION, OBJ, model_diff_ptr, VERBOSE, Result);
   if (VERBOSE) Rprintf("Done.\n");

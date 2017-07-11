@@ -5,22 +5,22 @@
 #include "lbfgsEval.h"
 
 // DECLARE FUNCTIONS
-double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ,
+double criterionList(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ,
                      model_diff_func *MODEL_COLLECTOR[],
-                     const arma::mat &DESIGN, const arma::rowvec &WT, arma::mat &R_PARA);
-double minDistCalc(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID,
-                   const arma::mat &DESIGN, const arma::rowvec &WT, arma::rowvec &R_PARA_OUT);
-arma::rowvec directionalDerivative(const OBJ_INFO &OBJ, const arma::mat &dsGrid, const arma::mat &PARA_SET, const arma::rowvec &alpha,
+                     const arma::mat DESIGN, const arma::rowvec WT, arma::mat &R_PARA);
+double minDistCalc(const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[], const int PAIRID,
+                   const arma::mat DESIGN, const arma::rowvec WT, arma::rowvec &R_PARA_OUT);
+arma::rowvec directionalDerivative(const OBJ_INFO OBJ, const arma::mat dsGrid, const arma::mat PARA_SET, const arma::rowvec alpha,
                                    model_diff_func *MODEL_COLLECTOR[]);
-arma::rowvec distCalc(const OBJ_INFO &OBJ, const arma::mat &x, const arma::mat &PARA_SET,
-                      model_diff_func *MODEL_COLLECTOR[], const int &PAIRID);
+arma::rowvec distCalc(const OBJ_INFO OBJ, const arma::mat x, const arma::mat PARA_SET,
+                      model_diff_func *MODEL_COLLECTOR[], const int PAIRID);
 
 // BODY
-double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ,
-                       model_diff_func *MODEL_COLLECTOR[], void *external, const rowvec &x, arma::mat &R_PARA)
+double DesignCriterion(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ,
+                       model_diff_func *MODEL_COLLECTOR[], void *external, const rowvec x, arma::mat &R_PARA)
 {
 	int nSupp = OBJ.nSupp;
-	int dSupp = OBJ.dSupp;
+	int dSupp = OBJ.dSupp; 
 	int d_type = OBJ.d_type;
 	//Rprintf("get design\n");
   arma::rowvec swarm = x;
@@ -101,6 +101,7 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PA
     Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(swarm));
 
     Rcpp::NumericVector eta_T_Rform((int)WT.n_elem), eta_R_Rform((int)WT.n_elem), DIV_Rform((int)WT.n_elem);
+
     eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(DESIGN_Rform, T_PARA_Rform);
     if (Rcpp::all(Rcpp::is_finite(eta_T_Rform))) {
       eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(DESIGN_Rform, R_PARA_Rform);
@@ -114,18 +115,14 @@ double DesignCriterion(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PA
         }
       }
     }
-    
-    //val = arma::accu(WT % DIV);
-    //if (std::isnan(val)) { val = 1e10; }
-    //if (!(arma::is_finite(val))) { val = 1e10; }
   }
 	return val;
 }
 
 //
-double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ,
+double criterionList(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ,
                      model_diff_func *MODEL_COLLECTOR[],
-										 const arma::mat &DESIGN, const arma::rowvec &WT, arma::mat &R_PARA)
+										 const arma::mat DESIGN, const arma::rowvec WT, arma::mat &R_PARA)
 {
 	int crit_type = OBJ.crit_type;
 	int N_PAIR = OBJ.N_PAIR;
@@ -152,7 +149,7 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARA
         PSO_OPTS[LOOPID + 1].varLower.set_size(OBJ.dParas(rmID)); 
         PSO_OPTS[LOOPID + 1].varLower = OBJ.parasLower.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
 
-        PSO_Result InnerResult = {};
+        PSO_Result InnerResult;
         PSO_MAIN(LOOPID + 1, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, &external, FALSE, FALSE, InnerResult);
         R_PARA_tmp = InnerResult.GBest;
         val = InnerResult.fGBest;
@@ -185,7 +182,7 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARA
           PSO_OPTS[LOOPID + 1].varLower.set_size(OBJ.dParas(rmID)); 
           PSO_OPTS[LOOPID + 1].varLower = OBJ.parasLower.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
 
-          PSO_Result InnerResult = {};
+          PSO_Result InnerResult;
           PSO_MAIN(LOOPID + 1, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, &external, FALSE, FALSE, InnerResult);
           R_PARA_tmp = InnerResult.GBest;
           eff_vals(i) = InnerResult.fGBest;
@@ -205,8 +202,8 @@ double criterionList(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARA
 // SUBFUNCTIONS
 
 // Minimal Distance Between Two Models
-double minDistCalc(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID,
-									 const arma::mat &DESIGN, const arma::rowvec &WT, arma::rowvec &R_PARA_OUT)
+double minDistCalc(const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[], const int PAIRID,
+									 const arma::mat DESIGN, const arma::rowvec WT, arma::rowvec &R_PARA_OUT)
 {
   model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
 
@@ -286,7 +283,7 @@ double minDistCalc(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_d
 }
 
 // Equivalence Theorem
-arma::rowvec directionalDerivative(const OBJ_INFO &OBJ, const arma::mat &dsGrid, const arma::mat &PARA_SET, const arma::rowvec &alpha,
+arma::rowvec directionalDerivative(const OBJ_INFO OBJ, const arma::mat dsGrid, const arma::mat PARA_SET, const arma::rowvec alpha,
                                    model_diff_func *MODEL_COLLECTOR[])
 {
   int crit_type = OBJ.crit_type;
@@ -310,8 +307,8 @@ arma::rowvec directionalDerivative(const OBJ_INFO &OBJ, const arma::mat &dsGrid,
   return dirDer;
 }
 
-arma::rowvec distCalc(const OBJ_INFO &OBJ, const arma::mat &x, const arma::mat &PARA_SET,
-                      model_diff_func *MODEL_COLLECTOR[], const int &PAIRID)
+arma::rowvec distCalc(const OBJ_INFO OBJ, const arma::mat x, const arma::mat PARA_SET,
+                      model_diff_func *MODEL_COLLECTOR[], const int PAIRID)
 {
   model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
   Rcpp::EvalBase *m1_func = (Rcpp::EvalBase *) func_input->M1_FUNC;
@@ -327,7 +324,7 @@ arma::rowvec distCalc(const OBJ_INFO &OBJ, const arma::mat &x, const arma::mat &
 
   Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(x));
   Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA));
-  Rcpp::NumericVector R_PARA_Rform  = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA));
+  Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA));
 
   Rcpp::NumericVector eta_T_Rform((int)x.n_rows), eta_R_Rform((int)x.n_rows), DIV_Rform((int)x.n_rows);
   eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(DESIGN_Rform, T_PARA_Rform);  

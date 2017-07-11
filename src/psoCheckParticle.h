@@ -1,6 +1,6 @@
 
-void psoCheckParticle(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const PSO_DYN &PSO_DYN, 
-							 				const arma::rowvec &varUpper, const arma::rowvec &varLower, arma::mat &swarm)
+void psoCheckParticle(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const PSO_DYN PSO_DYN, 
+							 				const arma::rowvec varUpper, const arma::rowvec varLower, arma::mat &swarm)
 {
   //int dSwarm = (int)swarm.n_cols;
   int nSwarm = (int)swarm.n_rows;

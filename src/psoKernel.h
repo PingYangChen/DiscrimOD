@@ -1,8 +1,8 @@
 
 // BODY
 // PSO MAIN FUNCTIONS
-void PSO_MAIN(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],
-              void *external, const bool &IF_PARALLEL, const bool COUNTER_ON, PSO_Result &PSO_Result)
+void PSO_MAIN(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[],
+              void *external, const bool IF_PARALLEL, const bool COUNTER_ON, PSO_Result &PSO_Result)
 {
 	/* -- BEGIN -- */
   // GET PSO PARAMETERS

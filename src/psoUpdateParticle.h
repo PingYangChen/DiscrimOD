@@ -1,7 +1,7 @@
 
-void psoUpdateParticle(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const PSO_DYN &PSO_DYN, 
-							 				 const arma::mat &PBest, const arma::rowvec &GBest, 
-							 				 const arma::rowvec &velMax, const arma::rowvec &varUpper, const arma::rowvec &varLower,
+void psoUpdateParticle(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const PSO_DYN PSO_DYN, 
+							 				 const arma::mat PBest, const arma::rowvec GBest, 
+							 				 const arma::rowvec velMax, const arma::rowvec varUpper, const arma::rowvec varLower,
 							 				 arma::mat &vStep, arma::mat &swarm)
 {
   int dSwarm = (int)swarm.n_cols;

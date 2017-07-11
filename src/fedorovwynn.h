@@ -1,8 +1,8 @@
 
 // BODY
 // FIND MINIMAL VALUE OF THE DIRECTIONAL DERIVATIVE FUNCTION
-double minDirDev(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID,
-                 const arma::rowvec &R_PARA, arma::rowvec &X_OUT)
+double minDirDev(const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[], const int PAIRID,
+                 const arma::rowvec R_PARA, arma::rowvec &X_OUT)
 {
   model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
 
@@ -68,7 +68,6 @@ double minDirDev(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_dif
     }
     count++;
   }
-
   for (int d = 0; d < dSupp; d++) { X_OUT(d) = domainMapping(1, (double)X_VEC[d], X_NBD(d), X_UPPER(d), X_LOWER(d)); }
 
   lbfgs_free(X_VEC); lbfgs_free(X_VEC1);
@@ -76,7 +75,7 @@ double minDirDev(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_dif
 }
 
 // Trimming
-void trimDesign(arma::mat &DESIGN, arma::rowvec &WT, const double &tol)
+void trimDesign(arma::mat &DESIGN, arma::rowvec &WT, const double tol)
 {
   uword n = DESIGN.n_rows;
   uword d = DESIGN.n_cols;
@@ -115,8 +114,8 @@ void trimDesign(arma::mat &DESIGN, arma::rowvec &WT, const double &tol)
 }
 
 // FIND MINIMAL VALUE OF THE DIRECTIONAL DERIVATIVE FUNCTION
-double optAlpha(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],
-                const arma::mat &DESIGN, const arma::rowvec &WT, const arma::vec &ALPHA_CAND)
+double optAlpha(const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[],
+                const arma::mat DESIGN, const arma::rowvec WT, const arma::vec ALPHA_CAND)
 {
   uword n = ALPHA_CAND.n_elem;
 
@@ -138,7 +137,7 @@ double optAlpha(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff
 
 
 // FEDOROV-WYNN MAIN FUNCTION
-void FEDOROVWYNN_MAIN(const FED_PARAM &FED_OPTION, const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],
+void FEDOROVWYNN_MAIN(const FED_PARAM FED_OPTION, const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[],
                       const bool COUNTER_ON, FED_Result &FED_Result)
 {
 	/* -- BEGIN -- */

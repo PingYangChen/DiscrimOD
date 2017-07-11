@@ -27,7 +27,7 @@ enzyme1 <- function(x, p) p[1]*x/(p[2] + x)           # Michaelise-Menten
 para_mmm_2 <- c(1, 1, 1)
 model_mmm <- list(
   list(model = enzyme2, para = para_mmm_2),
-  list(model = enzyme1, paraLower = c(-20, -20), paraUpper = c(20, 20))
+  list(model = enzyme1, paraLower = c(1e-4, 1e-4), paraUpper = c(20, 20))
 )
 
 DL <- 0.1; DU <- 5.0

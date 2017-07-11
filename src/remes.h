@@ -1,8 +1,8 @@
 
 // BODY
 // FIND MINIMAL VALUE OF THE DIRECTIONAL DERIVATIVE FUNCTION
-double max_CPoly_x(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID,
-                   const arma::rowvec &R_PARA, const arma::mat &DESIGN, arma::rowvec &X_OUT)
+double max_CPoly_x(const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[], const int PAIRID,
+                   const arma::rowvec R_PARA, const arma::mat DESIGN, arma::rowvec &X_OUT)
 {
   model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
 
@@ -69,8 +69,8 @@ double max_CPoly_x(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_d
   return (double)fx;
 }
 
-double min_CPoly_r(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID,
-                   const arma::mat &DESIGN, arma::rowvec &R_PARA_OUT)
+double min_CPoly_r(const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[], const int PAIRID,
+                   const arma::mat DESIGN, arma::rowvec &R_PARA_OUT)
 {
   model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
 
@@ -151,7 +151,7 @@ double min_CPoly_r(const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_d
   return (double)fx;
 }
 
-double getCPolyVal(const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID, const arma::mat &DESIGN, const arma::rowvec &R_PARA)
+double getCPolyVal(const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[], const int PAIRID, const arma::mat DESIGN, const arma::rowvec R_PARA)
 {
   model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
 
@@ -162,8 +162,8 @@ double getCPolyVal(const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], cons
   return cpoly(R_PARA, T_PARA, DESIGN, func_input);
 }
 
-arma::rowvec getRivalDev(const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[], const int &PAIRID,
-                         const arma::mat &DESIGN, const arma::rowvec &R_PARA)
+arma::rowvec getRivalDev(const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[], const int PAIRID,
+                         const arma::mat DESIGN, const arma::rowvec R_PARA)
 {
   model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
 
@@ -193,7 +193,7 @@ arma::rowvec getRivalDev(const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[]
 }
 
 // REMES MAIN FUNCTION
-void REMES_MAIN(const REMES_PARAM &REMES_OPTION, const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],
+void REMES_MAIN(const REMES_PARAM REMES_OPTION, const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[],
                 const bool COUNTER_ON, REMES_Result &REMES_Result)
 {
 	/* -- BEGIN -- */

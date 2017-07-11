@@ -260,22 +260,24 @@ typedef struct {
 // DECLARE FUNCTIONS
 void matrixPrintf(const mat &m);
 void rvecPrintf(const rowvec &v);
-void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &PSO_INFO_LIST);
+void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List PSO_INFO_LIST);
 void getNewtonStruct(LBFGS_PARAM &LFBGS_OPT, const Rcpp::List LBFGS_INFO_LIST);
 void getInfoStruct(OBJ_INFO &OBJ, const Rcpp::List OBJ_INFO_LIST);
-void PSO_MAIN(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ, model_diff_func *MODEL_COLLECTOR[],
-              void *external, const bool &IF_PARALLEL, const bool COUNTER_ON, PSO_Result &PSO_Result);
-void psoUpdateParticle(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const PSO_DYN &PSO_DYN,
-                       const arma::mat &PBest, const arma::rowvec &GBest,
-                       const arma::rowvec &velMax, const arma::rowvec &varUpper, const arma::rowvec &varLower,
+void getFedorovStruct(FED_PARAM &FED_OPT, const Rcpp::List FED_INFO_LIST);
+void getRemesStruct(REMES_PARAM &REMES_OPT, const Rcpp::List REMES_INFO_LIST);
+void PSO_MAIN(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[],
+              void *external, const bool IF_PARALLEL, const bool COUNTER_ON, PSO_Result &PSO_Result);
+void psoUpdateParticle(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const PSO_DYN PSO_DYN,
+                       const arma::mat PBest, const arma::rowvec GBest,
+                       const arma::rowvec velMax, const arma::rowvec varUpper, const arma::rowvec varLower,
                        arma::mat &vStep, arma::mat &swarm);
-void psoCheckParticle(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const PSO_DYN &PSO_DYN,
-                      const arma::rowvec &varUpper, const arma::rowvec &varLower, arma::mat &swarm);
-void psoUpdateDynPara(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const int iter, PSO_DYN &PSO_DYN,
-                      const arma::mat &swarm, const arma::mat &PBest, const arma::rowvec &GBest,
-                      const arma::vec &fSwarm, const arma::vec &fPBest, const double &fGBest);
-void psoFuncEval(const bool &IF_PARALLEL, const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM &LBFGS_OPTION, const OBJ_INFO &OBJ,
-                 const PSO_DYN &PSO_DYN, model_diff_func *MODEL_COLLECTOR[], void *external, const mat &swarm, vec &fSwarm);
+void psoCheckParticle(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const PSO_DYN PSO_DYN,
+                      const arma::rowvec varUpper, const arma::rowvec varLower, arma::mat &swarm);
+void psoUpdateDynPara(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const int iter, PSO_DYN &PSO_DYN,
+                      const arma::mat swarm, const arma::mat PBest, const arma::rowvec GBest,
+                      const arma::vec fSwarm, const arma::vec fPBest, const double fGBest);
+void psoFuncEval(const bool IF_PARALLEL, const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ,
+                 const PSO_DYN PSO_DYN, model_diff_func *MODEL_COLLECTOR[], void *external, const mat swarm, vec &fSwarm);
 
 #include "psoFuncEval.h"
 #include "psoCheckParticle.h"
@@ -312,45 +314,45 @@ void getInfoStruct(OBJ_INFO &OBJ, const Rcpp::List OBJ_INFO_LIST)
   OBJ.nSupp  = as<int>(OBJ_INFO_LIST["nSupp"]);
 
   Rcpp::NumericVector dsLower_Tmp = as<NumericVector>(OBJ_INFO_LIST["dsLower"]);
-  arma::rowvec dsLower(dsLower_Tmp.begin(), dsLower_Tmp.size());
+  arma::rowvec dsLower(dsLower_Tmp.begin(), dsLower_Tmp.size(), false);
   OBJ.dsLower = dsLower;
   Rcpp::NumericVector dsUpper_Tmp = as<NumericVector>(OBJ_INFO_LIST["dsUpper"]);
-  arma::rowvec dsUpper(dsUpper_Tmp.begin(), dsUpper_Tmp.size());
+  arma::rowvec dsUpper(dsUpper_Tmp.begin(), dsUpper_Tmp.size(), false);
   OBJ.dsUpper = dsUpper;
 
   OBJ.N_PAIR = as<int>(OBJ_INFO_LIST["N_PAIR"]);
 
   Rcpp::IntegerMatrix MODEL_PAIR_Tmp   = as<IntegerMatrix>(OBJ_INFO_LIST["MODEL_PAIR"]);
-  arma::imat MODEL_PAIR(MODEL_PAIR_Tmp.begin(), MODEL_PAIR_Tmp.nrow(), MODEL_PAIR_Tmp.ncol());
+  arma::imat MODEL_PAIR(MODEL_PAIR_Tmp.begin(), MODEL_PAIR_Tmp.nrow(), MODEL_PAIR_Tmp.ncol(), false);
   OBJ.MODEL_PAIR  = MODEL_PAIR;
 
   Rcpp::IntegerVector dParas_Tmp  = as<IntegerVector>(OBJ_INFO_LIST["dParas"]);
-  arma::irowvec dParas(dParas_Tmp.begin(), dParas_Tmp.size());
+  arma::irowvec dParas(dParas_Tmp.begin(), dParas_Tmp.size(), false);
   OBJ.dParas  = dParas;
 
   Rcpp::NumericMatrix paras_Tmp   = as<NumericMatrix>(OBJ_INFO_LIST["paras"]);
-  arma::mat paras(paras_Tmp.begin(), paras_Tmp.nrow(), paras_Tmp.ncol());
+  arma::mat paras(paras_Tmp.begin(), paras_Tmp.nrow(), paras_Tmp.ncol(), false);
   OBJ.paras  = paras;
 
   Rcpp::NumericMatrix parasInit_Tmp   = as<NumericMatrix>(OBJ_INFO_LIST["parasInit"]);
-  arma::mat parasInit(parasInit_Tmp.begin(), parasInit_Tmp.nrow(), parasInit_Tmp.ncol());
+  arma::mat parasInit(parasInit_Tmp.begin(), parasInit_Tmp.nrow(), parasInit_Tmp.ncol(), false);
   OBJ.parasInit  = parasInit;
 
   Rcpp::NumericMatrix parasUpper_Tmp   = as<NumericMatrix>(OBJ_INFO_LIST["parasUpper"]);
-  arma::mat parasUpper(parasUpper_Tmp.begin(), parasUpper_Tmp.nrow(), parasUpper_Tmp.ncol());
+  arma::mat parasUpper(parasUpper_Tmp.begin(), parasUpper_Tmp.nrow(), parasUpper_Tmp.ncol(), false);
   OBJ.parasUpper  = parasUpper;
 
   Rcpp::NumericMatrix parasLower_Tmp   = as<NumericMatrix>(OBJ_INFO_LIST["parasLower"]);
-  arma::mat parasLower(parasLower_Tmp.begin(), parasLower_Tmp.nrow(), parasLower_Tmp.ncol());
+  arma::mat parasLower(parasLower_Tmp.begin(), parasLower_Tmp.nrow(), parasLower_Tmp.ncol(), false);
   OBJ.parasLower  = parasLower;
 
   Rcpp::NumericMatrix parasBdd_Tmp   = as<NumericMatrix>(OBJ_INFO_LIST["parasBdd"]);
-  arma::mat parasBdd(parasBdd_Tmp.begin(), parasBdd_Tmp.nrow(), parasBdd_Tmp.ncol());
+  arma::mat parasBdd(parasBdd_Tmp.begin(), parasBdd_Tmp.nrow(), parasBdd_Tmp.ncol(), false);
   OBJ.parasBdd  = parasBdd;
 
   // Max-min Discrimination Design
   Rcpp::NumericVector std_vals_Tmp  = as<NumericVector>(OBJ_INFO_LIST["MaxMinStdVals"]);
-  arma::rowvec std_vals(std_vals_Tmp.begin(), std_vals_Tmp.size());
+  arma::rowvec std_vals(std_vals_Tmp.begin(), std_vals_Tmp.size(), false);
   OBJ.std_vals = std_vals;
 }
 
@@ -372,14 +374,14 @@ void getNewtonStruct(LBFGS_PARAM &LFBGS_OPT, const Rcpp::List LBFGS_INFO_LIST)
 }
 
 // PSO OPTIONS
-void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List &PSO_INFO_LIST)
+void getAlgStruct(PSO_OPTIONS PSO_OPT[], const Rcpp::List PSO_INFO_LIST)
 {
   Rcpp::IntegerVector nSwarm_Tmp     = as<IntegerVector>(PSO_INFO_LIST["nSwarm"]);
   Rcpp::IntegerVector dSwarm_Tmp     = as<IntegerVector>(PSO_INFO_LIST["dSwarm"]);
   Rcpp::NumericMatrix varUpper_Tmp   = as<NumericMatrix>(PSO_INFO_LIST["varUpper"]);
-  arma::mat varUpper(varUpper_Tmp.begin(), varUpper_Tmp.nrow(), varUpper_Tmp.ncol());
+  arma::mat varUpper(varUpper_Tmp.begin(), varUpper_Tmp.nrow(), varUpper_Tmp.ncol(), false);
   Rcpp::NumericMatrix varLower_Tmp   = as<NumericMatrix>(PSO_INFO_LIST["varLower"]);
-  arma::mat varLower(varLower_Tmp.begin(), varLower_Tmp.nrow(), varLower_Tmp.ncol());
+  arma::mat varLower(varLower_Tmp.begin(), varLower_Tmp.nrow(), varLower_Tmp.ncol(), false);
   Rcpp::IntegerVector maxIter_Tmp    = as<IntegerVector>(PSO_INFO_LIST["maxIter"]);
   //Rcpp::IntegerVector checkConv_Tmp  = as<IntegerVector>(PSO_INFO_LIST["checkConv"]);
   //Rcpp::IntegerVector typePSO_Tmp    = as<IntegerVector>(PSO_INFO_LIST["typePSO"]);

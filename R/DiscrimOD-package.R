@@ -50,4 +50,4 @@
 #' @importFrom inline cxxfunction
 #' @importFrom utils globalVariables
 #' @importFrom stats optim lm glm
-gctorture(FALSE)
+NULL

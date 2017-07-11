@@ -1,6 +1,6 @@
-void psoUpdateDynPara(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const int iter, PSO_DYN &PSO_DYN, 
-											const arma::mat &swarm, const arma::mat &PBest, const arma::rowvec &GBest,
-											const arma::vec &fSwarm, const arma::vec &fPBest, const double &fGBest)
+void psoUpdateDynPara(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const int iter, PSO_DYN &PSO_DYN, 
+											const arma::mat swarm, const arma::mat PBest, const arma::rowvec GBest,
+											const arma::vec fSwarm, const arma::vec fPBest, const double fGBest)
 {
   if (iter < 0) { // INITIALIZE
 
@@ -63,9 +63,9 @@ void psoUpdateDynPara(const int &LOOPID, PSO_OPTIONS PSO_OPTS[], const int iter,
 }
 
 /* Under Construction Now
-arma::mat getTopology(const int &LOOPID, const PSO_OPTIONS PSO_OPTS[], 
-						 					const arma::mat &swarm, const arma::mat &PBest, const arma::rowvec &GBest,
-											const arma::vec &fSwarm, const arma::vec &fPBest, const double &fGBest)
+arma::mat getTopology(const int LOOPID, const PSO_OPTIONS PSO_OPTS[], 
+						 					const arma::mat swarm, const arma::mat PBest, const arma::rowvec GBest,
+											const arma::vec fSwarm, const arma::vec fPBest, const double fGBest)
 {
 	int typeTopo = PSO_OPTS[LOOPID].typeTopo;
 	int nSwarm = PSO_OPTS[LOOPID].nSwarm;

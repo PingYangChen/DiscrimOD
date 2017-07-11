@@ -44,8 +44,8 @@ double domainMapping(const int INV, const double par, const int nbd, const doubl
 }
 
 //
-double f_fn(const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const arma::mat &DESIGN, const arma::rowvec &WT, model_diff_func *func_input,
-  const arma::rowvec &R_UPPER, const arma::rowvec &R_LOWER, const arma::irowvec &R_NBD)
+double f_fn(const arma::rowvec R_PARA, const arma::rowvec T_PARA, const arma::mat DESIGN, const arma::rowvec WT, model_diff_func *func_input,
+  const arma::rowvec R_UPPER, const arma::rowvec R_LOWER, const arma::irowvec R_NBD)
 {
 
   arma::rowvec R_PARA_OS(R_PARA.n_elem, fill::zeros);
@@ -80,9 +80,9 @@ double f_fn(const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const arma::
   return fvalTmp;
 }
 
-arma::rowvec f_gr(const double &FVAL, const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const arma::mat &DESIGN, const arma::rowvec &WT,
-                  model_diff_func *func_input, const arma::irowvec &BDD, const arma::rowvec &R_UPPER, const arma::rowvec &R_LOWER,
-                  const arma::irowvec &R_NBD, const double &FD_DELTA)
+arma::rowvec f_gr(const double FVAL, const arma::rowvec R_PARA, const arma::rowvec T_PARA, const arma::mat DESIGN, const arma::rowvec WT,
+                  model_diff_func *func_input, const arma::irowvec BDD, const arma::rowvec R_UPPER, const arma::rowvec R_LOWER,
+                  const arma::irowvec R_NBD, const double FD_DELTA)
 {
   // finite difference method
   double inv_delta = 1.0/FD_DELTA;
@@ -141,8 +141,8 @@ lbfgsfloatval_t evaluate(void *ex, const lbfgsfloatval_t *x, lbfgsfloatval_t *g,
 
 
 // FEDOROV-WYNN NEXT POINT
-double dd_fn(const arma::mat &X_VEC, const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, model_diff_func *func_input,
-             const arma::rowvec &X_UPPER, const arma::rowvec &X_LOWER, const arma::irowvec &X_NBD)
+double dd_fn(const arma::mat X_VEC, const arma::rowvec R_PARA, const arma::rowvec T_PARA, model_diff_func *func_input,
+             const arma::rowvec X_UPPER, const arma::rowvec X_LOWER, const arma::irowvec X_NBD)
 {
 
   arma::mat X_OS(1, X_VEC.n_cols, fill::zeros);
@@ -174,9 +174,9 @@ double dd_fn(const arma::mat &X_VEC, const arma::rowvec &R_PARA, const arma::row
   return fvalTmp;
 }
 
-arma::rowvec dd_gr(const double &FVAL, const arma::mat &X_VEC, const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, 
-                   model_diff_func *func_input, const arma::irowvec &BDD, const arma::rowvec &X_UPPER, const arma::rowvec &X_LOWER,
-                   const arma::irowvec &X_NBD, const double &FD_DELTA)
+arma::rowvec dd_gr(const double FVAL, const arma::mat X_VEC, const arma::rowvec R_PARA, const arma::rowvec T_PARA, 
+                   model_diff_func *func_input, const arma::irowvec BDD, const arma::rowvec X_UPPER, const arma::rowvec X_LOWER,
+                   const arma::irowvec X_NBD, const double FD_DELTA)
 {
   // finite difference method
   double inv_delta = 1.0/FD_DELTA;
@@ -234,13 +234,12 @@ lbfgsfloatval_t evaluate_dirdev(void *ex, const lbfgsfloatval_t *x, lbfgsfloatva
 }
 
 // Remes'a algorithm
-double cpoly(const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const arma::mat &DESIGN_PT, model_diff_func *func_input)
+double cpoly(const arma::rowvec R_PARA, const arma::rowvec T_PARA, const arma::mat DESIGN_PT, model_diff_func *func_input)
 {
   double cployVal = 0.0;
 
   Rcpp::EvalBase *m1_func = (Rcpp::EvalBase *) func_input->M1_FUNC;
   Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC;
-  //Rcpp::EvalBase *distFunc = (Rcpp::EvalBase *) func_input->DISTFUNC;
 
   Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(DESIGN_PT));
   Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA));
@@ -258,8 +257,8 @@ double cpoly(const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const arma:
   return cployVal;
 }
 
-arma::rowvec rival_gr(const arma::rowvec &R_PARA, const arma::mat &DESIGN_PT, 
-                      model_diff_func *func_input, const arma::irowvec &BDD, const double &FD_DELTA)
+arma::rowvec rival_gr(const arma::rowvec R_PARA, const arma::mat DESIGN_PT, 
+                      model_diff_func *func_input, const arma::irowvec BDD, const double FD_DELTA)
 {
   Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC;
   // finite difference method
@@ -272,6 +271,7 @@ arma::rowvec rival_gr(const arma::rowvec &R_PARA, const arma::mat &DESIGN_PT,
   Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(DESIGN_PT));
   Rcpp::NumericVector fr_R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA));
   Rcpp::NumericVector bk_R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA));
+
   Rcpp::NumericVector fr_eta_R_Rform((int)DESIGN_PT.n_rows), bk_eta_R_Rform((int)DESIGN_PT.n_rows);
 
   for (uword i = 0; i < R_PARA.n_elem; i++) {
@@ -283,8 +283,10 @@ arma::rowvec rival_gr(const arma::rowvec &R_PARA, const arma::mat &DESIGN_PT,
     } else {
       fr_para(i) += 0.5*FD_DELTA; bk_para(i) -= 0.5*FD_DELTA;
     }
+    
     Rcpp::NumericVector fr_R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(fr_para));
     Rcpp::NumericVector bk_R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(bk_para));
+
     fr_eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(DESIGN_Rform, fr_R_PARA_Rform);
     bk_eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(DESIGN_Rform, bk_R_PARA_Rform);
     fr_val = (double)(fr_eta_R_Rform[0]); bk_val = (double)(bk_eta_R_Rform[0]);
@@ -295,8 +297,8 @@ arma::rowvec rival_gr(const arma::rowvec &R_PARA, const arma::mat &DESIGN_PT,
 
 
 //
-double remes_r_fn(const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const arma::mat &DESIGN, model_diff_func *func_input,
-                  const arma::rowvec &R_UPPER, const arma::rowvec &R_LOWER, const arma::irowvec &R_NBD)
+double remes_r_fn(const arma::rowvec R_PARA, const arma::rowvec T_PARA, const arma::mat DESIGN, model_diff_func *func_input,
+                  const arma::rowvec R_UPPER, const arma::rowvec R_LOWER, const arma::irowvec R_NBD)
 {
   arma::rowvec R_PARA_OS(R_PARA.n_elem, fill::zeros);
   for (uword i = 0; i < R_PARA.n_elem; i++) { R_PARA_OS(i) = domainMapping(1, R_PARA(i), R_NBD(i), R_UPPER(i), R_LOWER(i)); }
@@ -313,9 +315,9 @@ double remes_r_fn(const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const 
   return fvalTmp;
 }
 
-arma::rowvec remes_r_gr(const double &FVAL, const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, const arma::mat &DESIGN, 
-                        model_diff_func *func_input, const arma::irowvec &BDD, const arma::rowvec &R_UPPER, const arma::rowvec &R_LOWER,
-                        const arma::irowvec &R_NBD, const double &FD_DELTA)
+arma::rowvec remes_r_gr(const double FVAL, const arma::rowvec R_PARA, const arma::rowvec T_PARA, const arma::mat DESIGN, 
+                        model_diff_func *func_input, const arma::irowvec BDD, const arma::rowvec R_UPPER, const arma::rowvec R_LOWER,
+                        const arma::irowvec R_NBD, const double FD_DELTA)
 {
   // finite difference method
   double inv_delta = 1.0/FD_DELTA;
@@ -343,8 +345,8 @@ arma::rowvec remes_r_gr(const double &FVAL, const arma::rowvec &R_PARA, const ar
 }
 
 //
-double remes_x_fn(const arma::mat &X_VEC, const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, model_diff_func *func_input,
-             const arma::rowvec &X_UPPER, const arma::rowvec &X_LOWER, const arma::irowvec &X_NBD)
+double remes_x_fn(const arma::mat X_VEC, const arma::rowvec R_PARA, const arma::rowvec T_PARA, model_diff_func *func_input,
+             const arma::rowvec X_UPPER, const arma::rowvec X_LOWER, const arma::irowvec X_NBD)
 {
 
   arma::mat X_OS(1, X_VEC.n_cols, fill::zeros);
@@ -357,9 +359,9 @@ double remes_x_fn(const arma::mat &X_VEC, const arma::rowvec &R_PARA, const arma
   return fvalTmp;
 }
 
-arma::rowvec remes_x_gr(const double &FVAL, const arma::mat &X_VEC, const arma::rowvec &R_PARA, const arma::rowvec &T_PARA, 
-                       model_diff_func *func_input, const arma::irowvec &BDD, const arma::rowvec &X_UPPER, const arma::rowvec &X_LOWER,
-                       const arma::irowvec &X_NBD, const double &FD_DELTA)
+arma::rowvec remes_x_gr(const double FVAL, const arma::mat X_VEC, const arma::rowvec R_PARA, const arma::rowvec T_PARA, 
+                       model_diff_func *func_input, const arma::irowvec BDD, const arma::rowvec X_UPPER, const arma::rowvec X_LOWER,
+                       const arma::irowvec X_NBD, const double FD_DELTA)
 {
   // finite difference method
   double inv_delta = 1.0/FD_DELTA;
