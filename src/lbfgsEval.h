@@ -58,9 +58,17 @@ double f_fn(const arma::rowvec R_PARA, const arma::rowvec T_PARA, const arma::ma
     Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC;
     Rcpp::EvalBase *distFunc = (Rcpp::EvalBase *) func_input->DISTFUNC;
 
-    Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(DESIGN));
-    Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA));
-    Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA_OS));
+    Shield<SEXP> DESIGN_SEXP(Rcpp::wrap(DESIGN));
+    Shield<SEXP> T_PARA_SEXP(Rcpp::wrap(T_PARA));
+    Shield<SEXP> R_PARA_SEXP(Rcpp::wrap(R_PARA_OS));
+
+    Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(DESIGN_SEXP);
+    Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(T_PARA_SEXP);
+    Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(R_PARA_SEXP);
+
+    //Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(DESIGN));
+    //Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA));
+    //Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA_OS));
 
     Rcpp::NumericVector eta_T_Rform((int)WT.n_elem), eta_R_Rform((int)WT.n_elem), DIV_Rform((int)WT.n_elem);
     eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(DESIGN_Rform, T_PARA_Rform);
@@ -155,14 +163,22 @@ double dd_fn(const arma::mat X_VEC, const arma::rowvec R_PARA, const arma::rowve
     Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC;
     Rcpp::EvalBase *distFunc = (Rcpp::EvalBase *) func_input->DISTFUNC;
 
-    Rcpp::NumericMatrix X_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(X_OS));
-    Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA));
-    Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA));
+    Shield<SEXP> DESIGN_SEXP(Rcpp::wrap(X_OS));
+    Shield<SEXP> T_PARA_SEXP(Rcpp::wrap(T_PARA));
+    Shield<SEXP> R_PARA_SEXP(Rcpp::wrap(R_PARA));
+
+    Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(DESIGN_SEXP);
+    Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(T_PARA_SEXP);
+    Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(R_PARA_SEXP);
+
+    //Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(X_OS));
+    //Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA));
+    //Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA));
 
     Rcpp::NumericVector eta_T_Rform((int)X_VEC.n_rows), eta_R_Rform((int)X_VEC.n_rows), DIV_Rform((int)X_VEC.n_rows);
-    eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(X_Rform, T_PARA_Rform);
+    eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(DESIGN_Rform, T_PARA_Rform);
     if (Rcpp::all(Rcpp::is_finite(eta_T_Rform))) {
-      eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(X_Rform, R_PARA_Rform);
+      eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(DESIGN_Rform, R_PARA_Rform);
       if (Rcpp::all(Rcpp::is_finite(eta_R_Rform))) {
         DIV_Rform = (Rcpp::NumericVector) distFunc->eval(eta_T_Rform, eta_R_Rform);
         if (Rcpp::all(Rcpp::is_finite(DIV_Rform))) {
@@ -241,9 +257,17 @@ double cpoly(const arma::rowvec R_PARA, const arma::rowvec T_PARA, const arma::m
   Rcpp::EvalBase *m1_func = (Rcpp::EvalBase *) func_input->M1_FUNC;
   Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC;
 
-  Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(DESIGN_PT));
-  Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA));
-  Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA));
+  Shield<SEXP> DESIGN_SEXP(Rcpp::wrap(DESIGN_PT));
+  Shield<SEXP> T_PARA_SEXP(Rcpp::wrap(T_PARA));
+  Shield<SEXP> R_PARA_SEXP(Rcpp::wrap(R_PARA));
+
+  Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(DESIGN_SEXP);
+  Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(T_PARA_SEXP);
+  Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(R_PARA_SEXP);
+
+  //Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(DESIGN_PT));
+  //Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA));
+  //Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA));
 
   Rcpp::NumericVector eta_T_Rform((int)DESIGN_PT.n_rows), eta_R_Rform((int)DESIGN_PT.n_rows), DIV_Rform((int)DESIGN_PT.n_rows);
   eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(DESIGN_Rform, T_PARA_Rform);
@@ -268,9 +292,12 @@ arma::rowvec rival_gr(const arma::rowvec R_PARA, const arma::mat DESIGN_PT,
   arma::rowvec bk_para(R_PARA.n_elem, fill::zeros);
   double fr_val, bk_val;
 
-  Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(DESIGN_PT));
-  Rcpp::NumericVector fr_R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA));
-  Rcpp::NumericVector bk_R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA));
+  Shield<SEXP> DESIGN_SEXP(Rcpp::wrap(DESIGN_PT));
+  Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(DESIGN_SEXP);
+
+  //Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(DESIGN_PT));
+  //Rcpp::NumericVector fr_R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA));
+  //Rcpp::NumericVector bk_R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA));
 
   Rcpp::NumericVector fr_eta_R_Rform((int)DESIGN_PT.n_rows), bk_eta_R_Rform((int)DESIGN_PT.n_rows);
 
@@ -284,8 +311,14 @@ arma::rowvec rival_gr(const arma::rowvec R_PARA, const arma::mat DESIGN_PT,
       fr_para(i) += 0.5*FD_DELTA; bk_para(i) -= 0.5*FD_DELTA;
     }
     
-    Rcpp::NumericVector fr_R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(fr_para));
-    Rcpp::NumericVector bk_R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(bk_para));
+    Shield<SEXP> fr_R_PARA_SEXP(Rcpp::wrap(fr_para));
+    Shield<SEXP> bk_R_PARA_SEXP(Rcpp::wrap(bk_para));
+
+    Rcpp::NumericVector fr_R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(fr_R_PARA_SEXP);
+    Rcpp::NumericVector bk_R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(bk_R_PARA_SEXP);
+
+    //Rcpp::NumericVector fr_R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(fr_para));
+    //Rcpp::NumericVector bk_R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(bk_para));
 
     fr_eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(DESIGN_Rform, fr_R_PARA_Rform);
     bk_eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(DESIGN_Rform, bk_R_PARA_Rform);

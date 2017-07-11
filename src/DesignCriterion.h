@@ -96,9 +96,13 @@ double DesignCriterion(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PAR
     Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC; 
     Rcpp::EvalBase *distFunc = (Rcpp::EvalBase *) func_input->DISTFUNC;
 
-    Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(DESIGN));
-    Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA));
-    Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(swarm));
+    Shield<SEXP> DESIGN_SEXP(Rcpp::wrap(DESIGN));
+    Shield<SEXP> T_PARA_SEXP(Rcpp::wrap(T_PARA));
+    Shield<SEXP> R_PARA_SEXP(Rcpp::wrap(swarm));
+
+    Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(DESIGN_SEXP);
+    Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(T_PARA_SEXP);
+    Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(R_PARA_SEXP);
 
     Rcpp::NumericVector eta_T_Rform((int)WT.n_elem), eta_R_Rform((int)WT.n_elem), DIV_Rform((int)WT.n_elem);
 
@@ -320,9 +324,13 @@ arma::rowvec distCalc(const OBJ_INFO OBJ, const arma::mat x, const arma::mat PAR
   arma::rowvec T_PARA = PARA_SET.submat(tmID, 0, tmID, OBJ.dParas(tmID) - 1);
   arma::rowvec R_PARA = PARA_SET.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
 
-  Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(Rcpp::wrap(x));
-  Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(T_PARA));
-  Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(R_PARA));
+  Shield<SEXP> DESIGN_SEXP(Rcpp::wrap(x));
+  Shield<SEXP> T_PARA_SEXP(Rcpp::wrap(T_PARA));
+  Shield<SEXP> R_PARA_SEXP(Rcpp::wrap(R_PARA));
+
+  Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(DESIGN_SEXP);
+  Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(T_PARA_SEXP);
+  Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(R_PARA_SEXP);
 
   Rcpp::NumericVector eta_T_Rform((int)x.n_rows), eta_R_Rform((int)x.n_rows), DIV_Rform((int)x.n_rows);
   eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(DESIGN_Rform, T_PARA_Rform);  

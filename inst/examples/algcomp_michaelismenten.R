@@ -8,7 +8,7 @@ if (!dir.exists(outputPath)) { dir.create(outputPath) }
 
 caseName <- "michaelismenten"
 
-nIter <- 200; nRep <- 50
+nIter <- 100; nRep <- 50
 # Set PSO options for pariwise discrimination design cases
 PSO_INFO <- getPSOInfo(nSwarm = c(32, 32), maxIter = c(nIter, 100))
 # Set L-BFGS algorithm options
@@ -84,18 +84,18 @@ for (iC in 1:length(distFunSet)) {
 
     eachRep <- vector("list", 3)
     # PSO-QN
-    out_q <- DiscrimOD(MODEL_INFO, DISTANCE, two_nSupp, dsLower = DL, dsUpper = DU,
-                       crit_type = "pair_fixed_true",
-                       PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, verbose = TRUE)
+    # out_q <- DiscrimOD(MODEL_INFO, DISTANCE, two_nSupp, dsLower = DL, dsUpper = DU,
+    #                    crit_type = "pair_fixed_true",
+    #                    PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, verbose = TRUE)
 
-    cri_q <- designCriterion(out_q$BESTDESIGN, MODEL_INFO, DISTANCE, dsLower = DL, dsUpper = DU, 
-                             crit_type = "pair_fixed_true", 
-                             PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_CRIT)
+    # cri_q <- designCriterion(out_q$BESTDESIGN, MODEL_INFO, DISTANCE, dsLower = DL, dsUpper = DU, 
+    #                          crit_type = "pair_fixed_true", 
+    #                          PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_CRIT)
 
-    eff_q <- cri_q$cri_val/OPT_VAL$cri_val
+    # eff_q <- cri_q$cri_val/OPT_VAL$cri_val
 
-    #algCompRes[[iC]][[iR]][[1]] <- list(RES = out_q, EFF = eff_q)
-    eachRep[[1]] <- list(RES = out_q, EFF = eff_q)
+    # #algCompRes[[iC]][[iR]][[1]] <- list(RES = out_q, EFF = eff_q)
+    # eachRep[[1]] <- list(RES = out_q, EFF = eff_q)
 
     # NestedPSO
     out_n <- DiscrimOD(MODEL_INFO, DISTANCE, two_nSupp, dsLower = DL, dsUpper = DU,
@@ -112,22 +112,22 @@ for (iC in 1:length(distFunSet)) {
     eachRep[[2]] <- list(RES = out_n, EFF = eff_n)
 
     # Fedorov-Wynn
-    out_f <- DiscrimFedWynn(MODEL_INFO, DISTANCE, dsLower = DL, dsUpper = DU,
-                            FED_INFO = FED_INFO, LBFGS_INFO = LBFGS_INFO, verbose = TRUE)
+    # out_f <- DiscrimFedWynn(MODEL_INFO, DISTANCE, dsLower = DL, dsUpper = DU,
+    #                         FED_INFO = FED_INFO, LBFGS_INFO = LBFGS_INFO, verbose = TRUE)
 
-    cri_f <- designCriterion(out_f$BESTDESIGN, MODEL_INFO, DISTANCE, dsLower = DL, dsUpper = DU, 
-                             crit_type = "pair_fixed_true", 
-                             PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_CRIT)
+    # cri_f <- designCriterion(out_f$BESTDESIGN, MODEL_INFO, DISTANCE, dsLower = DL, dsUpper = DU, 
+    #                          crit_type = "pair_fixed_true", 
+    #                          PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_CRIT)
 
-    eff_f <- cri_f$cri_val/OPT_VAL$cri_val
+    # eff_f <- cri_f$cri_val/OPT_VAL$cri_val
 
 
-    #algCompRes[[iC]][[iR]][[3]] <- list(RES = out_f, EFF = eff_f)
-    eachRep[[3]] <- list(RES = out_f, EFF = eff_f)
+    # #algCompRes[[iC]][[iR]][[3]] <- list(RES = out_f, EFF = eff_f)
+    # eachRep[[3]] <- list(RES = out_f, EFF = eff_f)
 
-    # No Remes
-    effvals[iR,] <- c(eachRep[[1]]$EFF, eachRep[[2]]$EFF, eachRep[[3]]$EFF, 
-                      eachRep[[1]]$RES$CPUTIME, eachRep[[2]]$RES$CPUTIME, eachRep[[3]]$RES$CPUTIME)
+    # # No Remes
+    # effvals[iR,] <- c(eachRep[[1]]$EFF, eachRep[[2]]$EFF, eachRep[[3]]$EFF, 
+    #                   eachRep[[1]]$RES$CPUTIME, eachRep[[2]]$RES$CPUTIME, eachRep[[3]]$RES$CPUTIME)
   }
   # SAVE RESULT
   write.csv(effvals, file.path(outputPath, paste0("algComp_Summary_", caseName, "_", iC, ".csv")))
