@@ -32,9 +32,12 @@ namespace Rcpp {
     private:
         SEXP fcall, env;
         Rcpp::NumericVector defaultfun(SEXP x, SEXP p) {
-          SEXP fn = ::Rf_lang4(fcall, x, p, R_DotsSymbol);
-          SEXP sexp_fvec = ::Rf_eval(fn, env);
-          Rcpp::NumericVector f_result = (Rcpp::NumericVector) Rcpp::as<Rcpp::NumericVector>(sexp_fvec);
+          //SEXP fn = ::Rf_lang4(fcall, x, p, R_DotsSymbol);
+          SEXP fn = Rcpp::Rcpp_lang4(fcall, x, p, R_DotsSymbol);
+          //SEXP sexp_fvec = ::Rf_eval(fn, env);
+          //SEXP sexp_fvec = Rcpp::Rcpp_eval(fn, env);
+          //Rcpp::NumericVector f_result = (Rcpp::NumericVector) Rcpp::as<Rcpp::NumericVector>(sexp_fvec);
+          Rcpp::NumericVector f_result = (Rcpp::NumericVector) Rcpp::as<Rcpp::NumericVector>(::Rf_eval(fn, env));
           return f_result;
         }
     };

@@ -25,7 +25,7 @@ DiscrimFedWynn <- function(MODEL_INFO, DISTANCE, dsLower, dsUpper,
                           crit_type = "pair_fixed_true", MaxMinStdVals = 0,
                           dSupp = length(dsLower), nSupp = 2, dsLower = dsLower, dsUpper = dsUpper)
 
-	D_INFO$nSupp <- D_INFO$dParas[2] + 1
+	D_INFO$nSupp <- D_INFO$dParas[2]
 	nSupp <- D_INFO$nSupp
 
 	if (is.null(FED_INFO)) {
@@ -62,7 +62,8 @@ DiscrimFedWynn <- function(MODEL_INFO, DISTANCE, dsLower, dsUpper,
 
 	if (verbose) message(paste0("CPU time: ", round(cputime, 2), " seconds."))
 
-	nonzero_wt <- which(fedOut$WT[1,] > 1e-12)
+	#nonzero_wt <- which(fedOut$WT[1,] > 1e-12)
+	nonzero_wt <- 1:length(fedOut$WT)
 	BESTDESIGN <- cbind(fedOut$DESIGN[nonzero_wt,], fedOut$WT[nonzero_wt])
 	BESTDESIGN <- BESTDESIGN[order(BESTDESIGN[,1]),]
 	dimnames(BESTDESIGN) <- list(paste0("obs_", 1:nrow(BESTDESIGN)), 

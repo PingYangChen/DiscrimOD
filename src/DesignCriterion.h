@@ -17,7 +17,7 @@ arma::rowvec distCalc(const OBJ_INFO OBJ, const arma::mat x, const arma::mat PAR
 
 // BODY
 double DesignCriterion(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ,
-                       model_diff_func *MODEL_COLLECTOR[], void *external, const rowvec x, arma::mat &R_PARA)
+                       model_diff_func *MODEL_COLLECTOR[], void *PSO_EXT, const rowvec x, arma::mat &R_PARA)
 {
 	int nSupp = OBJ.nSupp;
 	int dSupp = OBJ.dSupp; 
@@ -61,7 +61,7 @@ double DesignCriterion(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PAR
       // Find Optimal Weight for Equivalence Theorem on Max-min Optimal Design
       case 1001:
       {
-        best_alpha_info EXT = *(best_alpha_info*)(external);
+        best_alpha_info EXT = *(best_alpha_info*)(PSO_EXT);
         arma::mat DESIGN = EXT.DESIGN;
         double CRIT_VAL = EXT.CRIT_VAL;
 
@@ -82,7 +82,7 @@ double DesignCriterion(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PAR
       }
   	}
   } else {
-    inner_pso_info EXT = *(inner_pso_info*)(external);
+    inner_pso_info EXT = *(inner_pso_info*)(PSO_EXT);
     int PAIRID = (int) EXT.PAIRID;
     arma::mat DESIGN = (arma::mat) EXT.DESIGN;
     arma::rowvec WT = (arma::rowvec) EXT.WT;
@@ -138,10 +138,10 @@ double criterionList(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM
 			arma::rowvec R_PARA_tmp(OBJ.dParas(rmID));
 
       if (LBFGS == 0) { 
-        inner_pso_info external = {};
-        external.PAIRID = 0;
-        external.DESIGN = DESIGN;
-        external.WT = WT;
+        inner_pso_info PSO_EXT = {};
+        PSO_EXT.PAIRID = 0;
+        PSO_EXT.DESIGN = DESIGN;
+        PSO_EXT.WT = WT;
 
         PSO_OPTS[LOOPID + 1].dSwarm = OBJ.dParas(rmID);
         PSO_OPTS[LOOPID + 1].varUpper.set_size(OBJ.dParas(rmID)); 
@@ -150,7 +150,7 @@ double criterionList(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM
         PSO_OPTS[LOOPID + 1].varLower = OBJ.parasLower.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
 
         PSO_Result InnerResult;
-        PSO_MAIN(LOOPID + 1, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, &external, FALSE, FALSE, InnerResult);
+        PSO_MAIN(LOOPID + 1, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, &PSO_EXT, FALSE, FALSE, InnerResult);
         R_PARA_tmp = InnerResult.GBest;
         val = InnerResult.fGBest;
       } else {
@@ -169,10 +169,10 @@ double criterionList(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM
 				arma::rowvec R_PARA_tmp(OBJ.dParas(i+1));
 
         if (LBFGS == 0) {
-          inner_pso_info external = {};
-          external.PAIRID = i;
-          external.DESIGN = DESIGN;
-          external.WT = WT;
+          inner_pso_info PSO_EXT = {};
+          PSO_EXT.PAIRID = i;
+          PSO_EXT.DESIGN = DESIGN;
+          PSO_EXT.WT = WT;
 
           int rmID = OBJ.MODEL_PAIR(i, 1);
 
@@ -183,7 +183,7 @@ double criterionList(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM
           PSO_OPTS[LOOPID + 1].varLower = OBJ.parasLower.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
 
           PSO_Result InnerResult;
-          PSO_MAIN(LOOPID + 1, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, &external, FALSE, FALSE, InnerResult);
+          PSO_MAIN(LOOPID + 1, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, &PSO_EXT, FALSE, FALSE, InnerResult);
           R_PARA_tmp = InnerResult.GBest;
           eff_vals(i) = InnerResult.fGBest;
         } else {
@@ -198,8 +198,6 @@ double criterionList(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM
 	}
 	return val;
 }
-
-// SUBFUNCTIONS
 
 // Minimal Distance Between Two Models
 double minDistCalc(const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[], const int PAIRID,

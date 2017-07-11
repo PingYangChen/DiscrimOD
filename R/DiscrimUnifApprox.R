@@ -15,7 +15,8 @@ DiscrimUnifApproxT <- function(MODEL_INFO, nSupp, dsLower, dsUpper, REMES_MAXIT 
   stopifnot(all(is.finite(dsLower)), all(is.finite(dsUpper)), length(dsLower) == 1, 
             length(dsLower) == length(dsUpper), all(dsUpper > dsLower),
             all(names(FED_INFO) == names(getFEDInfo())),
-            all(names(LBFGS_INFO) == names(getLBFGSInfo())))
+            all(names(LBFGS_INFO) == names(getLBFGSInfo())),
+            nSupp > 1)
 
 	MODEL_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
 
@@ -25,8 +26,6 @@ DiscrimUnifApproxT <- function(MODEL_INFO, nSupp, dsLower, dsUpper, REMES_MAXIT 
 	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
                           crit_type = "pair_fixed_true", MaxMinStdVals = 0,
                           dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
-
-	stopifnot(D_INFO$nSupp > D_INFO$dParas[2])
 	
 	REMES_INFO <- list(REMES_MAXIT = REMES_MAXIT, freeRun = REMES_FreeRun, REMES_EPS = REMES_EPS)
 	

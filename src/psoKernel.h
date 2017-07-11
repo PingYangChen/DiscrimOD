@@ -2,7 +2,7 @@
 // BODY
 // PSO MAIN FUNCTIONS
 void PSO_MAIN(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[],
-              void *external, const bool IF_PARALLEL, const bool COUNTER_ON, PSO_Result &PSO_Result)
+              void *PSO_EXT, const bool IF_PARALLEL, const bool COUNTER_ON, PSO_Result &PSO_Result)
 {
 	/* -- BEGIN -- */
   // GET PSO PARAMETERS
@@ -36,7 +36,7 @@ void PSO_MAIN(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM LBFGS_
   // INITIALIZE VELOCITY
   vStep.fill(0);
   // INITIALIZE OBJECTIVE FUNCTION VALUES
-  psoFuncEval(IF_PARALLEL, LOOPID, PSO_OPTS, LBFGS_OPTION, OBJ, PSO_DYN, MODEL_COLLECTOR, external, swarm, fSwarm); 
+  psoFuncEval(IF_PARALLEL, LOOPID, PSO_OPTS, LBFGS_OPTION, OBJ, PSO_DYN, MODEL_COLLECTOR, PSO_EXT, swarm, fSwarm); 
   // INITIALIZE LOCAL BEST
   fPBest = fSwarm;	PBest = swarm;
   // INITIALIZE GLOBAL BEST
@@ -64,7 +64,7 @@ void PSO_MAIN(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM LBFGS_
     // UPDATE SWARM POSITION
     psoCheckParticle(LOOPID, PSO_OPTS, PSO_DYN, varUpper, varLower, swarm);	
     // UPDATE OBJECTIVE FUNCTION VALUES
-    psoFuncEval(IF_PARALLEL, LOOPID, PSO_OPTS, LBFGS_OPTION, OBJ, PSO_DYN, MODEL_COLLECTOR, external, swarm, fSwarm); 
+    psoFuncEval(IF_PARALLEL, LOOPID, PSO_OPTS, LBFGS_OPTION, OBJ, PSO_DYN, MODEL_COLLECTOR, PSO_EXT, swarm, fSwarm); 
     // UPDATE THE LOCAL AND GLOBAL BEST
     if (any(fSwarm < fPBest)) {
       uvec RowChange = find(fSwarm < fPBest);
