@@ -25,7 +25,7 @@ DiscrimFedWynn <- function(MODEL_INFO, DISTANCE, dsLower, dsUpper,
                           crit_type = "pair_fixed_true", MaxMinStdVals = 0,
                           dSupp = length(dsLower), nSupp = 2, dsLower = dsLower, dsUpper = dsUpper)
 
-	D_INFO$nSupp <- D_INFO$dParas[2]
+	D_INFO$nSupp <- D_INFO$dParas[2] + 1
 	nSupp <- D_INFO$nSupp
 
 	if (is.null(FED_INFO)) {

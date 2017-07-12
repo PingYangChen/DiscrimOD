@@ -79,7 +79,8 @@ for (iC in 1:length(two_model)) {
                                PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_CRIT)
 
     eachRep <- vector("list", 4)
-     # PSO-QN
+    # PSO-QN
+    cat("PSO-QN\n")
     out_q <- DiscrimOD(MODEL_INFO, DISTANCE, two_nSupp[iC], dsLower = DL, dsUpper = DU,
                        crit_type = "pair_fixed_true",
                        PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, verbose = TRUE)
@@ -94,6 +95,7 @@ for (iC in 1:length(two_model)) {
     eachRep[[1]] <- list(RES = out_q, EFF = eff_q)
 
     # NestedPSO
+    cat("NestedPSO\n")
     out_n <- DiscrimOD(MODEL_INFO, DISTANCE, two_nSupp[iC], dsLower = DL, dsUpper = DU,
                        crit_type = "pair_fixed_true",
                        PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_NOTRUN, verbose = TRUE)
@@ -108,6 +110,7 @@ for (iC in 1:length(two_model)) {
     eachRep[[2]] <- list(RES = out_n, EFF = eff_n)
 
     # Fedorov-Wynn
+    cat("Fedorov\n")
     out_f <- DiscrimFedWynn(MODEL_INFO, DISTANCE, dsLower = DL, dsUpper = DU,
                             FED_INFO = FED_INFO, LBFGS_INFO = LBFGS_INFO, verbose = TRUE)
 
@@ -121,6 +124,7 @@ for (iC in 1:length(two_model)) {
     eachRep[[3]] <- list(RES = out_f, EFF = eff_f)
 
     # Remes
+    cat("Remes\n")
     out_r <- DiscrimUnifApproxT(MODEL_INFO, two_nSupp[iC], dsLower = DL, dsUpper = DU,
                                 REMES_MAXIT = nIter, REMES_FreeRun = 1.0, REMES_EPS = 1e-2,
                                 LBFGS_INFO = LBFGS_INFO, verbose = TRUE)
@@ -139,13 +143,6 @@ for (iC in 1:length(two_model)) {
                       eachRep[[1]]$RES$CPUTIME, eachRep[[2]]$RES$CPUTIME, eachRep[[3]]$RES$CPUTIME, eachRep[[4]]$RES$CPUTIME)
   }
   # SAVE RESULT
-  #tmp <- algCompRes[[iC]]
-  #effvals <- matrix(0, nRep, 4*2)
-  #colnames(effvals) <- paste0(rep(c("PSOQN", "NESTEDPSO", "FEDWYNN", "REMES"), 2), rep(c("EFF", "CPU"), each = 4))
-  #for (iR in 1:nRep) {
-  #  effvals[iR,] <- c(tmp[[iR]][[1]]$EFF, tmp[[iR]][[2]]$EFF, tmp[[iR]][[3]]$EFF, tmp[[iR]][[4]]$EFF,
-  #                    tmp[[iR]][[1]]$RES$CPUTIME, tmp[[iR]][[2]]$RES$CPUTIME, tmp[[iR]][[3]]$RES$CPUTIME, tmp[[iR]][[4]]$RES$CPUTIME)    
-  #}
   write.csv(effvals, file.path(outputPath, paste0("algComp_Summary_", caseName, "_", iC, ".csv")))
 }
 

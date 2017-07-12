@@ -7,24 +7,6 @@ set.seed(round(runif(1, 1, 1e4)))
 #  install.packages(c("devtools", "Rcpp", "RcppArmadillo"))
 #  devtools::install_github("PingYangChen/DiscrimOD")
 
-## ----LOAD_PKG, cache=TRUE,eval=TRUE,echo=TRUE----------------------------
-library(DiscrimOD)
-
-## ----ALG_SETTING, cache=T------------------------------------------------
-# PSO basic settings
-PSO_INFO <- getPSOInfo(nSwarm = 32, maxIter = 200)
-# L-BFGS basic settings
-LBFGS_INFO <- getLBFGSInfo(LBFGS_RETRY = 2)
-
-## ----ALG_SETTING_MAXMIN, cache=T-----------------------------------------
-PSO_INFO_MAXMIN <- getPSOInfo(nSwarm = 32, maxIter = 400)
-
-## ----ALG_SETTING_NESTEDPSO, cache=T--------------------------------------
-# Set NestedPSO options. The length of setting indicates the number of loops
-NESTEDPSO_INFO <- getPSOInfo(nSwarm = c(32, 32), maxIter = c(200, 100))
-# Turn off L-BFGS implementation for the inner optimization loop
-LBFGS_NOTRUN <- getLBFGSInfo(IF_INNER_LBFGS = FALSE)
-
 ## ---- cache = FALSE, eval = FALSE, echo = TRUE---------------------------
 #  # xt is the vector of mean values of the true model at each support point
 #  # xr is the vector of mean values of the rival model at each support point
@@ -54,121 +36,6 @@ emptyModelList(N_model = 2)
 #  designCriterion(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper,
 #                  crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
 #                  PSO_INFO = NULL, LBFGS_INFO = NULL)
-
-## ----AF1975b_MODEL, cache=T----------------------------------------------
-af1 <- function(x, p) p[1] + p[2]*exp(x) + p[3]*exp(-x)
-af2 <- function(x, p) p[1] + p[2]*x + p[3]*x^2
-af3 <- function(x, p) p[1] + p[2]*sin(0.5*pi*x) + p[3]*cos(0.5*pi*x) + p[4]*sin(pi*x)
-
-## ----AF1975b_CASE_PAIR, cache=T------------------------------------------
-# Set the nominal values for the true model
-AF_para_af1 <- c(4.5, -1.5, -2.0)
-# The first pair: \eta_1 vs \eta_2
-af_info_12 <- list(
-  # The first list should be the true model and the specified nominal values
-  list(model = af1, para = AF_para_af1),
-  # Then the rival models are listed accordingly. We also need to specify the model space
-  list(model = af2, paraLower = rep(-10, 3), paraUpper = rep(10, 3))
-)
-# The second pair: \eta_1 vs \eta_3
-af_info_13 <- list(
-  list(model = af1, para = AF_para_af1),
-  list(model = af3, paraLower = rep(-10, 4), paraUpper = rep(10, 4))
-)
-
-## ----T_OPTIMAL, cache=T--------------------------------------------------
-# xt is the mean values of the true model
-# xr is the mean values of the rival model
-sq_diff <- function(xt, xr) (xt - xr)^2
-
-## ----AF1975b_RESULT_PAIR_12, cache=T-------------------------------------
-# Run PSO-QN Algorithm for discriminating \eta_1 and \eta_2
-af_res_12 <- DiscrimOD(MODEL_INFO = af_info_12, DISTANCE = sq_diff,
-                       nSupp = 4, dsLower = -1, dsUpper = 1,
-                       crit_type = "pair_fixed_true",
-                       PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, 
-                       seed = NULL, verbose = FALSE)
-
-## ----AF1975b_RESNAMES_PAIR_12, cache=T-----------------------------------
-names(af_res_12)
-
-## ----AF1975b_DESIGN_PAIR_12, cache=T-------------------------------------
-round(af_res_12$BESTDESIGN, 3) 
-
-## ----AF1975b_VAL_PAIR_12, cache=T----------------------------------------
-af_res_12$BESTVAL 
-
-## ----AF1975b_CPU_PAIR_12, cache=T----------------------------------------
-af_res_12$CPUTIME 
-
-## ----AF1975b_EQUV_PAIR_12, cache=T, fig.align='center', fig.height = 4, fig.width = 4----
-af_eqv_12 <- equivalence(ngrid = 100, PSO_RESULT = af_res_12, 
-                         MODEL_INFO = af_info_12, DISTANCE = sq_diff, 
-                         dsLower = -1, dsUpper = 1,
-                         crit_type = "pair_fixed_true",
-                         PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
-# Draw the directional derivative curve
-plot(af_eqv_12$Grid_1, af_eqv_12$DirDeriv, type = "l", col = "blue", 
-     main = "af_res_12", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
-points(af_res_12$BESTDESIGN[,1], rep(0, nrow(af_res_12$BESTDESIGN)), pch = 16)
-
-## ----AF1975b_RESULT_PAIR_13, cache=T-------------------------------------
-# Run PSO-QN Algorithm for discriminating \eta_1 and \eta_3
-af_res_13 <- DiscrimOD(MODEL_INFO = af_info_13, DISTANCE = sq_diff, 
-                       nSupp = 5, dsLower = -1.0, dsUpper = 1.0, 
-                       crit_type = "pair_fixed_true",
-                       PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO, 
-                       seed = NULL, verbose = FALSE)
-
-## ----AF1975b_DESIGN_PAIR_13, cache=T-------------------------------------
-round(af_res_13$BESTDESIGN, 3)
-
-## ----AF1975b_EQUV_PAIR_13, cache=T, fig.align='center', fig.height = 4, fig.width = 4----
-af_eqv_13 <- equivalence(ngrid = 100, PSO_RESULT = af_res_13, 
-                         MODEL_INFO = af_info_13, DISTANCE = sq_diff, 
-                         dsLower = -1, dsUpper = 1, 
-                         crit_type = "pair_fixed_true",
-                         PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
-# Draw the directional derivative curve
-plot(af_eqv_13$Grid_1, af_eqv_13$DirDeriv, type = "l", col = "blue", 
-     main = "af_res_13", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
-points(af_res_13$BESTDESIGN[,1], rep(0, nrow(af_res_13$BESTDESIGN)), pch = 16)
-
-## ----AF1975b_CASE_MAXMIN, cache=T----------------------------------------
-# Create model list for max-min approach
-af_info_maxmin <- list(af_info_12[[1]], af_info_12[[2]], af_info_13[[2]])
-# Define the vector of optimal criterion values for efficiency computations
-af_vals_pair <- c(af_res_12$BESTVAL, af_res_13$BESTVAL)
-
-## ----AF1975b_RESULT_MAXMIN, cache=T--------------------------------------
-af_res_maxmin <- DiscrimOD(MODEL_INFO = af_info_maxmin, DISTANCE = sq_diff, 
-                           nSupp = 5, dsLower = -1, dsUpper = 1, 
-                           crit_type = "maxmin_fixed_true", 
-                           MaxMinStdVals = af_vals_pair,
-                           PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO, 
-                           seed = NULL, verbose = FALSE)
-
-## ----AF1975b_DESIGN_MAXMIN, cache=T--------------------------------------
-round(af_res_maxmin$BESTDESIGN, 3)
-
-## ----AF1975b_VAL_MAXMIN, cache=T-----------------------------------------
-af_res_maxmin$BESTVAL
-
-## ----AF1975b_EQUV_MAXMIN, cache=T, fig.align='center', fig.height = 4, fig.width = 4----
-af_eqv_maxmin <- equivalence(ngrid = 100, PSO_RESULT = af_res_maxmin, 
-                             MODEL_INFO = af_info_maxmin, DISTANCE = sq_diff, 
-                             dsLower = -1, dsUpper = 1, 
-                             crit_type = "maxmin_fixed_true", 
-                             MaxMinStdVals = af_vals_pair, 
-                             PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO)
-# Draw the directional derivative curve
-plot(af_eqv_maxmin$Grid_1, af_eqv_maxmin$DirDeriv, type = "l", col = "blue", 
-     main = "af_res_maxmin", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
-points(af_res_maxmin$BESTDESIGN[,1], rep(0, nrow(af_res_maxmin$BESTDESIGN)), pch = 16)
-
-## ----AF1975b_EQUV_MAXMIN_ALPHA, cache=T----------------------------------
-# The weight of efficiency values
-af_eqv_maxmin$alpha
 
 ## ----MM_MODEL------------------------------------------------------------
 # Two types of Michaelise-Menten models
@@ -230,16 +97,6 @@ mmm_eqv_gamma <- equivalence(ngrid = 100, PSO_RESULT = mmm_res_gamma,
                              dsLower = 0.1, dsUpper = 5,  
                              crit_type = "pair_fixed_true", 
                              PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
-
-## ----MM_EQV_PLOT, cache=T, eval=T, echo=F, fig.align='center', fig.height = 4, fig.width = 7----
-# Draw the directional derivative curve
-lay <- layout(matrix(1:2, 1, 2))
-plot(mmm_eqv_lognB$Grid_1, mmm_eqv_lognB$DirDeriv, type = "l", col = "blue", 
-     main = "mmm_res_lognB", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
-points(mmm_res_lognB$BESTDESIGN[,1], rep(0, nrow(mmm_res_lognB$BESTDESIGN)), pch = 16)
-plot(mmm_eqv_gamma$Grid_1, mmm_eqv_gamma$DirDeriv, type = "l", col = "blue", 
-     main = "mmm_res_gamma", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
-points(mmm_res_gamma$BESTDESIGN[,1], rep(0, nrow(mmm_res_gamma$BESTDESIGN)), pch = 16)
 
 ## ----LOGIT_MODEL---------------------------------------------------------
 # Tommasi et al. (2016)
@@ -309,22 +166,6 @@ logit_res_mxmn <- DiscrimOD(MODEL_INFO = model_logit, DISTANCE = logit_diff,
 
 ## ----LOGIT_DESIGN_MM-----------------------------------------------------
 round(logit_res_mxmn$BESTDESIGN, 3) 
-
-## ----LOGIT_EQV_MM, cache=T, fig.align='center', fig.height = 4, fig.width = 4----
-logit_eqv_mxmn <- equivalence(ngrid = 100, PSO_RESULT = logit_res_mxmn, 
-                              MODEL_INFO = model_logit, DISTANCE = logit_diff, 
-                              dsLower = 0, dsUpper = 1,  
-                              crit_type = "maxmin_fixed_true", 
-                              MaxMinStdVals = logit_vals_pair, 
-                              PSO_INFO = PSO_INFO_MAXMIN, LBFGS_INFO = LBFGS_INFO)
-# Draw the directional derivative curve
-plot(logit_eqv_mxmn$Grid_1, logit_eqv_mxmn$DirDeriv, type = "l", col = "blue", 
-     main = "logit_res_mxmn", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
-points(logit_res_mxmn$BESTDESIGN[,1], rep(0, nrow(logit_res_mxmn$BESTDESIGN)), pch = 16)
-
-## ----LOGIT_EQUV_MAXMIN_ALPHA, cache=T------------------------------------
-# The weight of efficiency values
-logit_eqv_mxmn$alpha
 
 ## ----TOX_MODEL-----------------------------------------------------------
 tox5_par <- c(4.282, 835.571, 0.739, 3.515)

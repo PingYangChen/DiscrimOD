@@ -102,8 +102,7 @@ The criterion in @lopez2007optimal is called the $KL$-optimal criterion, and in 
 
 Let $f_1(y\mid x,\theta_1,\sigma^2)$ and $f_2(y\mid x,\theta_2,\sigma^2)$ be the two competing models.
 Assume the true model, $f_t(y\mid x, \sigma^2)$, is $f_1(y\mid x,\theta_1,\sigma^2)$ with specified parameter $\theta_1$.
-To measure the difference between two competing models, 
-the Kullback--Leibler ($KL$) divergence ([@eq:kldiv]) is used, i.e.,
+To measure the difference between two competing models, the Kullback--Leibler ($KL$) divergence ([@eq:kldiv]) is used, i.e.,
 
 $$
 \mathcal{I}(f_t, f_2, x, \theta_2) = 
