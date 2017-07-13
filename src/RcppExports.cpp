@@ -6,90 +6,6 @@
 
 using namespace Rcpp;
 
-// T_optimal
-arma::rowvec T_optimal(SEXP xt, SEXP xr);
-RcppExport SEXP DiscrimOD_T_optimal(SEXP xtSEXP, SEXP xrSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type xt(xtSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type xr(xrSEXP);
-    rcpp_result_gen = Rcpp::wrap(T_optimal(xt, xr));
-    return rcpp_result_gen;
-END_RCPP
-}
-// KL_normal_hetero
-arma::rowvec KL_normal_hetero(SEXP xt, SEXP xr);
-RcppExport SEXP DiscrimOD_KL_normal_hetero(SEXP xtSEXP, SEXP xrSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type xt(xtSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type xr(xrSEXP);
-    rcpp_result_gen = Rcpp::wrap(KL_normal_hetero(xt, xr));
-    return rcpp_result_gen;
-END_RCPP
-}
-// KL_logistic
-arma::rowvec KL_logistic(SEXP xt, SEXP xr);
-RcppExport SEXP DiscrimOD_KL_logistic(SEXP xtSEXP, SEXP xrSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type xt(xtSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type xr(xrSEXP);
-    rcpp_result_gen = Rcpp::wrap(KL_logistic(xt, xr));
-    return rcpp_result_gen;
-END_RCPP
-}
-// KL_lognormal_a
-arma::rowvec KL_lognormal_a(SEXP xt, SEXP xr);
-RcppExport SEXP DiscrimOD_KL_lognormal_a(SEXP xtSEXP, SEXP xrSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type xt(xtSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type xr(xrSEXP);
-    rcpp_result_gen = Rcpp::wrap(KL_lognormal_a(xt, xr));
-    return rcpp_result_gen;
-END_RCPP
-}
-// KL_lognormal_b
-arma::rowvec KL_lognormal_b(SEXP xt, SEXP xr);
-RcppExport SEXP DiscrimOD_KL_lognormal_b(SEXP xtSEXP, SEXP xrSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type xt(xtSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type xr(xrSEXP);
-    rcpp_result_gen = Rcpp::wrap(KL_lognormal_b(xt, xr));
-    return rcpp_result_gen;
-END_RCPP
-}
-// KL_lognormal_c
-arma::rowvec KL_lognormal_c(SEXP xt, SEXP xr);
-RcppExport SEXP DiscrimOD_KL_lognormal_c(SEXP xtSEXP, SEXP xrSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type xt(xtSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type xr(xrSEXP);
-    rcpp_result_gen = Rcpp::wrap(KL_lognormal_c(xt, xr));
-    return rcpp_result_gen;
-END_RCPP
-}
-// KL_gamma_b
-arma::rowvec KL_gamma_b(SEXP xt, SEXP xr);
-RcppExport SEXP DiscrimOD_KL_gamma_b(SEXP xtSEXP, SEXP xrSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type xt(xtSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type xr(xrSEXP);
-    rcpp_result_gen = Rcpp::wrap(KL_gamma_b(xt, xr));
-    return rcpp_result_gen;
-END_RCPP
-}
 // cppPSO
 Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, Rcpp::List EXTERNAL_LIST, const SEXP env, const bool IF_PARALLEL, const bool VERBOSE);
 RcppExport SEXP DiscrimOD_cppPSO(SEXP LOOPIDSEXP, SEXP PSO_INFO_LISTSEXP, SEXP LBFGS_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP EXTERNAL_LISTSEXP, SEXP envSEXP, SEXP IF_PARALLELSEXP, SEXP VERBOSESEXP) {
@@ -177,13 +93,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"DiscrimOD_T_optimal", (DL_FUNC) &DiscrimOD_T_optimal, 2},
-    {"DiscrimOD_KL_normal_hetero", (DL_FUNC) &DiscrimOD_KL_normal_hetero, 2},
-    {"DiscrimOD_KL_logistic", (DL_FUNC) &DiscrimOD_KL_logistic, 2},
-    {"DiscrimOD_KL_lognormal_a", (DL_FUNC) &DiscrimOD_KL_lognormal_a, 2},
-    {"DiscrimOD_KL_lognormal_b", (DL_FUNC) &DiscrimOD_KL_lognormal_b, 2},
-    {"DiscrimOD_KL_lognormal_c", (DL_FUNC) &DiscrimOD_KL_lognormal_c, 2},
-    {"DiscrimOD_KL_gamma_b", (DL_FUNC) &DiscrimOD_KL_gamma_b, 2},
     {"DiscrimOD_cppPSO", (DL_FUNC) &DiscrimOD_cppPSO, 9},
     {"DiscrimOD_cppDesignCriterion", (DL_FUNC) &DiscrimOD_cppDesignCriterion, 7},
     {"DiscrimOD_cppEquivalence", (DL_FUNC) &DiscrimOD_cppEquivalence, 7},

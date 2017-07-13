@@ -3,10 +3,10 @@ library(DiscrimOD)
 gdpath <- "D:/Ping_Yang/Google Drive/PYChen_Statistics_NCKU"
 projPath <- file.path(gdpath, "Researches/2015 min-max optimal discriminating designs")
 #projPath <- "./2017_PSOQN"
-outputPath <- file.path(projPath, "pkgOutput_algComp_toxicology_KL")
+outputPath <- file.path(projPath, "pkgOutput_algComp_logistic")
 if (!dir.exists(outputPath)) { dir.create(outputPath) }
 
-caseName <- "toxicology_KL"
+caseName <- "logistic"
 
 nIter <- 200; nRep <- 50
 # Set PSO options for pariwise discrimination design cases
@@ -20,88 +20,74 @@ FED_INFO <- getFEDInfo(FED_MAXIT = nIter, FED_TRIM = 3, FED_TRIM_EPS = 1e-2,
                        freeRun = 1.0, FED_EPS = 1e-6, FED_ALPHA_GRID = 20)
 
 # Create competing models
-tox5 <- cppFunction('
+linlogi4 <- cppFunction('
   Rcpp::NumericVector enzyme2(Rcpp::NumericMatrix x, Rcpp::NumericVector p) {
     Rcpp::NumericVector eta(x.nrow());
     for (int i = 0; i < x.nrow(); i++) { 
-      eta(i) = p(0)*(p(2) - (p(2) - 1.0)*std::exp((-1.0)*std::pow(x(i,0)/p(1), p(3)))); }
+      eta(i) = p(0) + p(1)*x(i,0) + p(2)*x(i,0)*x(i,0); }
     return eta; 
 }')
-tox4 <- cppFunction('
+linlogi3 <- cppFunction('
   Rcpp::NumericVector enzyme2(Rcpp::NumericMatrix x, Rcpp::NumericVector p) {
     Rcpp::NumericVector eta(x.nrow());
-    for (int i = 0; i < x.nrow(); i++) { 
-      eta(i) = p(0)*(p(2) - (p(2) - 1.0)*std::exp((-1.0)*x(i,0)/p(1))); }
+    for (int i = 0; i < x.nrow(); i++) { eta(i) = x(i,0)*(p(0) + p(1)*x(i,0)); }
     return eta; 
 }')
-tox3 <- cppFunction('
+linlogi2 <- cppFunction('
   Rcpp::NumericVector enzyme2(Rcpp::NumericMatrix x, Rcpp::NumericVector p) {
     Rcpp::NumericVector eta(x.nrow());
-    for (int i = 0; i < x.nrow(); i++) { 
-      eta(i) = p(0)*std::exp((-1.0)*std::pow(x(i,0)/p(1), p(2))); }
+    for (int i = 0; i < x.nrow(); i++) { eta(i) = p(0) + p(1)*x(i,0); }
     return eta; 
 }')
-tox2 <- cppFunction('
+linlogi1 <- cppFunction('
   Rcpp::NumericVector enzyme2(Rcpp::NumericMatrix x, Rcpp::NumericVector p) {
     Rcpp::NumericVector eta(x.nrow());
-    for (int i = 0; i < x.nrow(); i++) { 
-      eta(i) = p(0)*std::exp((-1.0)*x(i,0)/p(1)); }
-    return eta; 
-}')
-tox1 <- cppFunction('
-  Rcpp::NumericVector enzyme2(Rcpp::NumericMatrix x, Rcpp::NumericVector p) {
-    Rcpp::NumericVector eta(x.nrow());
-    for (int i = 0; i < x.nrow(); i++) { eta(i) = p(0); }
+    for (int i = 0; i < x.nrow(); i++) { eta(i) = p(0)*x(i,0); }
     return eta; 
 }')
 
 # Set the nominal values for the first model (null model)
-para_tox_5 <- c(4.282, 835.571, 0.739, 3.515)
-model_tox <- list(
-  list(model = tox5, para = para_tox_5),
-  list(model = tox4, paraLower = c(0, 0, 0), paraUpper = c(20, 5000, 1)),
-  list(model = tox3, paraLower = c(0, 0, 1), paraUpper = c(20, 5000, 15)),
-  list(model = tox2, paraLower = c(0, 0), paraUpper = c(20, 5000)),
-  list(model = tox1, paraLower = c(0), paraUpper = c(20))
+para_linlogi_4 <- c(1, 1, 1)
+# Create the model list
+model_linearLogistic <- list(
+  list(model = linlogi4, para = para_linlogi_4),
+  list(model = linlogi3, paraLower = c(-10, -10), paraUpper = c(10, 10)),
+  list(model = linlogi2, paraLower = c(-10, -10), paraUpper = c(10, 10)),
+  list(model = linlogi1, paraLower = c(-10), paraUpper = c(10))
 )
-DL <- 0; DU <- 1250
+
+DL <- 0; DU <- 1
 # Create the lists for pairwise discrimination designs
 two_model <- list(
-  list(model_tox[[1]], model_tox[[2]]),
-  list(model_tox[[1]], model_tox[[3]]),
-  list(model_tox[[1]], model_tox[[4]]),
-  list(model_tox[[1]], model_tox[[5]])
+  list(model_linearLogistic[[1]], model_linearLogistic[[2]]),
+  list(model_linearLogistic[[1]], model_linearLogistic[[3]]),
+  list(model_linearLogistic[[1]], model_linearLogistic[[4]])
 )
-# Specify the number fo support points for pairwise discrimination designs
-two_nSupp <- c(3, 4, 3, 2)
 
+# Specify the number fo support points for pairwise discrimination designs
+two_nSupp <- c(3, 3, 3)
+
+#
 two_optimal <- list(
-  cbind(c(0.000, 487.447, 1067.150), c(0.272, 0.500, 0.228)),
-  cbind(c(0.000, 498.898, 979.722, 1250.000), c(0.093, 0.290, 0.408, 0.210)),
-  cbind(c(0.000, 487.448, 1065.369), c(0.271, 0.500, 0.229)),
-  cbind(c(0.000, 1250.000), c(0.500, 0.500))
+
 )
 
 # Set distance function
-lognorm_for_tox_cpp <- cppFunction('
-  Rcpp::NumericVector log_norm_B(Rcpp::NumericVector xt, Rcpp::NumericVector xr) {
-    double sigsq = 0.01;
+logit_diff_cpp <- cppFunction('
+  Rcpp::NumericVector logit_diff(Rcpp::NumericVector xt, Rcpp::NumericVector xr) {
     Rcpp::NumericVector div(xt.size());
-    double xt2, xr2, vt, vr, mt, mr;
+    double et, er, mt, mr;
     for (int i = 0; i < xt.size(); i++) {
-      xt2 = xt(i)*xt(i); 
-      xr2 = xr(i)*xr(i);
-      vt = (std::exp(sigsq) - 1.0)*xt2;
-      vr = (std::exp(sigsq) - 1.0)*xr2;
-      mt = std::log(xt(i)) - 0.5*std::log(1.0 + (vt/xt2));
-      mr = std::log(xr(i)) - 0.5*std::log(1.0 + (vr/xr2));
-      div(i) = 0.5*((mt - mr)*(mt - mr))/sigsq;
-    }  
+      et = std::exp(xt(i)); mt = et/(1.0 + et);
+      er = std::exp(xr(i)); mr = er/(1.0 + er);
+      div(i) = mt*std::log(mt/mr) + (1.0 - mt)*std::log((1.0 - mt)/(1.0 - mr));
+    }
     return div;
 }')
 
+
 # Start for each pairwise discrimination design
-DISTANCE <- lognorm_for_tox_cpp
+DISTANCE <- logit_diff_cpp
 for (iC in 1:length(two_model)) {
   iC <- 3
 
