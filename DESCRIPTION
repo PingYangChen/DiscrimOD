@@ -25,6 +25,7 @@ Imports:
     Rcpp (>= 0.12.7),
     RcppArmadillo,
     inline,
+		limSolve,
     utils
 LinkingTo: Rcpp,
     RcppArmadillo,

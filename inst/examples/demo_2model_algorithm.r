@@ -153,7 +153,7 @@ Remes_af1975_12 <- DiscrimUnifApproxT(MODEL_INFO = model_af1975_12, nSupp = 4,
                                       REMES_MAXIT = 200, REMES_FreeRun = 1.0, REMES_EPS = 1e-2,
                                       LBFGS_INFO = LBFGS_INFO, seed = 10, verbose = TRUE)
 
-Remes_af1975_12$BESTDESIGN # may not be a design
+Remes_af1975_12$BESTDESIGN 
 #           dim_1      weight
 #obs_1 -1.0000000  1.31989632
 #obs_2 -0.6673253 -0.18147928

@@ -299,7 +299,7 @@ Rcpp::List cppUnifApprox(Rcpp::List REMES_INFO_LIST, Rcpp::List LBFGS_INFO_LIST,
   if (VERBOSE) Rprintf("Done.\n");
 
   return List::create(Named("DESIGN") = wrap(Result.DESIGN),
-                      Named("WT") = wrap(Result.WT),
+                      Named("DD_DEV") = wrap(Result.DD_DEV),
                       Named("R_PARA") = wrap(Result.R_PARA),
                       Named("CPolyVal") = wrap(Result.CPolyVal));
 }

@@ -14,7 +14,6 @@ DiscrimUnifApproxT <- function(MODEL_INFO, nSupp, dsLower, dsUpper, REMES_MAXIT 
 
   stopifnot(all(is.finite(dsLower)), all(is.finite(dsUpper)), length(dsLower) == 1, 
             length(dsLower) == length(dsUpper), all(dsUpper > dsLower),
-            all(names(FED_INFO) == names(getFEDInfo())),
             all(names(LBFGS_INFO) == names(getLBFGSInfo())),
             nSupp > 1)
 
@@ -58,7 +57,11 @@ DiscrimUnifApproxT <- function(MODEL_INFO, nSupp, dsLower, dsUpper, REMES_MAXIT 
 
 	if (verbose) message(paste0("CPU time: ", round(cputime, 2), " seconds."))
 
-	BESTDESIGN <- cbind(remesOut$DESIGN, t(remesOut$WT))
+	wout <- limSolve::lsei(A = remesOut$DD_DEV, B = rep(0, nrow(remesOut$DD_DEV)), E = t(rep(1, ncol(remesOut$DD_DEV))), F = 1, 
+										     G = rbind(diag(ncol(remesOut$DD_DEV)), -diag(ncol(remesOut$DD_DEV))), 
+										     H = c(rep(0, ncol(remesOut$DD_DEV)), rep(-1, ncol(remesOut$DD_DEV))))
+
+	BESTDESIGN <- cbind(remesOut$DESIGN, wout$X)
 	dimnames(BESTDESIGN) <- list(paste0("obs_", 1:nrow(BESTDESIGN)), 
 															 c(paste0("dim_", 1:(ncol(BESTDESIGN) - 1)), "weight"))
 

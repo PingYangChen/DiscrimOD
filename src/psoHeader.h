@@ -253,6 +253,7 @@ typedef struct {
 typedef struct {
   arma::mat DESIGN;
   arma::rowvec WT;
+  arma::mat DD_DEV;
   arma::rowvec R_PARA;
   arma::rowvec CPolyVal;
 } REMES_Result, *Ptr_REMES_Result;

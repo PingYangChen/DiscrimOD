@@ -278,20 +278,15 @@ void REMES_MAIN(const REMES_PARAM REMES_OPTION, const LBFGS_PARAM LBFGS_OPTION, 
   }
   /* -- FINISH FEDOROV LOOP -- */
   // Calculate Design Weights by (2.8) in Dette and Titoff (2009)
-  arma::mat DD_DEV(R_PARA.n_elem + 1, nSupp, fill::zeros);
+  arma::mat DD_DEV(R_PARA.n_elem, nSupp, fill::zeros);
   for (int i = 0; i < nSupp; i++) {
     ONE_PT.row(0) = DESIGN.row(i);
     CPolyVal(i) = getCPolyVal(OBJ, MODEL_COLLECTOR, 0, ONE_PT, R_PARA);
     DD_DEV.submat(0, i, R_PARA.n_elem - 1, i) = getRivalDev(OBJ, MODEL_COLLECTOR, 0, ONE_PT, R_PARA).t();
   }
-  DD_DEV.row(R_PARA.n_elem).fill(1.0);
-
-  arma::vec ZEROS_ONE(R_PARA.n_elem + 1, fill::zeros); ZEROS_ONE(R_PARA.n_elem) = 1.0;
-  arma::vec WT = arma::pinv(DD_DEV) * ZEROS_ONE;
-
  	/* -- OUTPUT -- */
   REMES_Result.DESIGN = DESIGN;
-  REMES_Result.WT = WT.t();
+  REMES_Result.DD_DEV = DD_DEV;
   REMES_Result.R_PARA = R_PARA;
   REMES_Result.CPolyVal = CPolyVal;
   /* -- END -- */
