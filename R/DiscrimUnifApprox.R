@@ -9,6 +9,7 @@
 #' @name DiscrimUnifApproxT
 #' @rdname DiscrimUnifApproxT
 #' @export
+#' @importFrom limSolve lsei
 DiscrimUnifApproxT <- function(MODEL_INFO, nSupp, dsLower, dsUpper, REMES_MAXIT = 50, REMES_FreeRun = 1.0, REMES_EPS = 1e-3, 
 													 		LBFGS_INFO = NULL, seed = NULL, verbose = TRUE, environment, ...) {
 
@@ -59,7 +60,8 @@ DiscrimUnifApproxT <- function(MODEL_INFO, nSupp, dsLower, dsUpper, REMES_MAXIT 
 
 	wout <- tryCatch(
 		{
-			limSolve::lsei(A = remesOut$DD_DEV, B = rep(0, nrow(remesOut$DD_DEV)), E = t(rep(1, ncol(remesOut$DD_DEV))), F = 1, 
+			limSolve::lsei(A = remesOut$DD_DEV, B = rep(0, nrow(remesOut$DD_DEV)), 
+										 E = t(rep(1, ncol(remesOut$DD_DEV))), F = 1, 
 										 G = rbind(diag(ncol(remesOut$DD_DEV)), -diag(ncol(remesOut$DD_DEV))), 
 										 H = c(rep(0, ncol(remesOut$DD_DEV)), rep(-1, ncol(remesOut$DD_DEV))))
 		},
