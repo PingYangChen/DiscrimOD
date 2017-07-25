@@ -57,20 +57,35 @@ DiscrimUnifApproxT <- function(MODEL_INFO, nSupp, dsLower, dsUpper, REMES_MAXIT 
 
 	if (verbose) message(paste0("CPU time: ", round(cputime, 2), " seconds."))
 
-	wout <- limSolve::lsei(A = remesOut$DD_DEV, B = rep(0, nrow(remesOut$DD_DEV)), E = t(rep(1, ncol(remesOut$DD_DEV))), F = 1, 
-										     G = rbind(diag(ncol(remesOut$DD_DEV)), -diag(ncol(remesOut$DD_DEV))), 
-										     H = c(rep(0, ncol(remesOut$DD_DEV)), rep(-1, ncol(remesOut$DD_DEV))))
+	wout <- tryCatch(
+		{
+			limSolve::lsei(A = remesOut$DD_DEV, B = rep(0, nrow(remesOut$DD_DEV)), E = t(rep(1, ncol(remesOut$DD_DEV))), F = 1, 
+										 G = rbind(diag(ncol(remesOut$DD_DEV)), -diag(ncol(remesOut$DD_DEV))), 
+										 H = c(rep(0, ncol(remesOut$DD_DEV)), rep(-1, ncol(remesOut$DD_DEV))))
+		},
+		error = function(cond) {
+			message("weight cannot be found by limSolve::lsei")
+			message("orignal error message:")
+			message(cond)
+			return(-1)
+		},
+		warning = function(cond) {
+			message("these is a warning message from limSolve::lsei:")
+			message(cond)
+			return(-1)
+		}
+	)
 
-	BESTDESIGN <- cbind(remesOut$DESIGN, wout$X)
-	dimnames(BESTDESIGN) <- list(paste0("obs_", 1:nrow(BESTDESIGN)), 
-															 c(paste0("dim_", 1:(ncol(BESTDESIGN) - 1)), "weight"))
-
-	BESTVAL <- "NOT A DESIGN"
-	if (all(remesOut$WT >= 0) & all(remesOut$WT <= 1)) {
+	if (!is.list(wout)) {
+		OUTPUT <- "CANNOT FIND A DESIGN DUE TO NO SOLUTION IN limSolve::lsei"	
+	} else {
+		BESTDESIGN <- cbind(remesOut$DESIGN, wout$X)
+		dimnames(BESTDESIGN) <- list(paste0("obs_", 1:nrow(BESTDESIGN)), 
+																 c(paste0("dim_", 1:(ncol(BESTDESIGN) - 1)), "weight"))
 		BESTDESIGN_M <- designV2M(BESTDESIGN, D_INFO)
 		tmp <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MODEL_LIST, 0, environment, BESTDESIGN_M)
 		BESTVAL <- -tmp$val
-	} 
-	
-	list(BESTDESIGN = BESTDESIGN, BESTVAL = BESTVAL, CPoly = remesOut$CPolyVal, CPUTIME = cputime)
+		OUTPUT <- list(BESTDESIGN = BESTDESIGN, BESTVAL = BESTVAL, CPoly = remesOut$CPolyVal, CPUTIME = cputime)
+	}
+	OUTPUT
 }
