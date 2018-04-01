@@ -10,7 +10,12 @@ designV2M <- function(v_design, D_INFO) {
 			tmp <- as.vector(t(v_design[,1:d]))		
 			wt <- sqrt(as.vector(v_design[,ncol(v_design)]))
 			ang <- numeric(n-1)
-			for (i in 1:(n-1)) ang[i] <- acos(wt[i]/sqrt(sum((wt[i:n]^2))))
+			for (i in 1:(n-1)) {
+				ang[i] <- acos(wt[i]/sqrt(sum((wt[i:n]^2))))
+				if (i < (n-1)) {
+			    ang[i] <- pi - ang[i]
+			  }
+			}
 			c(tmp, ang)
 		}
 	)
