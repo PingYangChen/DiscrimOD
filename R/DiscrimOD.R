@@ -244,7 +244,7 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, crit_type =
 #' @name designCriterion
 #' @rdname designCriterion
 #' @export
-designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
+designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, minWt = .0, crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
 														PSO_INFO = NULL, LBFGS_INFO = NULL, environment, ...) {
 
 	stopifnot(all(is.finite(dsLower)), all(is.finite(dsUpper)),
@@ -256,7 +256,7 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 	if (is.null(MaxMinStdVals)) MaxMinStdVals <- 0
 	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
                           crit_type = crit_type, MaxMinStdVals = MaxMinStdVals,
-                          dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
+                          dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper, minWt = minWt)
 
 	if (is.null(PSO_INFO)) { PSO_INFO <- getPSOInfo(nSwarm = c(32, 32), maxIter = c(100, 100)) }
 

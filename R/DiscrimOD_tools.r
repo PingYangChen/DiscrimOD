@@ -39,15 +39,15 @@ designM2V <- function(m_design, D_INFO) {
 			tmp <- as.matrix(tmp[do.call(order, as.data.frame(round(tmp, 4))),])
 			dimnames(tmp) <- list(paste0("obs_", 1:n), c(paste0("dim_", 1:d), "weight"))
 			tmp
-		},
-		"maxmin_eqv_wt" = {
-			n_model <- length(m_design) + 1
-			ang <- m_design
-			wcumsin <- wcos <- numeric(n_model)
-		 	wcumsin[1] <- 1; wcumsin[2:n_model] <- cumprod(sin(ang))
-		 	wcos[1:(n_model-1)] <- cos(ang); wcos[n_model] <- 1
-			v_design <-	(wcumsin*wcos)^2
-		}
+		}#,
+		#"maxmin_eqv_wt" = {
+		#	n_model <- length(m_design) + 1
+		#	ang <- m_design
+		#	wcumsin <- wcos <- numeric(n_model)
+		#	wcumsin[1] <- 1; wcumsin[2:n_model] <- cumprod(sin(ang))
+		# 	wcos[1:(n_model-1)] <- cos(ang); wcos[n_model] <- 1
+		#	v_design <-	(wcumsin*wcos)^2
+		#}
 	)
 	return(v_design)
 }
@@ -57,16 +57,16 @@ algInfoUpdate <- function(D_INFO) {
 	
 	D_SWARM <- switch(D_INFO$D_TYPE, 
 		"approx" = 
-			list(UB = matrix(c(rep(D_INFO$dsUpper, D_INFO$nSupp), rep(pi/2, D_INFO$nSupp - 1)), nrow = 1),
-					 LB = matrix(c(rep(D_INFO$dsLower, D_INFO$nSupp), rep(0.0,  D_INFO$nSupp - 1)), nrow = 1)
+			list(UB = matrix(c(rep(D_INFO$dsUpper, D_INFO$nSupp), rep(pi  , D_INFO$nSupp - 2), pi/2), nrow = 1),
+					 LB = matrix(c(rep(D_INFO$dsLower, D_INFO$nSupp), rep(pi/2, D_INFO$nSupp - 2),  0.0), nrow = 1)
 					),
 		"exact" = 
 			list(UB = matrix(c(rep(D_INFO$dsUpper, D_INFO$nSupp)), nrow = 1),
 				   LB = matrix(c(rep(D_INFO$dsLower, D_INFO$nSupp)), nrow = 1)
 					),
 		"multiexact" = 
-			list(UB = matrix(c(rep(D_INFO$dsUpper, D_INFO$nSubj*D_INFO$nSupp), rep(pi/2, D_INFO$nSubj - 1)), nrow = 1),
-		 			 LB = matrix(c(rep(D_INFO$dsLower, D_INFO$nSubj*D_INFO$nSupp), rep(0.0,  D_INFO$nSubj - 1)), nrow = 1)
+			list(UB = matrix(c(rep(D_INFO$dsUpper, D_INFO$nSubj*D_INFO$nSupp), rep(pi  , D_INFO$nSubj - 2), pi/2), nrow = 1),
+		 			 LB = matrix(c(rep(D_INFO$dsLower, D_INFO$nSubj*D_INFO$nSupp), rep(pi/2, D_INFO$nSubj - 2),  0.0), nrow = 1)
 					),
 		"2Dgrid" = 
 			list(UB = matrix(c(rep(D_INFO$dsUpper[1], D_INFO$nGrid1), rep(D_INFO$dsUpper[2], D_INFO$nGrid2)), nrow = 1),

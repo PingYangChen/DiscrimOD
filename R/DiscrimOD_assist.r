@@ -178,7 +178,7 @@ getFEDInfo <- function(FED_MAXIT = 200, FED_TRIM = 5, FED_TRIM_EPS = 1e-3, freeR
 #' @export
 getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL,
                           crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
-                          dSupp = 1L, nSupp = 2L, dsLower = NULL, dsUpper = NULL) {
+                          dSupp = 1L, nSupp = 2L, dsLower = NULL, dsUpper = NULL, minWt = .0) {
 
   dParas <- sapply(1:length(MODEL_INFO), function(k) if (k == 1) length(MODEL_INFO[[k]]$para) else length(MODEL_INFO[[k]]$paraUpper))
 
@@ -206,7 +206,7 @@ getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL
 
   return(list(D_TYPE = D_TYPE, D_TYPE_NUM = D_TYPE_NUM, dist_func = dist_func,
               CRIT_TYPE_NUM = CRIT_TYPE_NUM,
-              dSupp = dSupp, nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper,
+              dSupp = dSupp, nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper, minWt = minWt,
               N_PAIR = N_PAIR, MODEL_PAIR = MODEL_PAIR, dParas = dParas, paras = paras, parasInit = parasInit,
               parasUpper = parasUpper, parasLower = parasLower, parasBdd = parasBdd,
               MaxMinStdVals = MaxMinStdVals))

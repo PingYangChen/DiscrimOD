@@ -8,7 +8,7 @@ using namespace Rcpp;
 
 // cppPSO
 Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, Rcpp::List EXTERNAL_LIST, const SEXP env, const bool IF_PARALLEL, const bool VERBOSE);
-RcppExport SEXP DiscrimOD_cppPSO(SEXP LOOPIDSEXP, SEXP PSO_INFO_LISTSEXP, SEXP LBFGS_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP EXTERNAL_LISTSEXP, SEXP envSEXP, SEXP IF_PARALLELSEXP, SEXP VERBOSESEXP) {
+RcppExport SEXP _DiscrimOD_cppPSO(SEXP LOOPIDSEXP, SEXP PSO_INFO_LISTSEXP, SEXP LBFGS_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP EXTERNAL_LISTSEXP, SEXP envSEXP, SEXP IF_PARALLELSEXP, SEXP VERBOSESEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -27,7 +27,7 @@ END_RCPP
 }
 // cppDesignCriterion
 Rcpp::List cppDesignCriterion(Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, Rcpp::List EXTERNAL_LIST, SEXP env, arma::rowvec DESIGN);
-RcppExport SEXP DiscrimOD_cppDesignCriterion(SEXP PSO_INFO_LISTSEXP, SEXP LBFGS_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP EXTERNAL_LISTSEXP, SEXP envSEXP, SEXP DESIGNSEXP) {
+RcppExport SEXP _DiscrimOD_cppDesignCriterion(SEXP PSO_INFO_LISTSEXP, SEXP LBFGS_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP EXTERNAL_LISTSEXP, SEXP envSEXP, SEXP DESIGNSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -44,7 +44,7 @@ END_RCPP
 }
 // cppEquivalence
 Rcpp::List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, const double GBEST_VAL, const arma::mat PARA_SET, const arma::rowvec alpha, const SEXP env, const int nGrid);
-RcppExport SEXP DiscrimOD_cppEquivalence(SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP GBEST_VALSEXP, SEXP PARA_SETSEXP, SEXP alphaSEXP, SEXP envSEXP, SEXP nGridSEXP) {
+RcppExport SEXP _DiscrimOD_cppEquivalence(SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP GBEST_VALSEXP, SEXP PARA_SETSEXP, SEXP alphaSEXP, SEXP envSEXP, SEXP nGridSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -61,7 +61,7 @@ END_RCPP
 }
 // cppFedorovWynn
 Rcpp::List cppFedorovWynn(Rcpp::List FED_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, const SEXP env, const bool VERBOSE);
-RcppExport SEXP DiscrimOD_cppFedorovWynn(SEXP FED_INFO_LISTSEXP, SEXP LBFGS_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP envSEXP, SEXP VERBOSESEXP) {
+RcppExport SEXP _DiscrimOD_cppFedorovWynn(SEXP FED_INFO_LISTSEXP, SEXP LBFGS_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP envSEXP, SEXP VERBOSESEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -77,7 +77,7 @@ END_RCPP
 }
 // cppUnifApprox
 Rcpp::List cppUnifApprox(Rcpp::List REMES_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST, const SEXP env, const bool VERBOSE);
-RcppExport SEXP DiscrimOD_cppUnifApprox(SEXP REMES_INFO_LISTSEXP, SEXP LBFGS_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP envSEXP, SEXP VERBOSESEXP) {
+RcppExport SEXP _DiscrimOD_cppUnifApprox(SEXP REMES_INFO_LISTSEXP, SEXP LBFGS_INFO_LISTSEXP, SEXP OBJ_INFO_LISTSEXP, SEXP MODEL_INFO_LISTSEXP, SEXP envSEXP, SEXP VERBOSESEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -93,11 +93,11 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"DiscrimOD_cppPSO", (DL_FUNC) &DiscrimOD_cppPSO, 9},
-    {"DiscrimOD_cppDesignCriterion", (DL_FUNC) &DiscrimOD_cppDesignCriterion, 7},
-    {"DiscrimOD_cppEquivalence", (DL_FUNC) &DiscrimOD_cppEquivalence, 7},
-    {"DiscrimOD_cppFedorovWynn", (DL_FUNC) &DiscrimOD_cppFedorovWynn, 6},
-    {"DiscrimOD_cppUnifApprox", (DL_FUNC) &DiscrimOD_cppUnifApprox, 6},
+    {"_DiscrimOD_cppPSO", (DL_FUNC) &_DiscrimOD_cppPSO, 9},
+    {"_DiscrimOD_cppDesignCriterion", (DL_FUNC) &_DiscrimOD_cppDesignCriterion, 7},
+    {"_DiscrimOD_cppEquivalence", (DL_FUNC) &_DiscrimOD_cppEquivalence, 7},
+    {"_DiscrimOD_cppFedorovWynn", (DL_FUNC) &_DiscrimOD_cppFedorovWynn, 6},
+    {"_DiscrimOD_cppUnifApprox", (DL_FUNC) &_DiscrimOD_cppUnifApprox, 6},
     {NULL, NULL, 0}
 };
 
