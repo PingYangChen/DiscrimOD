@@ -84,6 +84,7 @@ typedef struct {
   // Design Space
   arma::rowvec dsLower; // rep(0,1)
   arma::rowvec dsUpper; // rep(1,1)
+  double minWt;
   // Competing Models
   int N_PAIR;
   arma::imat MODEL_PAIR;
@@ -322,6 +323,7 @@ void getInfoStruct(OBJ_INFO &OBJ, const Rcpp::List OBJ_INFO_LIST)
   arma::rowvec dsUpper(dsUpper_Tmp.begin(), dsUpper_Tmp.size(), false);
   OBJ.dsUpper = dsUpper;
 
+  OBJ.minWt = as<double>(OBJ_INFO_LIST["minWt"]);
   OBJ.N_PAIR = as<int>(OBJ_INFO_LIST["N_PAIR"]);
 
   Rcpp::IntegerMatrix MODEL_PAIR_Tmp   = as<IntegerMatrix>(OBJ_INFO_LIST["MODEL_PAIR"]);

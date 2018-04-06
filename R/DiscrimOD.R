@@ -151,7 +151,7 @@
 #' @name DiscrimOD
 #' @rdname DiscrimOD
 #' @export
-DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
+DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, minWt = 0.0, crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
 											PSO_INFO = NULL, LBFGS_INFO = NULL, seed = NULL, verbose = TRUE, environment, ...) {
 
   stopifnot(nSupp >= 2L, all(is.finite(dsLower)), all(is.finite(dsUpper)),
@@ -176,7 +176,8 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, crit_type =
 
 	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
                           crit_type = crit_type, MaxMinStdVals = MaxMinStdVals,
-                          dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
+                          dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper,
+	                        minWt = minWt)
 
 	if (is.null(PSO_INFO)) {
 		PSO_INFO <- getPSOInfo(nSwarm = c(32, 32), maxIter = c(100, 100))
@@ -214,7 +215,7 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, crit_type =
 	if (verbose) message(paste0("CPU time: ", round(cputime, 2), " seconds."))
 
 	BESTDESIGN <- designM2V(psoOut$GBest, D_INFO)
-	
+
 	list(BESTDESIGN = BESTDESIGN, BESTVAL = -psoOut$fGBest, GBESTHIST = -psoOut$fGBestHist,
 	     CPUTIME = cputime)
 }
@@ -283,7 +284,7 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, min
 	DESIGN1_M <- designV2M(DESIGN1, D_INFO)
 	cri_1 <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MODEL_LIST, 0, environment, DESIGN1_M)
 	rownames(cri_1$theta2) <- paste0("model_", 1:length(MODEL_INFO))
-	
+
   return(list(cri_val = -cri_1$val, theta2 = cri_1$theta2))
 }
 

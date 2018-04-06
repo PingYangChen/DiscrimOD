@@ -20,8 +20,9 @@ double DesignCriterion(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PAR
                        model_diff_func *MODEL_COLLECTOR[], void *PSO_EXT, const rowvec x, arma::mat &R_PARA)
 {
 	int nSupp = OBJ.nSupp;
-	int dSupp = OBJ.dSupp; 
+	int dSupp = OBJ.dSupp;
 	int d_type = OBJ.d_type;
+	double minWt = OBJ.minWt;
 	//Rprintf("get design\n");
   arma::rowvec swarm = x;
 
@@ -54,8 +55,10 @@ double DesignCriterion(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PAR
   			wcos(nSupp - 1) = 1.0; wcos.subvec(0, nSupp - 2) = arma::cos(ang);
   			WT = wcumsin % wcos;
   			WT = WT % WT;
-        val = criterionList(LOOPID, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, DESIGN, WT, R_PARA);
-        val *= -1.0;
+  			if (arma::min(WT) > minWt) {
+          val = criterionList(LOOPID, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, DESIGN, WT, R_PARA);
+          val *= -1.0;
+  			}
   			break;
   		}
       // Find Optimal Weight for Equivalence Theorem on Max-min Optimal Design
@@ -93,7 +96,7 @@ double DesignCriterion(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PAR
 
     model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
     Rcpp::EvalBase *m1_func = (Rcpp::EvalBase *) func_input->M1_FUNC;
-    Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC; 
+    Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC;
     Rcpp::EvalBase *distFunc = (Rcpp::EvalBase *) func_input->DISTFUNC;
 
     Shield<SEXP> DESIGN_SEXP(Rcpp::wrap(DESIGN));
@@ -115,7 +118,7 @@ double DesignCriterion(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PAR
           arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size());
           val = 0;
           for (uword i = 0; i < WT.n_elem; i++) { val += WT(i)*DIV(i); }
-          //val = arma::accu(WT % DIV); 
+          //val = arma::accu(WT % DIV);
         }
       }
     }
@@ -141,16 +144,16 @@ double criterionList(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM
       R_PARA.submat(0, 0, 0, OBJ.dParas(0) - 1) = OBJ.paras.submat(0, 0, 0, OBJ.dParas(0) - 1);
 			arma::rowvec R_PARA_tmp(OBJ.dParas(rmID));
 
-      if (LBFGS == 0) { 
+      if (LBFGS == 0) {
         inner_pso_info PSO_EXT = {};
         PSO_EXT.PAIRID = 0;
         PSO_EXT.DESIGN = DESIGN;
         PSO_EXT.WT = WT;
 
         PSO_OPTS[LOOPID + 1].dSwarm = OBJ.dParas(rmID);
-        PSO_OPTS[LOOPID + 1].varUpper.set_size(OBJ.dParas(rmID)); 
+        PSO_OPTS[LOOPID + 1].varUpper.set_size(OBJ.dParas(rmID));
         PSO_OPTS[LOOPID + 1].varUpper = OBJ.parasUpper.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
-        PSO_OPTS[LOOPID + 1].varLower.set_size(OBJ.dParas(rmID)); 
+        PSO_OPTS[LOOPID + 1].varLower.set_size(OBJ.dParas(rmID));
         PSO_OPTS[LOOPID + 1].varLower = OBJ.parasLower.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
 
         PSO_Result InnerResult;
@@ -181,9 +184,9 @@ double criterionList(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM
           int rmID = OBJ.MODEL_PAIR(i, 1);
 
           PSO_OPTS[LOOPID + 1].dSwarm = OBJ.dParas(rmID);
-          PSO_OPTS[LOOPID + 1].varUpper.set_size(OBJ.dParas(rmID)); 
+          PSO_OPTS[LOOPID + 1].varUpper.set_size(OBJ.dParas(rmID));
           PSO_OPTS[LOOPID + 1].varUpper = OBJ.parasUpper.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
-          PSO_OPTS[LOOPID + 1].varLower.set_size(OBJ.dParas(rmID)); 
+          PSO_OPTS[LOOPID + 1].varLower.set_size(OBJ.dParas(rmID));
           PSO_OPTS[LOOPID + 1].varLower = OBJ.parasLower.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
 
           PSO_Result InnerResult;
@@ -333,11 +336,11 @@ arma::rowvec distCalc(const OBJ_INFO OBJ, const arma::mat x, const arma::mat PAR
   Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(R_PARA_SEXP);
 
   Rcpp::NumericVector eta_T_Rform((int)x.n_rows), eta_R_Rform((int)x.n_rows), DIV_Rform((int)x.n_rows);
-  eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(DESIGN_Rform, T_PARA_Rform);  
+  eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(DESIGN_Rform, T_PARA_Rform);
   eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(DESIGN_Rform, R_PARA_Rform);
   DIV_Rform = (Rcpp::NumericVector) distFunc->eval(eta_T_Rform, eta_R_Rform);
-    
-  arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size());  
+
+  arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size());
   DIV.elem(find_nonfinite(DIV)).fill(1e10);
 
   return DIV;

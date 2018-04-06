@@ -8,10 +8,10 @@
 #' Specify \code{TRUE} for PSO to compute the stopping criterion \eqn{|f'-f|<\varepsilon}
 #' where \eqn{f'} and \eqn{f} are the objective function values in the previous and current iterations, respectively.
 #' The default is \code{FALSE}.
-#' @param freeRun A number between \eqn{[0,1]} that controls the percentage of PSO iterations which are free from examining the 
+#' @param freeRun A number between \eqn{[0,1]} that controls the percentage of PSO iterations which are free from examining the
 #' stopping criterion, \eqn{|f'-f|<\varepsilon}
 #' where \eqn{f'} and \eqn{f} are the objective function values in the previous and current iterations, respectively.
-#' The default is 1.0 implying the PSO will completely ignore the stopping criterion. 
+#' The default is 1.0 implying the PSO will completely ignore the stopping criterion.
 #' Otherwise, the PSO checks the stopping criterion after free iterations.
 #' @param tol A small value for the tolerance, \eqn{\varepsilon}, in the stopping criterion.
 #' For \code{freeRun} smaller than 1.0, the default is \code{1e-6}. Otherwise, this value would not affect the algorithm.
@@ -46,7 +46,7 @@
 #' @rdname getPSOInfo
 #' @export
 getPSOInfo <- function(nSwarm = 32, maxIter = 100,
-  #typePSO = 0, #dSwarm = NULL, varUpper = NULL, varLower = NULL, checkConv = 0, 
+  #typePSO = 0, #dSwarm = NULL, varUpper = NULL, varLower = NULL, checkConv = 0,
   freeRun = 1.0, tol = 1e-6, c1 = 2.05, c2 = 2.05,
   w0 = 1.2, w1 = 0.2, w_var = 0.8, vk = 4 #, chi = NULL,
   #typeTopo = NULL, nGroup = NULL, GC_S_ROOF = 5, GC_F_ROOF = 15, GC_RHO = 1,
@@ -82,7 +82,7 @@ getPSOInfo <- function(nSwarm = 32, maxIter = 100,
   #if (length(Q_a_var) < nLoop)    Q_a_var    <- rep(0.8   , nLoop)
   #if (length(LcRi_L) < nLoop)     LcRi_L     <- rep(0.01  , nLoop)
 
-  list(nSwarm = nSwarm, dSwarm = "autogen", varUpper = "autogen", varLower = "autogen", maxIter = maxIter, #typePSO = typePSO, checkConv = checkConv, 
+  list(nSwarm = nSwarm, dSwarm = "autogen", varUpper = "autogen", varLower = "autogen", maxIter = maxIter, #typePSO = typePSO, checkConv = checkConv,
     freeRun = freeRun, tol = tol, c1 = c1, c2 = c2, w0 = w0, w1 = w1, w_var = w_var, #chi = chi,
     vk = vk #, #typeTopo = typeTopo, nGroup = nGroup, GC_S_ROOF = GC_S_ROOF, GC_F_ROOF = GC_F_ROOF,
     #GC_RHO = GC_RHO, Q_cen_type = Q_cen_type, Q_a0 = Q_a0, Q_a1 = Q_a1, Q_a_var = Q_a_var,
@@ -148,30 +148,30 @@ getLBFGSInfo <- function(IF_INNER_LBFGS = TRUE, LBFGS_RETRY = 1, LBFGS_MAXIT = 0
 #' Create a list with Fedorov-Wynn algorithm parameters for optimal discrimination design search.
 #'
 #' @param FED_MAXIT A integer number of maximal iterations. The default is 200.
-#' @param FED_TRIM A integer number that indicates the timing of design trimming (pruning). 
+#' @param FED_TRIM A integer number that indicates the timing of design trimming (pruning).
 #' The default is 5, meaning that, to trim the design every 5 iterations.
-#' @param FED_TRIM_EPS A small value \eqn{\delta} with default \eqn{\delta=10^{-3}}. 
+#' @param FED_TRIM_EPS A small value \eqn{\delta} with default \eqn{\delta=10^{-3}}.
 #' In the trimming process, when the distance between two design points is smaller than \eqn{\delta}, the process will merge these two points.
-#' @param freeRun A number between \eqn{[0,1]} that controls the percentage of updating iterations which are free from examining the 
+#' @param freeRun A number between \eqn{[0,1]} that controls the percentage of updating iterations which are free from examining the
 #' stopping criterion, \eqn{|f'-f|<\varepsilon}
 #' where \eqn{f'} and \eqn{f} are the objective function values in the previous and current iterations, respectively.
-#' The default is 1.0 implying the algorithm will completely ignore the stopping criterion. 
+#' The default is 1.0 implying the algorithm will completely ignore the stopping criterion.
 #' Otherwise, the algorithm checks the stopping criterion after free iterations.
-#' @param tol A small value for the tolerance, \eqn{\varepsilon}, in the stopping criterion. 
+#' @param tol A small value for the tolerance, \eqn{\varepsilon}, in the stopping criterion.
 #' For \code{freeRun} smaller than 1.0, the default is \code{1e-6}. Otherwise, this value would not affect the algorithm.
-#' @param FED_ALPHA_GRID A integer number that specifies the grid size of candidate weights in the update-one-point process of the Fedorov-Wynn algorithm. 
+#' @param FED_ALPHA_GRID A integer number that specifies the grid size of candidate weights in the update-one-point process of the Fedorov-Wynn algorithm.
 #' The default is 20.
 #' @return The list of Fedorov-Wynn parameter settings.
 #' @examples
 #' # Get default settings for Fedorov-Wynn algorithm.
 #' FED_INFO <- getFEDInfo(FED_MAXIT = 200)
 #'
-#' @name getFEDInfo 
+#' @name getFEDInfo
 #' @rdname getFEDInfo
 #' @export
 getFEDInfo <- function(FED_MAXIT = 200, FED_TRIM = 5, FED_TRIM_EPS = 1e-3, freeRun = 1.0, FED_EPS = 1e-6, FED_ALPHA_GRID = 20) {
-   
-  list(FED_MAXIT = FED_MAXIT, FED_TRIM = FED_TRIM, FED_TRIM_EPS = FED_TRIM_EPS, 
+
+  list(FED_MAXIT = FED_MAXIT, FED_TRIM = FED_TRIM, FED_TRIM_EPS = FED_TRIM_EPS,
        freeRun = freeRun, FED_EPS = FED_EPS, FED_ALPHA_GRID = FED_ALPHA_GRID)
 }
 
