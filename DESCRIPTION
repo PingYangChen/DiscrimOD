@@ -1,8 +1,8 @@
 Package: DiscrimOD
 Type: Package
 Title: DiscrimOD: Finding Optimal Discrimination Designs by Hybridizing Particle Swarm and L-BFGS Algorithms
-Version: 0.1.0
-Date: 2017-04-30
+Version: 0.1.1
+Date: 2018-08-24
 Authors@R: person("Ping-Yang", "Chen", , "pychen.ping@gmail.com", c("aut", "cre"))
 Author: Ping-Yang Chen [aut, cre]
 Maintainer: Ping-Yang Chen <pychen.ping@gmail.com>
