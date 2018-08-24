@@ -84,7 +84,7 @@ typedef struct {
   // Design Space
   arma::rowvec dsLower; // rep(0,1)
   arma::rowvec dsUpper; // rep(1,1)
-  double minWt;
+  double minWt = 0.0;
   // Competing Models
   int N_PAIR;
   arma::imat MODEL_PAIR;
