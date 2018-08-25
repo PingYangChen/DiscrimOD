@@ -5,17 +5,18 @@
 \title{Generation function of PSO parameter settings}
 \usage{
 getPSOInfo(nSwarm = 32, maxIter = 100, freeRun = 1, tol = 1e-06,
-  c1 = 2.05, c2 = 2.05, w0 = 1.2, w1 = 0.2, w_var = 0.8, vk = 4)
+  c1 = 2.05, c2 = 2.05, w0 = 1.2, w1 = 0.2, w_var = 0.8,
+  vk = 4)
 }
 \arguments{
 \item{nSwarm}{A integer number of swarm size in PSO algorithm.}
 
 \item{maxIter}{A integer number of maximal PSO iterations.}
 
-\item{freeRun}{A number between \eqn{[0,1]} that controls the percentage of PSO iterations which are free from examining the 
+\item{freeRun}{A number between \eqn{[0,1]} that controls the percentage of PSO iterations which are free from examining the
 stopping criterion, \eqn{|f'-f|<\varepsilon}
 where \eqn{f'} and \eqn{f} are the objective function values in the previous and current iterations, respectively.
-The default is 1.0 implying the PSO will completely ignore the stopping criterion. 
+The default is 1.0 implying the PSO will completely ignore the stopping criterion.
 Otherwise, the PSO checks the stopping criterion after free iterations.}
 
 \item{tol}{A small value for the tolerance, \eqn{\varepsilon}, in the stopping criterion.

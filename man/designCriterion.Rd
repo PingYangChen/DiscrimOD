@@ -5,8 +5,8 @@
 \title{Function of criterion value computing}
 \usage{
 designCriterion(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper,
-  crit_type = "pair_fixed_true", MaxMinStdVals = NULL, PSO_INFO = NULL,
-  LBFGS_INFO = NULL, environment, ...)
+  crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
+  PSO_INFO = NULL, LBFGS_INFO = NULL, environment, ...)
 }
 \arguments{
 \item{DESIGN1}{matrix. The approximate design.}

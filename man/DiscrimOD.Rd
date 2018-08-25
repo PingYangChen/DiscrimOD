@@ -4,9 +4,10 @@
 \alias{DiscrimOD}
 \title{Hybrid Algorithm of PSO and L-BFGS for Finding Optimal Discrimination Design}
 \usage{
-DiscrimOD(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper,
-  crit_type = "pair_fixed_true", MaxMinStdVals = NULL, PSO_INFO = NULL,
-  LBFGS_INFO = NULL, seed = NULL, verbose = TRUE, environment, ...)
+DiscrimOD(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, minWt = 0,
+  crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
+  PSO_INFO = NULL, LBFGS_INFO = NULL, seed = NULL, verbose = TRUE,
+  environment, ...)
 }
 \arguments{
 \item{MODEL_INFO}{A list of information of competing models.
