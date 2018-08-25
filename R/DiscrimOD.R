@@ -12,6 +12,9 @@
 #' Its length should be equal to the dimension of design space.
 #' @param dsUpper The vector of finite upper bounds of the design space.
 #' Its length should be equal to the dimension of design space.
+#' @param minWt A small numerical value.  The weight of resulting design should
+#' be larger than this value.  This option is useful to avoid a degenerated resulting design.
+#' Its default is zero.
 #' @param crit_type The name of the case of the discrimination design problem. See details.
 #' @param MaxMinStdVals The vector of values of demoninators in the design efficiency
 #' calculation for finding max-min discrimination design.
@@ -175,7 +178,7 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, minWt = 0.0
   dSupp <- length(dsLower)
 
 	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
-                          crit_type = crit_type, MaxMinStdVals = MaxMinStdVals, 
+                          crit_type = crit_type, MaxMinStdVals = MaxMinStdVals,
                           dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper,
 	                        minWt = minWt)
 
