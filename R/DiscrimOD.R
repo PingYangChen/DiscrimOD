@@ -205,7 +205,12 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, minWt = 0.0
 	PSO_INFO$dSwarm <- rep(ncol(swarmSetting$UB), length(PSO_INFO$nSwarm))
 
 	# Find Initial Guess for parameters of rival model
-	UNIFDESIGN_M <- designV2M(cbind(seq(dsLower, dsUpper, length = nSupp), 1/nSupp), D_INFO)
+	propGuess <- NULL
+	for (i in 1:dSupp) {
+	  propGuess <- cbind(propGuess, seq(dsLower[i], dsUpper[i], length = nSupp))
+	}
+	propGuess <- cbind(propGuess, 1/nSupp)
+	UNIFDESIGN_M <- designV2M(propGuess, D_INFO)
 	iniGuess <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MODEL_LIST, 0, environment, UNIFDESIGN_M)
 	D_INFO$parasInit <- iniGuess$theta2
 
@@ -255,6 +260,7 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
             length(dsLower) == length(dsUpper), all(dsUpper > dsLower))
 
 	nSupp <- nrow(DESIGN1)
+	dSupp <- ncol(DESIGN1) - 1
 	MODEL_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
 
 	if (is.null(MaxMinStdVals)) MaxMinStdVals <- 0
@@ -279,7 +285,12 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 	PSO_INFO$dSwarm <- rep(ncol(swarmSetting$UB), length(PSO_INFO$nSwarm))
 
 	# Find Initial Guess for parameters of rival model
-	UNIFDESIGN_M <- designV2M(cbind(seq(dsLower, dsUpper, length = nSupp), 1/nSupp), D_INFO)
+	propGuess <- NULL
+	for (i in 1:dSupp) {
+	  propGuess <- cbind(propGuess, seq(dsLower[i], dsUpper[i], length = nSupp))
+	}
+	propGuess <- cbind(propGuess, 1/nSupp)
+	UNIFDESIGN_M <- designV2M(propGuess, D_INFO)
 	iniGuess <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MODEL_LIST, 0, environment, UNIFDESIGN_M)
 	D_INFO$parasInit <- iniGuess$theta2
 
@@ -355,7 +366,12 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	PSO_INFO$dSwarm <- rep(ncol(swarmSetting$UB), length(PSO_INFO$nSwarm))
 
 	# Find Initial Guess for parameters of rival model
-	UNIFDESIGN_M <- designV2M(cbind(seq(dsLower, dsUpper, length = nSupp), 1/nSupp), D_INFO)
+	propGuess <- NULL
+	for (i in 1:dSupp) {
+	  propGuess <- cbind(propGuess, seq(dsLower[i], dsUpper[i], length = nSupp))
+	}
+	propGuess <- cbind(propGuess, 1/nSupp)
+	UNIFDESIGN_M <- designV2M(propGuess, D_INFO)
 	iniGuess <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MODEL_LIST, 0, environment, UNIFDESIGN_M)
 	D_INFO$parasInit <- iniGuess$theta2
 
