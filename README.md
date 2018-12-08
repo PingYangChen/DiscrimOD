@@ -1,5 +1,5 @@
 
-DiscrimOD (ALPHA)
+DiscrimOD
 =================
 Using Hybridized PSO algorithm to search for the optimal approximate discrimination design
 
