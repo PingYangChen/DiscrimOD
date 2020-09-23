@@ -1,6 +1,7 @@
 // Rcpp Header File
 #include <cmath>
 #include <RcppArmadillo.h>
+#include <R.h>
 //#include <omp.h>
 
 //using namespace Rcpp;
@@ -32,7 +33,8 @@ namespace Rcpp {
     private:
         SEXP fcall, env;
         Rcpp::NumericVector defaultfun(SEXP x, SEXP p) {
-          Shield<SEXP> fn(Rcpp::Rcpp_lang4(fcall, x, p, R_DotsSymbol));
+          //Shield<SEXP> fn(Rcpp::Rcpp_lang4(fcall, x, p, R_DotsSymbol)); // disabled by Rcpp Version 1.0.4
+          Shield<SEXP> fn(::Rf_lang4(fcall, x, p, R_DotsSymbol));
           Shield<SEXP> sexp_fvec(::Rf_eval(fn, env));
           //SEXP sexp_fvec = Rcpp::Rcpp_eval(fn, env); // too slow
           Rcpp::NumericVector f_result = (Rcpp::NumericVector) Rcpp::as<Rcpp::NumericVector>(sexp_fvec);
