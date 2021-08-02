@@ -16,7 +16,7 @@ devtools::install_github("PingYangChen/DiscrimOD")
 
 If you encounter a bug, please file a reproducible example on [github](https://github.com/PingYangChen/DiscrimOD/issues).
 
-examples
+Examples
 --------
 ``` r
 # Atkinson and Fedorov (1975a): T-optimal
