@@ -3,6 +3,8 @@ DiscrimOD
 =================
 Using Hybridized PSO algorithm to search for the optimal approximate discrimination design
 
+* Chen, R. B., Chen, P. Y., Hsu, C. L., and Wong, W. K. (2020). Hybrid algorithms for generating optimal designs for discriminating multiple nonlinear models under various error distributional assumptions. PloS one, 15(10), e0239864.
+
 Installation
 ------------
 Please install the latest development version from github with
