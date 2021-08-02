@@ -1,20 +1,20 @@
 
-DiscrimOD
+DiscrimOD: Hybridized PSO algorithm for finding the optimal approximate discrimination design
 =================
-Using Hybridized PSO algorithm to search for the optimal approximate discrimination design
 
+We provide the source codes here for users who have basic knowledge in R programming. There are two required R packages for running our code, `Rcpp` and `RcppArmadillo`, because the main function of the `DiscrimOD` algorithm is written in C++. Nonetheless, users are NOT required to be familiar with C/C++ programming.
+
+For more information of optimal design requirements and computational details, please refer to our published paper:
 * Chen, R. B., Chen, P. Y., Hsu, C. L., and Wong, W. K. (2020). Hybrid algorithms for generating optimal designs for discriminating multiple nonlinear models under various error distributional assumptions. PloS one, 15(10), e0239864.
 
 Installation
 ------------
-Please install the latest development version from github with
+Please install the latest development version from github with the following R codes.
 
 ``` r
 install.packages("devtools")
 devtools::install_github("PingYangChen/DiscrimOD")
 ```
-
-If you encounter a bug, please file a reproducible example on [github](https://github.com/PingYangChen/DiscrimOD/issues).
 
 Examples
 --------
@@ -124,3 +124,5 @@ points(af_res_maxmin$BESTDESIGN[,1], rep(0, nrow(af_res_maxmin$BESTDESIGN)), pch
 # Gamma regression model
 # gamma_diff <- function(xt, xr) log(xr/xt) + (xt - xr)/xr
 ```
+
+If you encounter a bug, please file a reproducible example on [github](https://github.com/PingYangChen/DiscrimOD/issues).
