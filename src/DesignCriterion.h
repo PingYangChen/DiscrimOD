@@ -1,6 +1,6 @@
 
 // INCLUDE HEADER FILES
-#include <malloc.h>
+#include <stdlib.h>
 #include "lbfgsKernel.h"
 #include "lbfgsEval.h"
 
