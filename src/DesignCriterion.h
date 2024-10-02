@@ -95,9 +95,9 @@ double DesignCriterion(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PAR
     arma::rowvec T_PARA = OBJ.paras.submat(tmID, 0, tmID, OBJ.dParas(tmID) - 1);
 
     model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
-    Rcpp::EvalBase *m1_func = (Rcpp::EvalBase *) func_input->M1_FUNC;
-    Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC;
-    Rcpp::EvalBase *distFunc = (Rcpp::EvalBase *) func_input->DISTFUNC;
+    Rcpp::EvalBase2 *m1_func = (Rcpp::EvalBase2 *) func_input->M1_FUNC;
+    Rcpp::EvalBase2 *m2_func = (Rcpp::EvalBase2 *) func_input->M2_FUNC;
+    Rcpp::EvalBase4 *distFunc = (Rcpp::EvalBase4 *) func_input->DISTFUNC;
 
     Shield<SEXP> DESIGN_SEXP(Rcpp::wrap(DESIGN));
     Shield<SEXP> T_PARA_SEXP(Rcpp::wrap(T_PARA));
@@ -108,12 +108,13 @@ double DesignCriterion(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PAR
     Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(R_PARA_SEXP);
 
     Rcpp::NumericVector eta_T_Rform((int)WT.n_elem), eta_R_Rform((int)WT.n_elem), DIV_Rform((int)WT.n_elem);
+    Rcpp::NumericVector dummy_vec((int)WT.n_elem);
 
     eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(DESIGN_Rform, T_PARA_Rform);
     if (Rcpp::all(Rcpp::is_finite(eta_T_Rform))) {
       eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(DESIGN_Rform, R_PARA_Rform);
       if (Rcpp::all(Rcpp::is_finite(eta_R_Rform))) {
-        DIV_Rform = (Rcpp::NumericVector) distFunc->eval(eta_T_Rform, eta_R_Rform);
+        DIV_Rform = (Rcpp::NumericVector) distFunc->eval(eta_T_Rform, eta_R_Rform, dummy_vec, dummy_vec);
         if (Rcpp::all(Rcpp::is_finite(DIV_Rform))) {
           arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size());
           val = 0;
@@ -136,10 +137,11 @@ double criterionList(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM
   int LBFGS = LBFGS_OPTION.IF_INNER_LBFGS;
 
   R_PARA.reset(); R_PARA.set_size(OBJ.dParas.n_elem, OBJ.dParas.max()); R_PARA.zeros();
-	double val = 1e10;
+	double val;
 	switch (crit_type) {
 		case 0: // Fixed True
 		{
+	    val = 1e10;
       int rmID = OBJ.MODEL_PAIR(0, 1);
       R_PARA.submat(0, 0, 0, OBJ.dParas(0) - 1) = OBJ.paras.submat(0, 0, 0, OBJ.dParas(0) - 1);
 			arma::rowvec R_PARA_tmp(OBJ.dParas(rmID));
@@ -169,6 +171,7 @@ double criterionList(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM
 		}
 		case 1: // Max-min, Fixed True
 		{
+		  val = 1e10;
       R_PARA.submat(0, 0, 0, OBJ.dParas(0) - 1) = OBJ.paras.submat(0, 0, 0, OBJ.dParas(0) - 1);
 			arma::rowvec std_vals = OBJ.std_vals;
 			arma::rowvec eff_vals(N_PAIR, fill::zeros);
@@ -219,6 +222,7 @@ double minDistCalc(const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_dif
 	arma::rowvec T_PARA = OBJ.paras.submat(tmID, 0, tmID, OBJ.dParas(tmID) - 1);
 
 	int dParas = OBJ.dParas(rmID);
+	//int VAR_PARA_L0 = OBJ.varParasLoc0(rmID);
   arma::rowvec R_UPPER = OBJ.parasUpper.submat(rmID, 0, rmID, dParas - 1);
   arma::rowvec R_LOWER = OBJ.parasLower.submat(rmID, 0, rmID, dParas - 1);
   arma::irowvec R_NBD(dParas);
@@ -229,10 +233,11 @@ double minDistCalc(const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_dif
   LBFGS_EVAL.UPPER    = OBJ.parasUpper.submat(rmID, 0, rmID, dParas - 1);
   LBFGS_EVAL.LOWER    = OBJ.parasLower.submat(rmID, 0, rmID, dParas - 1);
   LBFGS_EVAL.NBD      = R_NBD;
-  LBFGS_EVAL.T_PARA     = T_PARA;
-  LBFGS_EVAL.DESIGN     = DESIGN;
-  LBFGS_EVAL.WT         = WT;
-  LBFGS_EVAL.FD_DELTA   = LBFGS_OPTION.FD_DELTA;
+  //LBFGS_EVAL.VAR_PARA_L0 = VAR_PARA_L0;
+  LBFGS_EVAL.T_PARA      = T_PARA;
+  LBFGS_EVAL.DESIGN      = DESIGN;
+  LBFGS_EVAL.WT          = WT;
+  LBFGS_EVAL.FD_DELTA    = LBFGS_OPTION.FD_DELTA;
 
   lbfgs_parameter_t LBFGS_PAR;
   lbfgs_parameter_init(&LBFGS_PAR);
@@ -316,9 +321,9 @@ arma::rowvec distCalc(const OBJ_INFO OBJ, const arma::mat x, const arma::mat PAR
                       model_diff_func *MODEL_COLLECTOR[], const int PAIRID)
 {
   model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
-  Rcpp::EvalBase *m1_func = (Rcpp::EvalBase *) func_input->M1_FUNC;
-  Rcpp::EvalBase *m2_func = (Rcpp::EvalBase *) func_input->M2_FUNC;
-  Rcpp::EvalBase *distFunc = (Rcpp::EvalBase *) func_input->DISTFUNC;
+  Rcpp::EvalBase2 *m1_func = (Rcpp::EvalBase2 *) func_input->M1_FUNC;
+  Rcpp::EvalBase2 *m2_func = (Rcpp::EvalBase2 *) func_input->M2_FUNC;
+  Rcpp::EvalBase4 *distFunc = (Rcpp::EvalBase4 *) func_input->DISTFUNC;
 
   arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
   int tmID = MODEL_PAIR(PAIRID, 0);
@@ -336,11 +341,14 @@ arma::rowvec distCalc(const OBJ_INFO OBJ, const arma::mat x, const arma::mat PAR
   Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(R_PARA_SEXP);
 
   Rcpp::NumericVector eta_T_Rform((int)x.n_rows), eta_R_Rform((int)x.n_rows), DIV_Rform((int)x.n_rows);
+  Rcpp::NumericVector dummy_vec((int)x.n_rows);
+
   eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(DESIGN_Rform, T_PARA_Rform);
   eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(DESIGN_Rform, R_PARA_Rform);
-  DIV_Rform = (Rcpp::NumericVector) distFunc->eval(eta_T_Rform, eta_R_Rform);
+  DIV_Rform = (Rcpp::NumericVector) distFunc->eval(eta_T_Rform, eta_R_Rform, dummy_vec, dummy_vec);
 
   arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size());
+  //rvecPrintf(DIV);
   DIV.elem(find_nonfinite(DIV)).fill(1e10);
 
   return DIV;

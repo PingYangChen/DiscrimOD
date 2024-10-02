@@ -2,6 +2,42 @@
 #include "psoHeader.h"
 
 // RCPP FUNCTIONS
+
+
+void initObjectives(model_diff_func model_diff_collect[], const int N_PAIR, const arma::imat MODEL_PAIR,
+                    const Rcpp::List OBJ_INFO_LIST, const Rcpp::List MODEL_INFO_LIST,
+                    const SEXP env)
+{
+  // WRAP FUNCTIONS (INSPIRED BY R PACKAGE 'lbfgs')
+  Rcpp::EvalBase4 *dfnc = NULL;
+  Shield<SEXP> DIST_FUNC_SEXP(Rcpp::as<SEXP>(OBJ_INFO_LIST["dist_func"]));
+  if (TYPEOF(DIST_FUNC_SEXP) == EXTPTRSXP) {
+    dfnc = new Rcpp::EvalCompiled4(DIST_FUNC_SEXP, env);
+  } else {
+    dfnc = new Rcpp::EvalStandard4(DIST_FUNC_SEXP, env);
+  }
+
+  for (int i = 0; i < N_PAIR; i++) {
+    int tmID = MODEL_PAIR(i, 0); int rmID = MODEL_PAIR(i, 1);
+    Rcpp::EvalBase2 *m1 = NULL;
+    Shield<SEXP> tmp1(Rcpp::as<SEXP>(MODEL_INFO_LIST[tmID]));
+    if (TYPEOF(tmp1) == EXTPTRSXP) {
+      m1 = new Rcpp::EvalCompiled2(tmp1, env);
+    } else {
+      m1 = new Rcpp::EvalStandard2(tmp1, env);
+    }
+    Rcpp::EvalBase2 *m2 = NULL;
+    Shield<SEXP> tmp2(Rcpp::as<SEXP>(MODEL_INFO_LIST[rmID]));
+    if (TYPEOF(tmp2) == EXTPTRSXP) {
+      m2 = new Rcpp::EvalCompiled2(tmp2, env);
+    } else {
+      m2 = new Rcpp::EvalStandard2(tmp2, env);
+    }
+    model_diff_collect[i] = model_diff_func(m1, m2, dfnc);
+  }
+  // End with well prepared MODEL_COLLECTOR
+}
+
 //[[Rcpp::export]]
 Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LIST,
                   Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
@@ -12,41 +48,12 @@ Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_I
 	if (NCPU < 3) NCPU = 2;
   omp_set_num_threads(NCPU - 1);*/
   OBJ_INFO OBJ; getInfoStruct(OBJ, OBJ_INFO_LIST);
-
-  // WRAP FUNCTIONS (INSPIRED BY R PACKAGE 'lbfgs')
-  Rcpp::EvalBase *dfnc = NULL;
-  Shield<SEXP> DIST_FUNC_SEXP(Rcpp::as<SEXP>(OBJ_INFO_LIST["dist_func"]));
-  if (TYPEOF(DIST_FUNC_SEXP) == EXTPTRSXP) {
-    dfnc = new Rcpp::EvalCompiled(DIST_FUNC_SEXP, env);
-  } else {
-    dfnc = new Rcpp::EvalStandard(DIST_FUNC_SEXP, env);
-  }
-
   int N_PAIR = OBJ.N_PAIR;
   arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
-
-  model_diff_func *model_diff_ptr[N_PAIR];
   model_diff_func model_diff_collect[N_PAIR];
-
-  for (int i = 0; i < N_PAIR; i++) {
-    int tmID = MODEL_PAIR(i, 0); int rmID = MODEL_PAIR(i, 1);
-    Rcpp::EvalBase *m1 = NULL;
-    Shield<SEXP> tmp1(Rcpp::as<SEXP>(MODEL_INFO_LIST[tmID]));
-    if (TYPEOF(tmp1) == EXTPTRSXP) {
-      m1 = new Rcpp::EvalCompiled(tmp1, env);
-    } else {
-      m1 = new Rcpp::EvalStandard(tmp1, env);
-    }
-    Rcpp::EvalBase *m2 = NULL;
-    Shield<SEXP> tmp2(Rcpp::as<SEXP>(MODEL_INFO_LIST[rmID]));
-    if (TYPEOF(tmp2) == EXTPTRSXP) {
-      m2 = new Rcpp::EvalCompiled(tmp2, env);
-    } else {
-      m2 = new Rcpp::EvalStandard(tmp2, env);
-    }
-    model_diff_collect[i] = model_diff_func(m1, m2, dfnc);
-    model_diff_ptr[i] = &model_diff_collect[i];
-  }
+  initObjectives(model_diff_collect, N_PAIR, MODEL_PAIR, OBJ_INFO_LIST, MODEL_INFO_LIST, env);
+  model_diff_func *model_diff_ptr[N_PAIR];
+  for (int i = 0; i < N_PAIR; i++) model_diff_ptr[i] = &model_diff_collect[i];
 
   PSO_OPTIONS PSO_OPT[N_PSO_OPTS]; getAlgStruct(PSO_OPT, PSO_INFO_LIST);
   LBFGS_PARAM LBFGS_OPTION; getNewtonStruct(LBFGS_OPTION, LBFGS_INFO_LIST);
@@ -76,41 +83,12 @@ Rcpp::List cppDesignCriterion(Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LI
                               Rcpp::List EXTERNAL_LIST, SEXP env, arma::rowvec DESIGN)
 {
   OBJ_INFO OBJ; getInfoStruct(OBJ, OBJ_INFO_LIST);
-
-  // WRAP FUNCTIONS (INSPIRED BY R PACKAGE 'lbfgs')
-  Rcpp::EvalBase *dfnc = NULL;
-  Shield<SEXP> DIST_FUNC_SEXP(Rcpp::as<SEXP>(OBJ_INFO_LIST["dist_func"]));
-  if (TYPEOF(DIST_FUNC_SEXP) == EXTPTRSXP) {
-    dfnc = new Rcpp::EvalCompiled(DIST_FUNC_SEXP, env);
-  } else {
-    dfnc = new Rcpp::EvalStandard(DIST_FUNC_SEXP, env);
-  }
-
   int N_PAIR = OBJ.N_PAIR;
   arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
-
-  model_diff_func *model_diff_ptr[N_PAIR];
   model_diff_func model_diff_collect[N_PAIR];
-
-  for (int i = 0; i < N_PAIR; i++) {
-    int tmID = MODEL_PAIR(i, 0); int rmID = MODEL_PAIR(i, 1);
-    Rcpp::EvalBase *m1 = NULL;
-    Shield<SEXP> tmp1(Rcpp::as<SEXP>(MODEL_INFO_LIST[tmID]));
-    if (TYPEOF(tmp1) == EXTPTRSXP) {
-      m1 = new Rcpp::EvalCompiled(tmp1, env);
-    } else {
-      m1 = new Rcpp::EvalStandard(tmp1, env);
-    }
-    Rcpp::EvalBase *m2 = NULL;
-    Shield<SEXP> tmp2(Rcpp::as<SEXP>(MODEL_INFO_LIST[rmID]));
-    if (TYPEOF(tmp2) == EXTPTRSXP) {
-      m2 = new Rcpp::EvalCompiled(tmp2, env);
-    } else {
-      m2 = new Rcpp::EvalStandard(tmp2, env);
-    }
-    model_diff_collect[i] = model_diff_func(m1, m2, dfnc);
-    model_diff_ptr[i] = &model_diff_collect[i];
-  }
+  initObjectives(model_diff_collect, N_PAIR, MODEL_PAIR, OBJ_INFO_LIST, MODEL_INFO_LIST, env);
+  model_diff_func *model_diff_ptr[N_PAIR];
+  for (int i = 0; i < N_PAIR; i++) model_diff_ptr[i] = &model_diff_collect[i];
 
   PSO_OPTIONS PSO_OPT[N_PSO_OPTS]; getAlgStruct(PSO_OPT, PSO_INFO_LIST);
   LBFGS_PARAM LBFGS_OPTION; getNewtonStruct(LBFGS_OPTION, LBFGS_INFO_LIST);
@@ -127,41 +105,12 @@ Rcpp::List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
                           const double GBEST_VAL, const arma::mat PARA_SET, const arma::rowvec alpha, const SEXP env, const int nGrid)
 {
   OBJ_INFO OBJ; getInfoStruct(OBJ, OBJ_INFO_LIST);
-
-  // WRAP FUNCTIONS (INSPIRED BY R PACKAGE 'lbfgs')
-  Rcpp::EvalBase *dfnc = NULL;
-  Shield<SEXP> DIST_FUNC_SEXP(Rcpp::as<SEXP>(OBJ_INFO_LIST["dist_func"]));
-  if (TYPEOF(DIST_FUNC_SEXP) == EXTPTRSXP) {
-    dfnc = new Rcpp::EvalCompiled(DIST_FUNC_SEXP, env);
-  } else {
-    dfnc = new Rcpp::EvalStandard(DIST_FUNC_SEXP, env);
-  }
-
   int N_PAIR = OBJ.N_PAIR;
   arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
-
-  model_diff_func *model_diff_ptr[N_PAIR];
   model_diff_func model_diff_collect[N_PAIR];
-
-  for (int i = 0; i < N_PAIR; i++) {
-    int tmID = MODEL_PAIR(i, 0); int rmID = MODEL_PAIR(i, 1);
-    Rcpp::EvalBase *m1 = NULL;
-    Shield<SEXP> tmp1(Rcpp::as<SEXP>(MODEL_INFO_LIST[tmID]));
-    if (TYPEOF(tmp1) == EXTPTRSXP) {
-      m1 = new Rcpp::EvalCompiled(tmp1, env);
-    } else {
-      m1 = new Rcpp::EvalStandard(tmp1, env);
-    }
-    Rcpp::EvalBase *m2 = NULL;
-    Shield<SEXP> tmp2(Rcpp::as<SEXP>(MODEL_INFO_LIST[rmID]));
-    if (TYPEOF(tmp2) == EXTPTRSXP) {
-      m2 = new Rcpp::EvalCompiled(tmp2, env);
-    } else {
-      m2 = new Rcpp::EvalStandard(tmp2, env);
-    }
-    model_diff_collect[i] = model_diff_func(m1, m2, dfnc);
-    model_diff_ptr[i] = &model_diff_collect[i];
-  }
+  initObjectives(model_diff_collect, N_PAIR, MODEL_PAIR, OBJ_INFO_LIST, MODEL_INFO_LIST, env);
+  model_diff_func *model_diff_ptr[N_PAIR];
+  for (int i = 0; i < N_PAIR; i++) model_diff_ptr[i] = &model_diff_collect[i];
 
   /* REVISE HERE */
   arma::vec xLine_1 = linspace<vec>(OBJ.dsLower(0), OBJ.dsUpper(0), nGrid);
@@ -198,41 +147,12 @@ Rcpp::List cppFedorovWynn(Rcpp::List FED_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, 
                           const SEXP env, const bool VERBOSE)
 {
   OBJ_INFO OBJ; getInfoStruct(OBJ, OBJ_INFO_LIST);
-
-  // WRAP FUNCTIONS (INSPIRED BY R PACKAGE 'lbfgs')
-  Rcpp::EvalBase *dfnc = NULL;
-  Shield<SEXP> DIST_FUNC_SEXP(Rcpp::as<SEXP>(OBJ_INFO_LIST["dist_func"]));
-  if (TYPEOF(DIST_FUNC_SEXP) == EXTPTRSXP) {
-    dfnc = new Rcpp::EvalCompiled(DIST_FUNC_SEXP, env);
-  } else {
-    dfnc = new Rcpp::EvalStandard(DIST_FUNC_SEXP, env);
-  }
-
   int N_PAIR = OBJ.N_PAIR;
   arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
-
-  model_diff_func *model_diff_ptr[N_PAIR];
   model_diff_func model_diff_collect[N_PAIR];
-
-  for (int i = 0; i < N_PAIR; i++) {
-    int tmID = MODEL_PAIR(i, 0); int rmID = MODEL_PAIR(i, 1);
-    Rcpp::EvalBase *m1 = NULL;
-    Shield<SEXP> tmp1(Rcpp::as<SEXP>(MODEL_INFO_LIST[tmID]));
-    if (TYPEOF(tmp1) == EXTPTRSXP) {
-      m1 = new Rcpp::EvalCompiled(tmp1, env);
-    } else {
-      m1 = new Rcpp::EvalStandard(tmp1, env);
-    }
-    Rcpp::EvalBase *m2 = NULL;
-    Shield<SEXP> tmp2(Rcpp::as<SEXP>(MODEL_INFO_LIST[rmID]));
-    if (TYPEOF(tmp2) == EXTPTRSXP) {
-      m2 = new Rcpp::EvalCompiled(tmp2, env);
-    } else {
-      m2 = new Rcpp::EvalStandard(tmp2, env);
-    }
-    model_diff_collect[i] = model_diff_func(m1, m2, dfnc);
-    model_diff_ptr[i] = &model_diff_collect[i];
-  }
+  initObjectives(model_diff_collect, N_PAIR, MODEL_PAIR, OBJ_INFO_LIST, MODEL_INFO_LIST, env);
+  model_diff_func *model_diff_ptr[N_PAIR];
+  for (int i = 0; i < N_PAIR; i++) model_diff_ptr[i] = &model_diff_collect[i];
 
   FED_PARAM FED_OPTION; getFedorovStruct(FED_OPTION, FED_INFO_LIST);
   LBFGS_PARAM LBFGS_OPTION; getNewtonStruct(LBFGS_OPTION, LBFGS_INFO_LIST);
@@ -254,41 +174,12 @@ Rcpp::List cppUnifApprox(Rcpp::List REMES_INFO_LIST, Rcpp::List LBFGS_INFO_LIST,
                          const SEXP env, const bool VERBOSE)
 {
   OBJ_INFO OBJ; getInfoStruct(OBJ, OBJ_INFO_LIST);
-
-  // WRAP FUNCTIONS (INSPIRED BY R PACKAGE 'lbfgs')
-  Rcpp::EvalBase *dfnc = NULL;
-  Shield<SEXP> DIST_FUNC_SEXP(Rcpp::as<SEXP>(OBJ_INFO_LIST["dist_func"]));
-  if (TYPEOF(DIST_FUNC_SEXP) == EXTPTRSXP) {
-    dfnc = new Rcpp::EvalCompiled(DIST_FUNC_SEXP, env);
-  } else {
-    dfnc = new Rcpp::EvalStandard(DIST_FUNC_SEXP, env);
-  }
-
   int N_PAIR = OBJ.N_PAIR;
   arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
-
-  model_diff_func *model_diff_ptr[N_PAIR];
   model_diff_func model_diff_collect[N_PAIR];
-
-  for (int i = 0; i < N_PAIR; i++) {
-    int tmID = MODEL_PAIR(i, 0); int rmID = MODEL_PAIR(i, 1);
-    Rcpp::EvalBase *m1 = NULL;
-    Shield<SEXP> tmp1(Rcpp::as<SEXP>(MODEL_INFO_LIST[tmID]));
-    if (TYPEOF(tmp1) == EXTPTRSXP) {
-      m1 = new Rcpp::EvalCompiled(tmp1, env);
-    } else {
-      m1 = new Rcpp::EvalStandard(tmp1, env);
-    }
-    Rcpp::EvalBase *m2 = NULL;
-    Shield<SEXP> tmp2(Rcpp::as<SEXP>(MODEL_INFO_LIST[rmID]));
-    if (TYPEOF(tmp2) == EXTPTRSXP) {
-      m2 = new Rcpp::EvalCompiled(tmp2, env);
-    } else {
-      m2 = new Rcpp::EvalStandard(tmp2, env);
-    }
-    model_diff_collect[i] = model_diff_func(m1, m2, dfnc);
-    model_diff_ptr[i] = &model_diff_collect[i];
-  }
+  initObjectives(model_diff_collect, N_PAIR, MODEL_PAIR, OBJ_INFO_LIST, MODEL_INFO_LIST, env);
+  model_diff_func *model_diff_ptr[N_PAIR];
+  for (int i = 0; i < N_PAIR; i++) model_diff_ptr[i] = &model_diff_collect[i];
 
   REMES_PARAM REMES_OPTION; getRemesStruct(REMES_OPTION, REMES_INFO_LIST);
   LBFGS_PARAM LBFGS_OPTION; getNewtonStruct(LBFGS_OPTION, LBFGS_INFO_LIST);
