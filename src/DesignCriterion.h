@@ -92,36 +92,54 @@ double DesignCriterion(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PAR
 
     arma::imat MODEL_PAIR = (arma::imat) OBJ.MODEL_PAIR;
     int tmID = MODEL_PAIR(PAIRID, 0);
-    arma::rowvec T_PARA = OBJ.paras.submat(tmID, 0, tmID, OBJ.dParas(tmID) - 1);
+    arma::rowvec T_PARA_M = OBJ.paras.submat(tmID, 0, tmID, OBJ.varParasLoc0(tmID) - 1);
+    arma::rowvec T_PARA_V = OBJ.paras.submat(tmID, OBJ.varParasLoc0(tmID), tmID, OBJ.dParas(tmID) - 1);
+    arma::rowvec R_PARA_M = swarm.subvec(0, OBJ.varParasLoc0(tmID) - 1);
+    arma::rowvec R_PARA_V = swarm.subvec(OBJ.varParasLoc0(tmID), OBJ.dParas(tmID) - 1);
+
 
     model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
     Rcpp::EvalBase2 *m1_func = (Rcpp::EvalBase2 *) func_input->M1_FUNC;
     Rcpp::EvalBase2 *m2_func = (Rcpp::EvalBase2 *) func_input->M2_FUNC;
+    Rcpp::EvalBase2 *v1_func = (Rcpp::EvalBase2 *) func_input->V1_FUNC;
+    Rcpp::EvalBase2 *v2_func = (Rcpp::EvalBase2 *) func_input->V2_FUNC;
     Rcpp::EvalBase4 *distFunc = (Rcpp::EvalBase4 *) func_input->DISTFUNC;
 
-    Shield<SEXP> DESIGN_SEXP(Rcpp::wrap(DESIGN));
-    Shield<SEXP> T_PARA_SEXP(Rcpp::wrap(T_PARA));
-    Shield<SEXP> R_PARA_SEXP(Rcpp::wrap(swarm));
+    Rcpp::Shield<SEXP> DESIGN_SEXP(Rcpp::wrap(DESIGN));
+    Rcpp::Shield<SEXP> T_PARA_M_SEXP(Rcpp::wrap(T_PARA_M));
+    Rcpp::Shield<SEXP> T_PARA_V_SEXP(Rcpp::wrap(T_PARA_V));
+    Rcpp::Shield<SEXP> R_PARA_M_SEXP(Rcpp::wrap(R_PARA_M));
+    Rcpp::Shield<SEXP> R_PARA_V_SEXP(Rcpp::wrap(R_PARA_V));
 
     Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(DESIGN_SEXP);
-    Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(T_PARA_SEXP);
-    Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(R_PARA_SEXP);
+    Rcpp::NumericVector T_PARA_M_Rform = Rcpp::as<Rcpp::NumericVector>(T_PARA_M_SEXP);
+    Rcpp::NumericVector T_PARA_V_Rform = Rcpp::as<Rcpp::NumericVector>(T_PARA_V_SEXP);
+    Rcpp::NumericVector R_PARA_M_Rform = Rcpp::as<Rcpp::NumericVector>(R_PARA_M_SEXP);
+    Rcpp::NumericVector R_PARA_V_Rform = Rcpp::as<Rcpp::NumericVector>(R_PARA_V_SEXP);
 
-    Rcpp::NumericVector eta_T_Rform((int)WT.n_elem), eta_R_Rform((int)WT.n_elem), DIV_Rform((int)WT.n_elem);
-    Rcpp::NumericVector dummy_vec((int)WT.n_elem);
+    Rcpp::NumericVector eta_T_Rform((int)WT.n_elem), eta_R_Rform((int)WT.n_elem);
+    Rcpp::NumericVector var_T_Rform((int)WT.n_elem), var_R_Rform((int)WT.n_elem);
+    Rcpp::NumericVector DIV_Rform((int)WT.n_elem);
 
-    eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(DESIGN_Rform, T_PARA_Rform);
-    if (Rcpp::all(Rcpp::is_finite(eta_T_Rform))) {
-      eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(DESIGN_Rform, R_PARA_Rform);
-      if (Rcpp::all(Rcpp::is_finite(eta_R_Rform))) {
-        DIV_Rform = (Rcpp::NumericVector) distFunc->eval(eta_T_Rform, eta_R_Rform, dummy_vec, dummy_vec);
-        if (Rcpp::all(Rcpp::is_finite(DIV_Rform))) {
-          arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size());
-          val = 0;
-          for (uword i = 0; i < WT.n_elem; i++) { val += WT(i)*DIV(i); }
-          //val = arma::accu(WT % DIV);
-        }
-      }
+    eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(DESIGN_Rform, T_PARA_M_Rform);
+    eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(DESIGN_Rform, R_PARA_M_Rform);
+    var_T_Rform = (Rcpp::NumericVector) v1_func->eval(DESIGN_Rform, T_PARA_V_Rform);
+    var_R_Rform = (Rcpp::NumericVector) v2_func->eval(DESIGN_Rform, R_PARA_V_Rform);
+    DIV_Rform = (Rcpp::NumericVector) distFunc->eval(eta_T_Rform, eta_R_Rform, var_T_Rform, var_R_Rform);
+
+    bool eta_T_finite = Rcpp::all(Rcpp::is_finite(eta_T_Rform));
+    bool eta_R_finite = Rcpp::all(Rcpp::is_finite(eta_R_Rform));
+    bool var_T_finite = Rcpp::all(Rcpp::is_finite(var_T_Rform));
+    bool var_R_finite = Rcpp::all(Rcpp::is_finite(var_R_Rform));
+    bool DIV_finite = Rcpp::all(Rcpp::is_finite(DIV_Rform));
+
+    bool checkFinite = eta_T_finite && eta_R_finite && var_T_finite && var_R_finite && DIV_finite;
+
+    if (checkFinite) {
+      arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size());
+      val = 0;
+      for (uword i = 0; i < WT.n_elem; i++) { val += WT(i)*DIV(i); }
+      //val = arma::accu(WT % DIV);
     }
   }
 	return val;
@@ -137,7 +155,7 @@ double criterionList(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM
   int LBFGS = LBFGS_OPTION.IF_INNER_LBFGS;
 
   R_PARA.reset(); R_PARA.set_size(OBJ.dParas.n_elem, OBJ.dParas.max()); R_PARA.zeros();
-	double val;
+	double val = 1e10;
 	switch (crit_type) {
 		case 0: // Fixed True
 		{
@@ -233,8 +251,9 @@ double minDistCalc(const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_dif
   LBFGS_EVAL.UPPER    = OBJ.parasUpper.submat(rmID, 0, rmID, dParas - 1);
   LBFGS_EVAL.LOWER    = OBJ.parasLower.submat(rmID, 0, rmID, dParas - 1);
   LBFGS_EVAL.NBD      = R_NBD;
-  //LBFGS_EVAL.VAR_PARA_L0 = VAR_PARA_L0;
   LBFGS_EVAL.T_PARA      = T_PARA;
+  LBFGS_EVAL.T_VAR_PARA_L0 = OBJ.varParasLoc0(tmID);
+  LBFGS_EVAL.R_VAR_PARA_L0 = OBJ.varParasLoc0(rmID);
   LBFGS_EVAL.DESIGN      = DESIGN;
   LBFGS_EVAL.WT          = WT;
   LBFGS_EVAL.FD_DELTA    = LBFGS_OPTION.FD_DELTA;
@@ -323,29 +342,40 @@ arma::rowvec distCalc(const OBJ_INFO OBJ, const arma::mat x, const arma::mat PAR
   model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
   Rcpp::EvalBase2 *m1_func = (Rcpp::EvalBase2 *) func_input->M1_FUNC;
   Rcpp::EvalBase2 *m2_func = (Rcpp::EvalBase2 *) func_input->M2_FUNC;
+  Rcpp::EvalBase2 *v1_func = (Rcpp::EvalBase2 *) func_input->V1_FUNC;
+  Rcpp::EvalBase2 *v2_func = (Rcpp::EvalBase2 *) func_input->V2_FUNC;
   Rcpp::EvalBase4 *distFunc = (Rcpp::EvalBase4 *) func_input->DISTFUNC;
 
   arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
   int tmID = MODEL_PAIR(PAIRID, 0);
   int rmID = MODEL_PAIR(PAIRID, 1);
 
-  arma::rowvec T_PARA = PARA_SET.submat(tmID, 0, tmID, OBJ.dParas(tmID) - 1);
-  arma::rowvec R_PARA = PARA_SET.submat(rmID, 0, rmID, OBJ.dParas(rmID) - 1);
+  arma::rowvec T_PARA_M = PARA_SET.submat(tmID, 0, tmID, OBJ.varParasLoc0(tmID) - 1);
+  arma::rowvec T_PARA_V = PARA_SET.submat(tmID, OBJ.varParasLoc0(tmID), tmID, OBJ.dParas(tmID) - 1);
+  arma::rowvec R_PARA_M = PARA_SET.submat(rmID, 0, rmID, OBJ.varParasLoc0(rmID) - 1);
+  arma::rowvec R_PARA_V = PARA_SET.submat(rmID, OBJ.varParasLoc0(rmID), rmID, OBJ.dParas(rmID) - 1);
 
   Shield<SEXP> DESIGN_SEXP(Rcpp::wrap(x));
-  Shield<SEXP> T_PARA_SEXP(Rcpp::wrap(T_PARA));
-  Shield<SEXP> R_PARA_SEXP(Rcpp::wrap(R_PARA));
+  Shield<SEXP> T_PARA_M_SEXP(Rcpp::wrap(T_PARA_M));
+  Shield<SEXP> T_PARA_V_SEXP(Rcpp::wrap(T_PARA_V));
+  Shield<SEXP> R_PARA_M_SEXP(Rcpp::wrap(R_PARA_M));
+  Shield<SEXP> R_PARA_V_SEXP(Rcpp::wrap(R_PARA_V));
 
   Rcpp::NumericMatrix DESIGN_Rform = Rcpp::as<Rcpp::NumericMatrix>(DESIGN_SEXP);
-  Rcpp::NumericVector T_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(T_PARA_SEXP);
-  Rcpp::NumericVector R_PARA_Rform = Rcpp::as<Rcpp::NumericVector>(R_PARA_SEXP);
+  Rcpp::NumericVector T_PARA_M_Rform = Rcpp::as<Rcpp::NumericVector>(T_PARA_M_SEXP);
+  Rcpp::NumericVector T_PARA_V_Rform = Rcpp::as<Rcpp::NumericVector>(T_PARA_V_SEXP);
+  Rcpp::NumericVector R_PARA_M_Rform = Rcpp::as<Rcpp::NumericVector>(R_PARA_M_SEXP);
+  Rcpp::NumericVector R_PARA_V_Rform = Rcpp::as<Rcpp::NumericVector>(R_PARA_V_SEXP);
 
-  Rcpp::NumericVector eta_T_Rform((int)x.n_rows), eta_R_Rform((int)x.n_rows), DIV_Rform((int)x.n_rows);
-  Rcpp::NumericVector dummy_vec((int)x.n_rows);
+  Rcpp::NumericVector eta_T_Rform((int)x.n_elem), eta_R_Rform((int)x.n_elem);
+  Rcpp::NumericVector var_T_Rform((int)x.n_elem), var_R_Rform((int)x.n_elem);
+  Rcpp::NumericVector DIV_Rform((int)x.n_elem);
 
-  eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(DESIGN_Rform, T_PARA_Rform);
-  eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(DESIGN_Rform, R_PARA_Rform);
-  DIV_Rform = (Rcpp::NumericVector) distFunc->eval(eta_T_Rform, eta_R_Rform, dummy_vec, dummy_vec);
+  eta_T_Rform = (Rcpp::NumericVector) m1_func->eval(DESIGN_Rform, T_PARA_M_Rform);
+  eta_R_Rform = (Rcpp::NumericVector) m2_func->eval(DESIGN_Rform, R_PARA_M_Rform);
+  var_T_Rform = (Rcpp::NumericVector) v1_func->eval(DESIGN_Rform, T_PARA_V_Rform);
+  var_R_Rform = (Rcpp::NumericVector) v2_func->eval(DESIGN_Rform, R_PARA_V_Rform);
+  DIV_Rform = (Rcpp::NumericVector) distFunc->eval(eta_T_Rform, eta_R_Rform, var_T_Rform, var_R_Rform);
 
   arma::rowvec DIV(DIV_Rform.begin(), DIV_Rform.size());
   //rvecPrintf(DIV);

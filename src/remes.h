@@ -128,7 +128,7 @@ double min_CPoly_r(const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_dif
     arma::rowvec SIGN_RAND = randu(1, dParas)*2.0 - 1.0;
     for (int d = 0; d < dParas; d++) { R_PARA1[d] = SIGN_RAND(d)*R_PARA1[d]; }
     CONV = lbfgs(dParas, R_PARA1, &fx1, evaluate_remes_r, NULL, &LBFGS_EVAL, &LBFGS_PAR);
-    
+
     //Rprintf("CONV: %d, f = %4.9f\n", CONV, fx1);
 
     if (std::isfinite(fx1) & (!std::isnan(fx1))) {
@@ -157,9 +157,13 @@ double getCPolyVal(const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[], const
 
   arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
   int tmID = MODEL_PAIR(PAIRID, 0);
+  int rmID = MODEL_PAIR(PAIRID, 1);
   arma::rowvec T_PARA = OBJ.paras.submat(tmID, 0, tmID, OBJ.dParas(tmID) - 1);
 
-  return cpoly(R_PARA, T_PARA, DESIGN, func_input);
+  int T_VAR_PARA_L0 = OBJ.varParasLoc0(tmID);
+  int R_VAR_PARA_L0 = OBJ.varParasLoc0(rmID);
+
+  return cpoly(R_PARA, T_PARA, T_VAR_PARA_L0, R_VAR_PARA_L0, DESIGN, func_input);
 }
 
 arma::rowvec getRivalDev(const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[], const int PAIRID,
@@ -186,8 +190,11 @@ arma::rowvec getRivalDev(const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[],
     }
   }
 
-  double mul = cpoly(R_PARA, T_PARA, DESIGN, func_input);
-  arma::rowvec rDev = rival_gr(R_PARA, DESIGN, func_input, BDD, DELTA);
+  int T_VAR_PARA_L0 = OBJ.varParasLoc0(tmID);
+  int R_VAR_PARA_L0 = OBJ.varParasLoc0(rmID);
+
+  double mul = cpoly(R_PARA, T_PARA, T_VAR_PARA_L0, R_VAR_PARA_L0, DESIGN, func_input);
+  arma::rowvec rDev = rival_gr(R_PARA, R_VAR_PARA_L0, DESIGN, func_input, BDD, DELTA);
 
   return mul*rDev;
 }

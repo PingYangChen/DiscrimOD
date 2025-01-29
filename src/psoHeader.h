@@ -154,6 +154,8 @@ typedef struct {
 typedef struct model_diff_func {
   Rcpp::EvalBase2* M1_FUNC;
   Rcpp::EvalBase2* M2_FUNC;
+  Rcpp::EvalBase2* V1_FUNC;
+  Rcpp::EvalBase2* V2_FUNC;
   Rcpp::EvalBase4* DISTFUNC;
 public:
     model_diff_func() : M1_FUNC(0), M2_FUNC(0), DISTFUNC(0) {}
@@ -165,7 +167,8 @@ typedef struct lbfgs_eval {
   arma::rowvec UPPER;
   arma::rowvec LOWER;
   arma::irowvec NBD;
-  int VAR_PARA_L0;
+  int T_VAR_PARA_L0;
+  int R_VAR_PARA_L0;
   arma::rowvec T_PARA;
   arma::rowvec R_PARA;
   arma::mat DESIGN;
