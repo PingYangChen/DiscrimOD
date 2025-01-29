@@ -162,8 +162,7 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, minWt = 0.0
             all(names(PSO_INFO) == names(getPSOInfo())),
             crit_type %in% c("pair_fixed_true", "maxmin_fixed_true"))
 
-	MEAN_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
-	DISP_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$disp)
+	MODEL_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
 
   if (crit_type == "maxmin_fixed_true") {
   	if (is.null(MaxMinStdVals)) {
@@ -212,13 +211,13 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, minWt = 0.0
 	}
 	propGuess <- cbind(propGuess, 1/nSupp)
 	UNIFDESIGN_M <- designV2M(propGuess, D_INFO)
-	iniGuess <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MEAN_LIST, DISP_LIST, 0, environment, UNIFDESIGN_M)
+	iniGuess <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MODEL_LIST, 0, environment, UNIFDESIGN_M)
 	D_INFO$parasInit <- iniGuess$theta2
 
 	# Start
 	set.seed(seed)
 	cputime <- system.time(
-		psoOut <- cppPSO(0, PSO_INFO, LBFGS_INFO, D_INFO, MEAN_LIST, DISP_LIST, 0, environment, FALSE, verbose)
+		psoOut <- cppPSO(0, PSO_INFO, LBFGS_INFO, D_INFO, MODEL_LIST, 0, environment, FALSE, verbose)
 	)[3]
 
 	if (verbose) message(paste0("CPU time: ", round(cputime, 2), " seconds."))
@@ -262,8 +261,7 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 
 	nSupp <- nrow(DESIGN1)
 	dSupp <- ncol(DESIGN1) - 1
-	MEAN_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
-	DISP_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$disp)
+	MODEL_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
 
 	if (is.null(MaxMinStdVals)) MaxMinStdVals <- 0
 	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
@@ -293,12 +291,12 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 	}
 	propGuess <- cbind(propGuess, 1/nSupp)
 	UNIFDESIGN_M <- designV2M(propGuess, D_INFO)
-	iniGuess <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MEAN_LIST, DISP_LIST, 0, environment, UNIFDESIGN_M)
+	iniGuess <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MODEL_LIST, 0, environment, UNIFDESIGN_M)
 	D_INFO$parasInit <- iniGuess$theta2
 
 	# Compute the criterion value
 	DESIGN1_M <- designV2M(DESIGN1, D_INFO)
-	cri_1 <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MEAN_LIST, DISP_LIST, 0, environment, DESIGN1_M)
+	cri_1 <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MODEL_LIST, 0, environment, DESIGN1_M)
 	rownames(cri_1$theta2) <- paste0("model_", 1:length(MODEL_INFO))
 
   return(list(cri_val = -cri_1$val, theta2 = cri_1$theta2))
@@ -344,8 +342,7 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	nSupp <- nrow(DESIGN)
 	dSupp <- ncol(DESIGN) - 1
 
-	MEAN_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
-	DISP_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$disp)
+	MODEL_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
 
 	if (!hasArg(environment)) environment <- new.env()
 
@@ -375,12 +372,12 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	}
 	propGuess <- cbind(propGuess, 1/nSupp)
 	UNIFDESIGN_M <- designV2M(propGuess, D_INFO)
-	iniGuess <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MEAN_LIST, DISP_LIST, 0, environment, UNIFDESIGN_M)
+	iniGuess <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MODEL_LIST, 0, environment, UNIFDESIGN_M)
 	D_INFO$parasInit <- iniGuess$theta2
 
 	# Compute for the equivalence theorem
 	DESIGN_M <- designV2M(DESIGN, D_INFO)
-	CRIT_VAL <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MEAN_LIST, DISP_LIST, 0, environment, DESIGN_M)
+	CRIT_VAL <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MODEL_LIST, 0, environment, DESIGN_M)
 	PARA_SET <- CRIT_VAL$theta2
 
 	ALPHA <- 0
@@ -405,7 +402,7 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 		ALPHA <- designM2V(psoOut$GBest, ALPHA_INFO)
 	}
 
-	equiv <- cppEquivalence(D_INFO, MEAN_LIST, DISP_LIST, -CRIT_VAL$val, PARA_SET, ALPHA, environment, ngrid)
+	equiv <- cppEquivalence(D_INFO, MODEL_LIST, -CRIT_VAL$val, PARA_SET, ALPHA, environment, ngrid)
 
 	if (crit_type == "maxmin_fixed_true") { equiv$alpha <- ALPHA }
 
@@ -441,11 +438,8 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 #' @export
 emptyModelList <- function(N_model = 2) {
 	out <- lapply(1:N_model, function(k) {
-		if (k == 1) list(model = 'R or C++ Mean Function for True Model',
-		                 disp  = 'R or C++ Variance Function for True Model',
-		                 para = 'Nominal Values of Parameters in True Model')
-		else list(model = paste0('R or C++ Mean Function for Rival ', k-1),
-		          disp  = paste0('R or C++ Variance Function for Rival ', k-1),
+		if (k == 1) list(model = 'R or C++ Function for True Model', para = 'Nominal Values of Parameters in True Model')
+		else list(model = paste0('R or C++ Function for Rival ', k-1),
 							paraLower = paste0('Lower Bound of Parameter Space for Rival ', k-1),
 							paraUpper = paste0('Upper Bound of Parameter Space for Rival ', k-1))
 	})

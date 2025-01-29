@@ -5,7 +5,7 @@
 
 
 void initObjectives(model_diff_func model_diff_collect[], const int N_PAIR, const arma::imat MODEL_PAIR,
-                    const Rcpp::List OBJ_INFO_LIST, const Rcpp::List MODEL_INFO_LIST,
+                    const Rcpp::List OBJ_INFO_LIST, const Rcpp::List MEAN_LIST, const Rcpp::List DISP_LIST,
                     const SEXP env)
 {
   // WRAP FUNCTIONS (INSPIRED BY R PACKAGE 'lbfgs')
@@ -20,27 +20,44 @@ void initObjectives(model_diff_func model_diff_collect[], const int N_PAIR, cons
   for (int i = 0; i < N_PAIR; i++) {
     int tmID = MODEL_PAIR(i, 0); int rmID = MODEL_PAIR(i, 1);
     Rcpp::EvalBase2 *m1 = NULL;
-    Shield<SEXP> tmp1(Rcpp::as<SEXP>(MODEL_INFO_LIST[tmID]));
-    if (TYPEOF(tmp1) == EXTPTRSXP) {
-      m1 = new Rcpp::EvalCompiled2(tmp1, env);
+    Shield<SEXP> tmpM1(Rcpp::as<SEXP>(MEAN_LIST[tmID]));
+    if (TYPEOF(tmpM1) == EXTPTRSXP) {
+      m1 = new Rcpp::EvalCompiled2(tmpM1, env);
     } else {
-      m1 = new Rcpp::EvalStandard2(tmp1, env);
+      m1 = new Rcpp::EvalStandard2(tmpM1, env);
     }
+    //
+    Rcpp::EvalBase2 *v1 = NULL;
+    Shield<SEXP> tmpV1(Rcpp::as<SEXP>(DISP_LIST[tmID]));
+    if (TYPEOF(tmpV1) == EXTPTRSXP) {
+      v1 = new Rcpp::EvalCompiled2(tmpV1, env);
+    } else {
+      v1 = new Rcpp::EvalStandard2(tmpV1, env);
+    }
+    //
     Rcpp::EvalBase2 *m2 = NULL;
-    Shield<SEXP> tmp2(Rcpp::as<SEXP>(MODEL_INFO_LIST[rmID]));
-    if (TYPEOF(tmp2) == EXTPTRSXP) {
-      m2 = new Rcpp::EvalCompiled2(tmp2, env);
+    Shield<SEXP> tmpM2(Rcpp::as<SEXP>(MEAN_LIST[rmID]));
+    if (TYPEOF(tmpM2) == EXTPTRSXP) {
+      m2 = new Rcpp::EvalCompiled2(tmpM2, env);
     } else {
-      m2 = new Rcpp::EvalStandard2(tmp2, env);
+      m2 = new Rcpp::EvalStandard2(tmpM2, env);
     }
-    model_diff_collect[i] = model_diff_func(m1, m2, dfnc);
+    //
+    Rcpp::EvalBase2 *v2 = NULL;
+    Shield<SEXP> tmpV2(Rcpp::as<SEXP>(DISP_LIST[rmID]));
+    if (TYPEOF(tmpM2) == EXTPTRSXP) {
+      v2 = new Rcpp::EvalCompiled2(tmpV2, env);
+    } else {
+      v2 = new Rcpp::EvalStandard2(tmpV2, env);
+    }
+    model_diff_collect[i] = model_diff_func(m1, m2, v1, v2, dfnc);
   }
   // End with well prepared MODEL_COLLECTOR
 }
 
 //[[Rcpp::export]]
 Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LIST,
-                  Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
+                  Rcpp::List OBJ_INFO_LIST, Rcpp::List MEAN_LIST, Rcpp::List DISP_LIST,
                   Rcpp::List EXTERNAL_LIST, const SEXP env, const bool IF_PARALLEL, const bool VERBOSE)
 {
   //arma_rng::set_seed_random();
@@ -51,7 +68,7 @@ Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_I
   int N_PAIR = OBJ.N_PAIR;
   arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
   model_diff_func model_diff_collect[N_PAIR];
-  initObjectives(model_diff_collect, N_PAIR, MODEL_PAIR, OBJ_INFO_LIST, MODEL_INFO_LIST, env);
+  initObjectives(model_diff_collect, N_PAIR, MODEL_PAIR, OBJ_INFO_LIST, MEAN_LIST, DISP_LIST, env);
   model_diff_func *model_diff_ptr[N_PAIR];
   for (int i = 0; i < N_PAIR; i++) model_diff_ptr[i] = &model_diff_collect[i];
 
@@ -79,14 +96,14 @@ Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_I
 
 //[[Rcpp::export]]
 Rcpp::List cppDesignCriterion(Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LIST,
-                              Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
+                              Rcpp::List OBJ_INFO_LIST, Rcpp::List MEAN_LIST, Rcpp::List DISP_LIST,
                               Rcpp::List EXTERNAL_LIST, SEXP env, arma::rowvec DESIGN)
 {
   OBJ_INFO OBJ; getInfoStruct(OBJ, OBJ_INFO_LIST);
   int N_PAIR = OBJ.N_PAIR;
   arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
   model_diff_func model_diff_collect[N_PAIR];
-  initObjectives(model_diff_collect, N_PAIR, MODEL_PAIR, OBJ_INFO_LIST, MODEL_INFO_LIST, env);
+  initObjectives(model_diff_collect, N_PAIR, MODEL_PAIR, OBJ_INFO_LIST, MEAN_LIST, DISP_LIST, env);
   model_diff_func *model_diff_ptr[N_PAIR];
   for (int i = 0; i < N_PAIR; i++) model_diff_ptr[i] = &model_diff_collect[i];
 
@@ -101,14 +118,14 @@ Rcpp::List cppDesignCriterion(Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LI
 }
 
 //[[Rcpp::export]]
-Rcpp::List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
+Rcpp::List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MEAN_LIST, Rcpp::List DISP_LIST,
                           const double GBEST_VAL, const arma::mat PARA_SET, const arma::rowvec alpha, const SEXP env, const int nGrid)
 {
   OBJ_INFO OBJ; getInfoStruct(OBJ, OBJ_INFO_LIST);
   int N_PAIR = OBJ.N_PAIR;
   arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
   model_diff_func model_diff_collect[N_PAIR];
-  initObjectives(model_diff_collect, N_PAIR, MODEL_PAIR, OBJ_INFO_LIST, MODEL_INFO_LIST, env);
+  initObjectives(model_diff_collect, N_PAIR, MODEL_PAIR, OBJ_INFO_LIST, MEAN_LIST, DISP_LIST, env);
   model_diff_func *model_diff_ptr[N_PAIR];
   for (int i = 0; i < N_PAIR; i++) model_diff_ptr[i] = &model_diff_collect[i];
 
@@ -143,14 +160,15 @@ Rcpp::List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
 }
 
 //[[Rcpp::export]]
-Rcpp::List cppFedorovWynn(Rcpp::List FED_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
+Rcpp::List cppFedorovWynn(Rcpp::List FED_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST, 
+                          Rcpp::List MEAN_LIST, Rcpp::List DISP_LIST,
                           const SEXP env, const bool VERBOSE)
 {
   OBJ_INFO OBJ; getInfoStruct(OBJ, OBJ_INFO_LIST);
   int N_PAIR = OBJ.N_PAIR;
   arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
   model_diff_func model_diff_collect[N_PAIR];
-  initObjectives(model_diff_collect, N_PAIR, MODEL_PAIR, OBJ_INFO_LIST, MODEL_INFO_LIST, env);
+  initObjectives(model_diff_collect, N_PAIR, MODEL_PAIR, OBJ_INFO_LIST, MEAN_LIST, DISP_LIST, env);
   model_diff_func *model_diff_ptr[N_PAIR];
   for (int i = 0; i < N_PAIR; i++) model_diff_ptr[i] = &model_diff_collect[i];
 
@@ -170,14 +188,15 @@ Rcpp::List cppFedorovWynn(Rcpp::List FED_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, 
 }
 
 //[[Rcpp::export]]
-Rcpp::List cppUnifApprox(Rcpp::List REMES_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST, Rcpp::List MODEL_INFO_LIST,
+Rcpp::List cppUnifApprox(Rcpp::List REMES_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST, 
+                         Rcpp::List MEAN_LIST, Rcpp::List DISP_LIST,
                          const SEXP env, const bool VERBOSE)
 {
   OBJ_INFO OBJ; getInfoStruct(OBJ, OBJ_INFO_LIST);
   int N_PAIR = OBJ.N_PAIR;
   arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
   model_diff_func model_diff_collect[N_PAIR];
-  initObjectives(model_diff_collect, N_PAIR, MODEL_PAIR, OBJ_INFO_LIST, MODEL_INFO_LIST, env);
+  initObjectives(model_diff_collect, N_PAIR, MODEL_PAIR, OBJ_INFO_LIST, MEAN_LIST, DISP_LIST, env);
   model_diff_func *model_diff_ptr[N_PAIR];
   for (int i = 0; i < N_PAIR; i++) model_diff_ptr[i] = &model_diff_collect[i];
 
