@@ -158,8 +158,8 @@ typedef struct model_diff_func {
   Rcpp::EvalBase2* V2_FUNC;
   Rcpp::EvalBase4* DISTFUNC;
 public:
-    model_diff_func() : M1_FUNC(0), M2_FUNC(0), DISTFUNC(0) {}
-    model_diff_func(Rcpp::EvalBase2* m1, Rcpp::EvalBase2* m2, Rcpp::EvalBase4* d) : M1_FUNC(m1), M2_FUNC(m2), DISTFUNC(d) {}
+    model_diff_func() : M1_FUNC(0), M2_FUNC(0), V1_FUNC(0), V2_FUNC(0), DISTFUNC(0) {}
+    model_diff_func(Rcpp::EvalBase2* m1, Rcpp::EvalBase2* m2, Rcpp::EvalBase2* v1, Rcpp::EvalBase2* v2, Rcpp::EvalBase4* d) : M1_FUNC(m1), M2_FUNC(m2), V1_FUNC(v1), V2_FUNC(v2), DISTFUNC(d) {}
 } model_diff_func;
 
 typedef struct lbfgs_eval {

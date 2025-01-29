@@ -30,7 +30,7 @@ Imports:
 LinkingTo: Rcpp,
     RcppArmadillo,
     inline
-RoxygenNote: 6.1.0
+RoxygenNote: 7.3.2
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr
