@@ -4,11 +4,20 @@
 \alias{getLBFGSInfo}
 \title{Generation function of L-BFGS parameter settings}
 \usage{
-getLBFGSInfo(IF_INNER_LBFGS = TRUE, LBFGS_RETRY = 1, LBFGS_MAXIT = 0,
-  LBFGS_LM = 6, FVAL_EPS = 0, GRAD_EPS = 1e-05,
-  LINESEARCH_MAXTRIAL = 20, LINESEARCH_MAX = 1e+20,
-  LINESEARCH_MIN = 1e-20, LINESEARCH_ARMIJO = 1e-04,
-  LINESEARCH_WOLFE = 0.9, FD_DELTA = 0.001)
+getLBFGSInfo(
+  IF_INNER_LBFGS = TRUE,
+  LBFGS_RETRY = 1,
+  LBFGS_MAXIT = 0,
+  LBFGS_LM = 6,
+  FVAL_EPS = 0,
+  GRAD_EPS = 1e-05,
+  LINESEARCH_MAXTRIAL = 20,
+  LINESEARCH_MAX = 1e+20,
+  LINESEARCH_MIN = 1e-20,
+  LINESEARCH_ARMIJO = 1e-04,
+  LINESEARCH_WOLFE = 0.9,
+  FD_DELTA = 0.001
+)
 }
 \arguments{
 \item{IF_INNER_LBFGS}{The logical input \code{TRUE}/\code{FALSE} to turn on/off L-BFGS algorithm for the

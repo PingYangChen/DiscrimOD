@@ -4,9 +4,18 @@
 \alias{getPSOInfo}
 \title{Generation function of PSO parameter settings}
 \usage{
-getPSOInfo(nSwarm = 32, maxIter = 100, freeRun = 1, tol = 1e-06,
-  c1 = 2.05, c2 = 2.05, w0 = 1.2, w1 = 0.2, w_var = 0.8,
-  vk = 4)
+getPSOInfo(
+  nSwarm = 32,
+  maxIter = 100,
+  freeRun = 1,
+  tol = 1e-06,
+  c1 = 2.05,
+  c2 = 2.05,
+  w0 = 1.2,
+  w1 = 0.2,
+  w_var = 0.8,
+  vk = 4
+)
 }
 \arguments{
 \item{nSwarm}{A integer number of swarm size in PSO algorithm.}

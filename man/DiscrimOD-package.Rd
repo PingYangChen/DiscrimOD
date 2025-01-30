@@ -54,3 +54,7 @@ Eberhart, R. C. and Kennedy, J. (1995). A new optimizer using particle swarm the
 
 Nocedal, J. and Wright, S. (2006). Numerical Optimization. Springer.
 }
+\author{
+\strong{Maintainer}: Ping-Yang Chen \email{pychen.ping@gmail.com}
+
+}

@@ -43,7 +43,7 @@
 #' @references Eberhart, R. C. and Kennedy, J. (1995). A new optimizer using particle swarm theory. In Proceedings of the sixth international symposium on micro machine and human science, pages 39-43. IEEE.
 #' @references Nocedal, J. and Wright, S. (2006). Numerical Optimization. Springer.
 #'
-#' @docType package
+"_PACKAGE"
 #' @name DiscrimOD-package
 #' @useDynLib DiscrimOD
 #' @importFrom Rcpp cppFunction sourceCpp

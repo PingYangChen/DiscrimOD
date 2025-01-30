@@ -12,9 +12,14 @@ double domainMapping(const int INV, const double par, const int nbd, const doubl
         break;
       }
       case 2: // Both
-      {
-        tmp = (par - lower)/(upper - lower);
-        if (tmp < 1e-12) { out = -1e8; } else if (tmp > (1 - 1e-12)) { out = 1e8; } else { out = std::log((tmp/(1.0 - tmp))); } break;
+      { 
+        if ((upper - lower) < 1e-12) {
+          out = upper;
+        } else {
+          tmp = (par - lower)/(upper - lower);
+          if (tmp < 1e-12) { out = -1e8; } else if (tmp > (1 - 1e-12)) { out = 1e8; } else { out = std::log((tmp/(1.0 - tmp))); }  
+        }
+        break; 
       }
       case 3: // Upper
       {
@@ -31,8 +36,12 @@ double domainMapping(const int INV, const double par, const int nbd, const doubl
       }
       case 2:
       {
-        tmp = std::exp(par);
-        if (!std::isfinite(tmp)) { out = upper; } else { out = (tmp/(1.0 + tmp))*(upper - lower) + lower; } break;
+        if ((upper - lower) < 1e-12) {
+          out = upper;
+        } else {
+          tmp = std::exp(par);
+          if (!std::isfinite(tmp)) { out = upper; } else { out = (tmp/(1.0 + tmp))*(upper - lower) + lower; } break;
+        }
       }
       case 3:
       {

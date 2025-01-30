@@ -271,18 +271,18 @@ double minDistCalc(const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_dif
   LBFGS_PAR.max_step        = (lbfgsfloatval_t)LBFGS_OPTION.LINESEARCH_MAX;
 
   arma::rowvec R_PARA_INI = OBJ.parasInit.submat(rmID, 0, rmID, dParas - 1);
-
+  
   lbfgsfloatval_t *R_PARA   = lbfgs_malloc(dParas);
   lbfgsfloatval_t *R_PARA1  = lbfgs_malloc(dParas);
   for (int d = 0; d < dParas; d++) { R_PARA[d] = (lbfgsfloatval_t)domainMapping(0, R_PARA_INI(d), R_NBD(d), R_UPPER(d), R_LOWER(d)); }
 
   lbfgsfloatval_t fx, fx1;
-
+  
   int CONV;
   CONV = lbfgs(dParas, R_PARA, &fx, evaluate, NULL, &LBFGS_EVAL, &LBFGS_PAR);
   //Rprintf("CONV: %d\n", CONV);
   for (int d = 0; d < dParas; d++) { R_PARA1[d] = R_PARA[d]; }
-
+  
   int LBFGS_RETRY = LBFGS_OPTION.LBFGS_RETRY; if (CONV) { LBFGS_RETRY++; }
   if ((!std::isfinite(fx)) | std::isnan(fx)) { LBFGS_RETRY++; }
   int count = 0;
@@ -354,6 +354,9 @@ arma::rowvec distCalc(const OBJ_INFO OBJ, const arma::mat x, const arma::mat PAR
   arma::rowvec T_PARA_V = PARA_SET.submat(tmID, OBJ.varParasLoc0(tmID), tmID, OBJ.dParas(tmID) - 1);
   arma::rowvec R_PARA_M = PARA_SET.submat(rmID, 0, rmID, OBJ.varParasLoc0(rmID) - 1);
   arma::rowvec R_PARA_V = PARA_SET.submat(rmID, OBJ.varParasLoc0(rmID), rmID, OBJ.dParas(rmID) - 1);
+
+  rvecPrintf(T_PARA_M);
+  rvecPrintf(T_PARA_V);
 
   Shield<SEXP> DESIGN_SEXP(Rcpp::wrap(x));
   Shield<SEXP> T_PARA_M_SEXP(Rcpp::wrap(T_PARA_M));

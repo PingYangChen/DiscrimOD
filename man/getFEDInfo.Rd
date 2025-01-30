@@ -4,8 +4,14 @@
 \alias{getFEDInfo}
 \title{Generation function of Fedorov-Wynn algorithm parameter settings}
 \usage{
-getFEDInfo(FED_MAXIT = 200, FED_TRIM = 5, FED_TRIM_EPS = 0.001,
-  freeRun = 1, FED_EPS = 1e-06, FED_ALPHA_GRID = 20)
+getFEDInfo(
+  FED_MAXIT = 200,
+  FED_TRIM = 5,
+  FED_TRIM_EPS = 0.001,
+  freeRun = 1,
+  FED_EPS = 1e-06,
+  FED_ALPHA_GRID = 20
+)
 }
 \arguments{
 \item{FED_MAXIT}{A integer number of maximal iterations. The default is 200.}

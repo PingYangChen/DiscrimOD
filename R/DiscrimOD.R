@@ -162,9 +162,8 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, minWt = 0.0
             all(names(PSO_INFO) == names(getPSOInfo())),
             crit_type %in% c("pair_fixed_true", "maxmin_fixed_true"))
 
-	MEAN_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
+	MEAN_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$mean)
 	DISP_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$disp)
-
   if (crit_type == "maxmin_fixed_true") {
   	if (is.null(MaxMinStdVals)) {
   		stop("Need optimal values for pairwise discrimination in efficiency computations.")
@@ -262,7 +261,7 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 
 	nSupp <- nrow(DESIGN1)
 	dSupp <- ncol(DESIGN1) - 1
-	MEAN_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
+	MEAN_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$mean)
 	DISP_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$disp)
 
 	if (is.null(MaxMinStdVals)) MaxMinStdVals <- 0
@@ -344,7 +343,7 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	nSupp <- nrow(DESIGN)
 	dSupp <- ncol(DESIGN) - 1
 
-	MEAN_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$model)
+	MEAN_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$mean)
 	DISP_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$disp)
 
 	if (!hasArg(environment)) environment <- new.env()

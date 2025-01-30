@@ -4,8 +4,18 @@
 \alias{DiscrimFedWynn}
 \title{Hybrid Algorithm of PSO and L-BFGS for Finding Optimal Discrimination Design}
 \usage{
-DiscrimFedWynn(MODEL_INFO, DISTANCE, dsLower, dsUpper, FED_INFO = NULL,
-  LBFGS_INFO = NULL, seed = NULL, verbose = TRUE, environment, ...)
+DiscrimFedWynn(
+  MODEL_INFO,
+  DISTANCE,
+  dsLower,
+  dsUpper,
+  FED_INFO = NULL,
+  LBFGS_INFO = NULL,
+  seed = NULL,
+  verbose = TRUE,
+  environment,
+  ...
+)
 }
 \description{
 Implement the hybridized PSO algorithm to find the optimal discrimination designs

@@ -4,9 +4,20 @@
 \alias{DiscrimUnifApproxT}
 \title{Hybrid Algorithm of PSO and L-BFGS for Finding Optimal Discrimination Design}
 \usage{
-DiscrimUnifApproxT(MODEL_INFO, nSupp, dsLower, dsUpper, REMES_MAXIT = 50,
-  REMES_FreeRun = 1, REMES_EPS = 0.001, LBFGS_INFO = NULL,
-  seed = NULL, verbose = TRUE, environment, ...)
+DiscrimUnifApproxT(
+  MODEL_INFO,
+  nSupp,
+  dsLower,
+  dsUpper,
+  REMES_MAXIT = 50,
+  REMES_FreeRun = 1,
+  REMES_EPS = 0.001,
+  LBFGS_INFO = NULL,
+  seed = NULL,
+  verbose = TRUE,
+  environment,
+  ...
+)
 }
 \description{
 Implement the hybridized PSO algorithm to find the optimal discrimination designs

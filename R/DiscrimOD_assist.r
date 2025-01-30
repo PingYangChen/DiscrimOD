@@ -180,19 +180,36 @@ getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL
                           crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
                           dSupp = 1L, nSupp = 2L, dsLower = NULL, dsUpper = NULL, minWt = .0) {
 
-  dParas <- sapply(1:length(MODEL_INFO), function(k) if (k == 1) length(MODEL_INFO[[k]]$para) else length(MODEL_INFO[[k]]$paraUpper))
+  dParas <- sapply(1:length(MODEL_INFO), function(k) {
+    if (k == 1) {
+      length(MODEL_INFO[[k]]$meanPara) + length(MODEL_INFO[[k]]$dispPara)
+    } else {
+      length(MODEL_INFO[[k]]$meanParaUpper) + length(MODEL_INFO[[k]]$dispParaUpper)
+    }
+  })
 
   paras <- parasInit <- parasUpper <- parasLower <- parasBdd <- matrix(0, length(MODEL_INFO), max(dParas))
+  varParasLoc0 <- numeric(length(MODEL_INFO))
   for (k in 1:length(MODEL_INFO)) {
-    if (k == 1) { paras[k,] <- c(MODEL_INFO[[k]]$para, rep(0, max(dParas) - dParas[k])) } else {
-
-      parasUpper[k,] <- c(ifelse(is.finite(MODEL_INFO[[k]]$paraUpper), MODEL_INFO[[k]]$paraUpper, 0), rep(0, max(dParas) - dParas[k]))
-      parasLower[k,] <- c(ifelse(is.finite(MODEL_INFO[[k]]$paraLower), MODEL_INFO[[k]]$paraLower, 0), rep(0, max(dParas) - dParas[k]))
-
-      tmp <- is.finite(MODEL_INFO[[k]]$paraLower) + 10*is.finite(MODEL_INFO[[k]]$paraUpper)
+    if (k == 1) {
+      paras[k,] <- c(MODEL_INFO[[k]]$meanPara, MODEL_INFO[[k]]$dispPara, rep(0, max(dParas) - dParas[k]))
+      varParasLoc0[k] <- length(MODEL_INFO[[k]]$meanPara)
+    } else {
+      parasUpper[k,] <- c(
+        ifelse(is.finite(MODEL_INFO[[k]]$meanParaUpper), MODEL_INFO[[k]]$meanParaUpper, 0),
+        ifelse(is.finite(MODEL_INFO[[k]]$dispParaUpper), MODEL_INFO[[k]]$dispParaUpper, 0),
+        rep(0, max(dParas) - dParas[k])
+      )
+      parasLower[k,] <- c(
+        ifelse(is.finite(MODEL_INFO[[k]]$meanParaLower), MODEL_INFO[[k]]$meanParaLower, 0),
+        ifelse(is.finite(MODEL_INFO[[k]]$dispParaLower), MODEL_INFO[[k]]$dispParaLower, 0),
+        rep(0, max(dParas) - dParas[k])
+      )
+      tmp <- is.finite(c(MODEL_INFO[[k]]$meanParaLower, MODEL_INFO[[k]]$dispParaLower)) + 10*is.finite(c(MODEL_INFO[[k]]$meanParaUpper, MODEL_INFO[[k]]$dispParaUpper))
       tmp2 <- ifelse(tmp == 0, 0, ifelse(tmp == 1, 1, ifelse(tmp == 10, 3, 2)))
       parasBdd[k,] <- c(tmp2, rep(0, max(dParas) - dParas[k]))
       parasInit[k,] <- runif(max(dParas), as.vector(parasLower[k,]), as.vector(parasUpper[k,]))
+      varParasLoc0[k] <- length(MODEL_INFO[[k]]$meanParaUpper)
     }
   }
 
@@ -207,7 +224,7 @@ getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL
   return(list(D_TYPE = D_TYPE, D_TYPE_NUM = D_TYPE_NUM, dist_func = dist_func,
               CRIT_TYPE_NUM = CRIT_TYPE_NUM,
               dSupp = dSupp, nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper, minWt = minWt,
-              N_PAIR = N_PAIR, MODEL_PAIR = MODEL_PAIR, dParas = dParas, paras = paras, parasInit = parasInit,
+              N_PAIR = N_PAIR, MODEL_PAIR = MODEL_PAIR, dParas = dParas, paras = paras, varParasLoc0 = varParasLoc0, parasInit = parasInit,
               parasUpper = parasUpper, parasLower = parasLower, parasBdd = parasBdd,
               MaxMinStdVals = MaxMinStdVals))
 }
