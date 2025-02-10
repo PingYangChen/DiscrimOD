@@ -1,3 +1,5 @@
+library(DiscrimOD)
+
 # Atkinson and Fedorov (1975a): T-optimal
 # Two R functions of competing models are given by
 af1 <- function(x, p) p[1] + p[2]*exp(x) + p[3]*exp(-x)
@@ -17,12 +19,12 @@ af_info_12 <- list(
   # Then the rival models are listed accordingly. We also need to specify the model space.
   list(mean = af2, disp = af2_v,
        meanParaLower = rep(-10, 3), meanParaUpper = rep(10, 3),
-       dispParaLower = c(1), dispParaUpper = c(1) )
+       dispParaLower = c(1), dispParaUpper = c(10) )
 )
 # Define the R function for the distance measure in T-optimal criterion
 # xt is the mean values of the true model
 # xr is the mean values of the rival model
-sq_diff <- function(xt, xr, vt, vr) (xt - xr)^2
+sq_diff <- function(xt, xr, vt, vr) (xt/vt - xr/vr)^2
 
 # Initialize PSO and BFGS options
 PSO_INFO <- getPSOInfo(nSwarm = 32, maxIter = 100)
