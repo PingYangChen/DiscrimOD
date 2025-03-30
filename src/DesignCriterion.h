@@ -55,7 +55,7 @@ double DesignCriterion(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PAR
   			wcos(nSupp - 1) = 1.0; wcos.subvec(0, nSupp - 2) = arma::cos(ang);
   			WT = wcumsin % wcos;
   			WT = WT % WT;
-  			if (arma::min(WT) > minWt) {
+  			if (arma::min(WT) >= minWt) {
           val = criterionList(LOOPID, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, DESIGN, WT, R_PARA);
           val *= -1.0;
   			}

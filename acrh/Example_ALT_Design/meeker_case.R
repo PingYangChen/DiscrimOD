@@ -1,6 +1,6 @@
 library(DiscrimOD)
 
-source("./divFunctions.R")
+#source("./divFunctions.R")
 
 # Case: Pascual, F. G., & Meeker, W. Q. (1997). Analysis of fatigue data with runouts
 #       based on a model with nonconstant standard deviation and a fatigue limit parameter.
@@ -40,6 +40,8 @@ res <- DiscrimOD(MODEL_INFO = model_info, DISTANCE = kldiv_censored_lnIsTrue_tc_
 round(res$BESTDESIGN, 3) # The resulting design
 res$BESTVAL # The CKL-optimal criterion value
 res$CPUTIME # CPU time
+
+#testDesign <- cbind(c(86.29, 89.456, 90, 142), c(0,0,1,0))
 
 designCriterion(res$BESTDESIGN, MODEL_INFO = model_info, DISTANCE = kldiv_censored_lnIsTrue_tc_1000,
                 dsLower = dsRange[1], dsUpper = dsRange[2], crit_type = "pair_fixed_true", MaxMinStdVals = NULL,

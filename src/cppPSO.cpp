@@ -112,7 +112,6 @@ Rcpp::List cppDesignCriterion(Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LI
 
   arma::mat R_PARA;
   double val = DesignCriterion(0, PSO_OPT, LBFGS_OPTION, OBJ, model_diff_ptr, NULL, DESIGN, R_PARA);
-
   return List::create(Named("val") = wrap(val),
                       Named("theta2") = wrap(R_PARA));
 }
@@ -160,7 +159,7 @@ Rcpp::List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MEAN_LIST, Rcpp::
 }
 
 //[[Rcpp::export]]
-Rcpp::List cppFedorovWynn(Rcpp::List FED_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST, 
+Rcpp::List cppFedorovWynn(Rcpp::List FED_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST,
                           Rcpp::List MEAN_LIST, Rcpp::List DISP_LIST,
                           const SEXP env, const bool VERBOSE)
 {
@@ -188,7 +187,7 @@ Rcpp::List cppFedorovWynn(Rcpp::List FED_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, 
 }
 
 //[[Rcpp::export]]
-Rcpp::List cppUnifApprox(Rcpp::List REMES_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST, 
+Rcpp::List cppUnifApprox(Rcpp::List REMES_INFO_LIST, Rcpp::List LBFGS_INFO_LIST, Rcpp::List OBJ_INFO_LIST,
                          Rcpp::List MEAN_LIST, Rcpp::List DISP_LIST,
                          const SEXP env, const bool VERBOSE)
 {
