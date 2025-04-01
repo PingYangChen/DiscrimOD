@@ -13,8 +13,8 @@ void PSO_MAIN(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM LBFGS_
 	//int checkConv = PSO_OPTS[LOOPID].checkConv;
 	double freeRun   = PSO_OPTS[LOOPID].freeRun;
 	double tol       = PSO_OPTS[LOOPID].tol;
-  rowvec varUpper  = PSO_OPTS[LOOPID].varUpper;
-  rowvec varLower  = PSO_OPTS[LOOPID].varLower;
+	arma::rowvec varUpper  = PSO_OPTS[LOOPID].varUpper;
+	arma::rowvec varLower  = PSO_OPTS[LOOPID].varLower;
 
 	// DECLARE VARIABLES
   arma::mat swarm(nSwarm, dSwarm), vStep(nSwarm, dSwarm), PBest(nSwarm, dSwarm);//, GrBest(nGroup, dSwarm);
@@ -32,7 +32,7 @@ void PSO_MAIN(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM LBFGS_
   double vk = PSO_OPTS[LOOPID].vk;
   velMax = (varUpper - varLower)/vk;
   // INITIALIZE RANDOM SWARM
-  swarm = randu(nSwarm, dSwarm) % repmat(varUpper - varLower, nSwarm, 1) + repmat(varLower, nSwarm, 1);
+  swarm = arma::randu(nSwarm, dSwarm) % arma::repmat(varUpper - varLower, nSwarm, 1) + arma::repmat(varLower, nSwarm, 1);
   // INITIALIZE VELOCITY
   vStep.fill(0);
   // INITIALIZE OBJECTIVE FUNCTION VALUES
@@ -67,7 +67,7 @@ void PSO_MAIN(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM LBFGS_
     psoFuncEval(IF_PARALLEL, LOOPID, PSO_OPTS, LBFGS_OPTION, OBJ, PSO_DYN, MODEL_COLLECTOR, PSO_EXT, swarm, fSwarm);
     // UPDATE THE LOCAL AND GLOBAL BEST
     if (any(fSwarm < fPBest)) {
-      uvec RowChange = find(fSwarm < fPBest);
+      arma::uvec RowChange = arma::find(fSwarm < fPBest);
       fPBest.elem(RowChange) = fSwarm.elem(RowChange);
       PBest.rows(RowChange) = swarm.rows(RowChange);
     }

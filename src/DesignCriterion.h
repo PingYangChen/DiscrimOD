@@ -97,7 +97,6 @@ double DesignCriterion(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PAR
     arma::rowvec R_PARA_M = swarm.subvec(0, OBJ.varParasLoc0(tmID) - 1);
     arma::rowvec R_PARA_V = swarm.subvec(OBJ.varParasLoc0(tmID), OBJ.dParas(tmID) - 1);
 
-
     model_diff_func* func_input = MODEL_COLLECTOR[PAIRID];
     Rcpp::EvalBase2 *m1_func = (Rcpp::EvalBase2 *) func_input->M1_FUNC;
     Rcpp::EvalBase2 *m2_func = (Rcpp::EvalBase2 *) func_input->M2_FUNC;
