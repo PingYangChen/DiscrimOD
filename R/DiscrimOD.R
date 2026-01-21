@@ -381,6 +381,7 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	DESIGN_M <- designV2M(DESIGN, D_INFO)
 	CRIT_VAL <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MEAN_LIST, DISP_LIST, 0, environment, DESIGN_M)
 	PARA_SET <- CRIT_VAL$theta2
+	rownames(CRIT_VAL$theta2) <- paste0("model_", 1:length(MODEL_INFO))
 
 	ALPHA <- 0
 	if (crit_type == "maxmin_fixed_true") {
@@ -408,7 +409,7 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 
 	if (crit_type == "maxmin_fixed_true") { equiv$alpha <- ALPHA }
 
-	return(equiv)
+	return(list(eqv = equiv, crit = list(cri_val = -CRIT_VAL$val, theta2 = CRIT_VAL$theta2)))
 }
 
 #' Create An Empty Model List
