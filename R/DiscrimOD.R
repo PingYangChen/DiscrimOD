@@ -401,7 +401,7 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 		EXTERNAL_LIST <- list(DESIGN = as.matrix(DESIGN[,-ncol(DESIGN)], nSupp, dSupp), CRIT_VAL = -CRIT_VAL$val)
 
 		tmp <- getLBFGSInfo()
-		psoOut <- cppPSO(0, ALPHA_PSO_INFO, tmp, ALPHA_INFO, MODEL_LIST, EXTERNAL_LIST, environment, FALSE, FALSE)
+		psoOut <- cppPSO(0, ALPHA_PSO_INFO, tmp, ALPHA_INFO, MEAN_LIST, DISP_LIST, EXTERNAL_LIST, environment, FALSE, FALSE)
 		ALPHA <- designM2V(psoOut$GBest, ALPHA_INFO)
 	}
 
@@ -442,12 +442,16 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 emptyModelList <- function(N_model = 2) {
 	out <- lapply(1:N_model, function(k) {
 		if (k == 1) list(model = 'R or C++ Mean Function for True Model',
-		                 disp  = 'R or C++ Variance Function for True Model',
-		                 para = 'Nominal Values of Parameters in True Model')
+		                 disp  = 'R or C++ Scale Function for True Model',
+		                 meanPara = 'Nominal Values of Mean Parameters in True Model',
+		                 dispPara = 'Nominal Values of Scale Parameters in True Model')
 		else list(model = paste0('R or C++ Mean Function for Rival ', k-1),
-		          disp  = paste0('R or C++ Variance Function for Rival ', k-1),
-							paraLower = paste0('Lower Bound of Parameter Space for Rival ', k-1),
-							paraUpper = paste0('Upper Bound of Parameter Space for Rival ', k-1))
+		          disp  = paste0('R or C++ Scale Function for Rival ', k-1),
+		          meanParaLower = paste0('Lower Bound of Mean Parameter Space for Rival ', k-1),
+		          meanParaUpper = paste0('Upper Bound of Mean Parameter Space for Rival ', k-1),
+		          dispParaLower = paste0('Upper Bound of Scale Parameter Space for Rival ', k-1),
+		          dispParaUpper = paste0('Upper Bound of Scale Parameter Space for Rival ', k-1)
+		          )
 	})
 	names(out) <- c("True", paste0("Rival", 1:(N_model - 1)))
 	return(out)
