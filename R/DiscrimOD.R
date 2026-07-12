@@ -155,12 +155,13 @@
 #' @rdname DiscrimOD
 #' @export
 DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, minWt = 0.0, crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
+                      MODEL_PAIR = NULL, WT_PAIR = NULL,
 											PSO_INFO = NULL, LBFGS_INFO = NULL, seed = NULL, verbose = TRUE, environment, ...) {
 
   stopifnot(nSupp >= 2L, all(is.finite(dsLower)), all(is.finite(dsUpper)),
             length(dsLower) == length(dsUpper), all(dsUpper > dsLower),
             all(names(PSO_INFO) == names(getPSOInfo())),
-            crit_type %in% c("pair_fixed_true", "maxmin_fixed_true"))
+            crit_type %in% c("pair_fixed_true", "maxmin_fixed_true", "pair_multi_true"))
 
 	MEAN_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$mean)
 	DISP_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$disp)
@@ -177,8 +178,8 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, minWt = 0.0
 
   dSupp <- length(dsLower)
 
-	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
-                          crit_type = crit_type, MaxMinStdVals = MaxMinStdVals,
+	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, MODEL_PAIR = MODEL_PAIR, WT_PAIR = WT_PAIR,
+	                        dist_func = DISTANCE, crit_type = crit_type, MaxMinStdVals = MaxMinStdVals,
                           dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper,
 	                        minWt = minWt)
 
@@ -254,6 +255,7 @@ DiscrimOD <- function(MODEL_INFO, DISTANCE, nSupp, dsLower, dsUpper, minWt = 0.0
 #' @rdname designCriterion
 #' @export
 designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
+                            MODEL_PAIR = NULL, WT_PAIR = NULL,
 														PSO_INFO = NULL, LBFGS_INFO = NULL, environment, ...) {
 
 	stopifnot(all(is.finite(dsLower)), all(is.finite(dsUpper)),
@@ -298,9 +300,10 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 	# Compute the criterion value
 	DESIGN1_M <- designV2M(DESIGN1, D_INFO)
 	cri_1 <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MEAN_LIST, DISP_LIST, 0, environment, DESIGN1_M)
-	rownames(cri_1$theta2) <- paste0("model_", 1:length(MODEL_INFO))
+	rownames(cri_1$theta1) <- paste0("model_", MODEL_PAIR[,1])
+	rownames(cri_1$theta2) <- paste0("model_", MODEL_PAIR[,2])
 
-  return(list(cri_val = -cri_1$val, theta2 = cri_1$theta2))
+  return(list(cri_val = -cri_1$val, theta1 = cri_1$theta1, theta2 = cri_1$theta2))
 }
 
 #' Equivalence theorem for discrimination design
@@ -332,7 +335,7 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 #' @export
 equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = FALSE,
 												MODEL_INFO, DISTANCE, dsLower, dsUpper, crit_type = "pair_fixed_true",
-												MaxMinStdVals = NULL, PSO_INFO = NULL, LBFGS_INFO = NULL,
+												MaxMinStdVals = NULL, MODEL_PAIR = NULL, WT_PAIR = NULL, PSO_INFO = NULL, LBFGS_INFO = NULL,
 												ALPHA_PSO_INFO = NULL, environment, ...) {
 
 	stopifnot(all(is.finite(dsLower)), all(is.finite(dsUpper)),
@@ -380,8 +383,11 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	# Compute for the equivalence theorem
 	DESIGN_M <- designV2M(DESIGN, D_INFO)
 	CRIT_VAL <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MEAN_LIST, DISP_LIST, 0, environment, DESIGN_M)
-	PARA_SET <- CRIT_VAL$theta2
-	rownames(CRIT_VAL$theta2) <- paste0("model_", 1:length(MODEL_INFO))
+	T_PARA <- CRIT_VAL$theta1
+	R_PARA <- CRIT_VAL$theta2
+	# PARA_SET <- CRIT_VAL$theta2
+	rownames(CRIT_VAL$theta1) <- paste0("model_", MODEL_PAIR[,1])
+	rownames(CRIT_VAL$theta2) <- paste0("model_", MODEL_PAIR[,2])
 
 	ALPHA <- 0
 	if (crit_type == "maxmin_fixed_true") {
@@ -390,7 +396,7 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 		ALPHA_INFO <- getDesignInfo(D_TYPE = "maxmin_eqv_wt", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
                           	 		crit_type = crit_type, MaxMinStdVals = MaxMinStdVals, minWt = .0,
                              		dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
-		ALPHA_INFO$paras <- PARA_SET
+		# ALPHA_INFO$paras <- PARA_SET
 		if (is.null(ALPHA_PSO_INFO)) { ALPHA_PSO_INFO <- getPSOInfo(nSwarm = 64, maxIter = 200) }
 		swarmSetting <- algInfoUpdate(ALPHA_INFO)
 		ALPHA_PSO_INFO$varUpper <- matrix(swarmSetting$UB, length(ALPHA_PSO_INFO$nSwarm), ncol(swarmSetting$UB), byrow = TRUE)
@@ -398,18 +404,18 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 		ALPHA_PSO_INFO$dSwarm <- rep(ncol(swarmSetting$UB), length(ALPHA_PSO_INFO$nSwarm))
 
 		dimnames(DESIGN) <- NULL
-		EXTERNAL_LIST <- list(DESIGN = as.matrix(DESIGN[,-ncol(DESIGN)], nSupp, dSupp), CRIT_VAL = -CRIT_VAL$val)
+		EXTERNAL_LIST <- list(DESIGN = as.matrix(DESIGN[,-ncol(DESIGN)], nSupp, dSupp), CRIT_VAL = -CRIT_VAL$val, T_PARA = T_PARA, R_PARA = R_PARA)
 
 		tmp <- getLBFGSInfo()
 		psoOut <- cppPSO(0, ALPHA_PSO_INFO, tmp, ALPHA_INFO, MEAN_LIST, DISP_LIST, EXTERNAL_LIST, environment, FALSE, FALSE)
 		ALPHA <- designM2V(psoOut$GBest, ALPHA_INFO)
 	}
 
-	equiv <- cppEquivalence(D_INFO, MEAN_LIST, DISP_LIST, -CRIT_VAL$val, PARA_SET, ALPHA, environment, ngrid)
+	equiv <- cppEquivalence(D_INFO, MEAN_LIST, DISP_LIST, -CRIT_VAL$val, T_PARA, R_PARA, ALPHA, environment, ngrid)
 
 	if (crit_type == "maxmin_fixed_true") { equiv$alpha <- ALPHA }
 
-	return(list(eqv = equiv, crit = list(cri_val = -CRIT_VAL$val, theta2 = CRIT_VAL$theta2)))
+	return(list(eqv = equiv, crit = CRIT_VAL))
 }
 
 #' Create An Empty Model List
@@ -441,12 +447,12 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 #' @export
 emptyModelList <- function(N_model = 2) {
 	out <- lapply(1:N_model, function(k) {
-		if (k == 1) list(model = 'R or C++ Mean Function for True Model',
-		                 disp  = 'R or C++ Scale Function for True Model',
+		if (k == 1) list(mean = 'R or C++ Mean Function for True Model',
+		                 disp = 'R or C++ Scale Function for True Model',
 		                 meanPara = 'Nominal Values of Mean Parameters in True Model',
 		                 dispPara = 'Nominal Values of Scale Parameters in True Model')
-		else list(model = paste0('R or C++ Mean Function for Rival ', k-1),
-		          disp  = paste0('R or C++ Scale Function for Rival ', k-1),
+		else list(mean = paste0('R or C++ Mean Function for Rival ', k-1),
+		          disp = paste0('R or C++ Scale Function for Rival ', k-1),
 		          meanParaLower = paste0('Lower Bound of Mean Parameter Space for Rival ', k-1),
 		          meanParaUpper = paste0('Upper Bound of Mean Parameter Space for Rival ', k-1),
 		          dispParaLower = paste0('Upper Bound of Scale Parameter Space for Rival ', k-1),

@@ -176,25 +176,74 @@ getFEDInfo <- function(FED_MAXIT = 200, FED_TRIM = 5, FED_TRIM_EPS = 1e-3, freeR
 }
 
 #' @export
-getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL,
+getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, MODEL_PAIR = NULL, WT_PAIR = NULL, dist_func = NULL,
                           crit_type = "pair_fixed_true", MaxMinStdVals = NULL,
                           dSupp = 1L, nSupp = 2L, dsLower = NULL, dsUpper = NULL, minWt = .0) {
 
+  # After Tp-optimal
+  # Check MODEL_PAIR format
+  if (is.null(MODEL_PAIR)) { MODEL_PAIR <- cbind(1, 2:length(MODEL_INFO)) }
+  if (!is.matrix(MODEL_PAIR)) {
+    stopifnot(length(MODEL_PAIR) == 2); MODEL_PAIR <- as.matrix(MODEL_PAIR, 1, 2)
+  }
+  utid <- unique(MODEL_PAIR[,1])
+  for (k in 1:length(utid)) {
+    stopifnot(!is.null(MODEL_INFO[[utid[k]]]$meanPara)); stopifnot(!is.null(MODEL_INFO[[utid[k]]]$dispPara))
+  }
+  urid <- unique(MODEL_PAIR[,2])
+  for (k in 1:length(urid)) {
+    stopifnot(!is.null(MODEL_INFO[[urid[k]]]$meanParaUpper)); stopifnot(!is.null(MODEL_INFO[[urid[k]]]$meanParaLower))
+    stopifnot(!is.null(MODEL_INFO[[urid[k]]]$dispParaUpper)); stopifnot(!is.null(MODEL_INFO[[urid[k]]]$dispParaLower))
+  }
+  # Reformat MODEL_PAIR for Cpp
+  MODEL_PAIR <- MODEL_PAIR - 1
+  # Get the weights for each MODEL_PAIR
+  N_PAIR <- nrow(MODEL_PAIR)
+  if (is.null(WT_PAIR)) { WT_PAIR <- rep(1/N_PAIR, N_PAIR) }
+  stopifnot(length(WT_PAIR) == N_PAIR)
+  # Test mean and disp function parameter inputs
+  testSample <- matrix(runif(10*length(dsLower), dsLower, dsUpper), 10, length(dsLower), byrow = T)
+  for (k in 1:length(MODEL_INFO)) {
+    if (!is.null(MODEL_INFO[[k]]$meanPara)) {
+      tryCatch({ MODEL_INFO[[k]]$mean(testSample, MODEL_INFO[[k]]$meanPara) },
+               warning = function(msg) { message(paste0(msg,"\n")) },
+               error = function(msg) { stop(paste0(msg,"\n"))} )
+      tryCatch({ MODEL_INFO[[k]]$disp(testSample, MODEL_INFO[[k]]$dispPara) },
+               warning = function(msg) { message(paste0(msg,"\n")) },
+               error = function(msg) { stop(paste0(msg,"\n"))} )
+    }
+    if (!is.null(MODEL_INFO[[k]]$meanParaUppper)) {
+      tryCatch({ MODEL_INFO[[k]]$mean(testSample, MODEL_INFO[[k]]$meanParaUpper) },
+               warning = function(msg) { message(paste0(msg,"\n")) },
+               error = function(msg) { stop(paste0(msg,"\n"))} )
+      tryCatch({ MODEL_INFO[[k]]$mean(testSample, MODEL_INFO[[k]]$meanParaLower) },
+               warning = function(msg) { message(paste0(msg,"\n")) },
+               error = function(msg) { stop(paste0(msg,"\n"))} )
+      tryCatch({ MODEL_INFO[[k]]$disp(testSample, MODEL_INFO[[k]]$dispParaUpper) },
+               warning = function(msg) { message(paste0(msg,"\n")) },
+               error = function(msg) { stop(paste0(msg,"\n"))} )
+      tryCatch({ MODEL_INFO[[k]]$disp(testSample, MODEL_INFO[[k]]$dispParaLower) },
+               warning = function(msg) { message(paste0(msg,"\n")) },
+               error = function(msg) { stop(paste0(msg,"\n"))} )
+    }
+  }
+  #
   dParas <- sapply(1:length(MODEL_INFO), function(k) {
-    if (k == 1) {
+    if (!is.null(MODEL_INFO[[k]]$meanPara)) {
       length(MODEL_INFO[[k]]$meanPara) + length(MODEL_INFO[[k]]$dispPara)
     } else {
       length(MODEL_INFO[[k]]$meanParaUpper) + length(MODEL_INFO[[k]]$dispParaUpper)
     }
   })
-
-  paras <- parasInit <- parasUpper <- parasLower <- parasBdd <- matrix(0, length(MODEL_INFO), max(dParas))
+  paras <- parasUpper <- parasLower <- parasBdd <- matrix(0, length(MODEL_INFO), max(dParas))
+  parasInit <- matrix(0, nrow(MODEL_PAIR), max(dParas))
   varParasLoc0 <- numeric(length(MODEL_INFO))
   for (k in 1:length(MODEL_INFO)) {
-    if (k == 1) {
+    if (!is.null(MODEL_INFO[[k]]$meanPara)) {
       paras[k,] <- c(MODEL_INFO[[k]]$meanPara, MODEL_INFO[[k]]$dispPara, rep(0, max(dParas) - dParas[k]))
       varParasLoc0[k] <- length(MODEL_INFO[[k]]$meanPara)
-    } else {
+    }
+    if (!is.null(MODEL_INFO[[k]]$meanParaUpper)) {
       parasUpper[k,] <- c(
         ifelse(is.finite(MODEL_INFO[[k]]$meanParaUpper), MODEL_INFO[[k]]$meanParaUpper, 0),
         ifelse(is.finite(MODEL_INFO[[k]]$dispParaUpper), MODEL_INFO[[k]]$dispParaUpper, 0),
@@ -208,23 +257,58 @@ getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, dist_func = NULL
       tmp <- is.finite(c(MODEL_INFO[[k]]$meanParaLower, MODEL_INFO[[k]]$dispParaLower)) + 10*is.finite(c(MODEL_INFO[[k]]$meanParaUpper, MODEL_INFO[[k]]$dispParaUpper))
       tmp2 <- ifelse(tmp == 0, 0, ifelse(tmp == 1, 1, ifelse(tmp == 10, 3, 2)))
       parasBdd[k,] <- c(tmp2, rep(0, max(dParas) - dParas[k]))
-      parasInit[k,] <- runif(max(dParas), as.vector(parasLower[k,]), as.vector(parasUpper[k,]))
       varParasLoc0[k] <- length(MODEL_INFO[[k]]$meanParaUpper)
+      parasInit[which(MODEL_PAIR[,2] == k),] <- runif(max(dParas), as.vector(parasLower[k,]), as.vector(parasUpper[k,]))
     }
   }
 
+  # # Before Tp-optimal
+  # dParas <- sapply(1:length(MODEL_INFO), function(k) {
+  #   if (k == 1) {
+  #     length(MODEL_INFO[[k]]$meanPara) + length(MODEL_INFO[[k]]$dispPara)
+  #   } else {
+  #     length(MODEL_INFO[[k]]$meanParaUpper) + length(MODEL_INFO[[k]]$dispParaUpper)
+  #   }
+  # })
+  # paras <- parasInit <- parasUpper <- parasLower <- parasBdd <- matrix(0, length(MODEL_INFO), max(dParas))
+  # varParasLoc0 <- numeric(length(MODEL_INFO))
+  # for (k in 1:length(MODEL_INFO)) {
+  #   if (k == 1) {
+  #     paras[k,] <- c(MODEL_INFO[[k]]$meanPara, MODEL_INFO[[k]]$dispPara, rep(0, max(dParas) - dParas[k]))
+  #     varParasLoc0[k] <- length(MODEL_INFO[[k]]$meanPara)
+  #   } else {
+  #     parasUpper[k,] <- c(
+  #       ifelse(is.finite(MODEL_INFO[[k]]$meanParaUpper), MODEL_INFO[[k]]$meanParaUpper, 0),
+  #       ifelse(is.finite(MODEL_INFO[[k]]$dispParaUpper), MODEL_INFO[[k]]$dispParaUpper, 0),
+  #       rep(0, max(dParas) - dParas[k])
+  #     )
+  #     parasLower[k,] <- c(
+  #       ifelse(is.finite(MODEL_INFO[[k]]$meanParaLower), MODEL_INFO[[k]]$meanParaLower, 0),
+  #       ifelse(is.finite(MODEL_INFO[[k]]$dispParaLower), MODEL_INFO[[k]]$dispParaLower, 0),
+  #       rep(0, max(dParas) - dParas[k])
+  #     )
+  #     tmp <- is.finite(c(MODEL_INFO[[k]]$meanParaLower, MODEL_INFO[[k]]$dispParaLower)) + 10*is.finite(c(MODEL_INFO[[k]]$meanParaUpper, MODEL_INFO[[k]]$dispParaUpper))
+  #     tmp2 <- ifelse(tmp == 0, 0, ifelse(tmp == 1, 1, ifelse(tmp == 10, 3, 2)))
+  #     parasBdd[k,] <- c(tmp2, rep(0, max(dParas) - dParas[k]))
+  #     parasInit[k,] <- runif(max(dParas), as.vector(parasLower[k,]), as.vector(parasUpper[k,]))
+  #     varParasLoc0[k] <- length(MODEL_INFO[[k]]$meanParaUpper)
+  #   }
+  # }
+
   CRIT_TYPE_NUM <- ifelse(crit_type == "pair_fixed_true", 0,
-                      ifelse(crit_type == "maxmin_fixed_true", 1, 2))
+                      ifelse(crit_type == "maxmin_fixed_true", 1,
+                         ifelse(crit_type == "pair_multi_true", 2, 3)))
 
   if (D_TYPE == "maxmin_eqv_wt") { D_TYPE_NUM <- 1001 } else { D_TYPE_NUM <- 1 }
 
-  N_PAIR <- length(MODEL_INFO) - 1
-  MODEL_PAIR <- cbind(0, 1:N_PAIR)
+  # # Before Tp-optimal
+  # N_PAIR <- length(MODEL_INFO) - 1
+  # MODEL_PAIR <- cbind(0, 1:N_PAIR)
 
   return(list(D_TYPE = D_TYPE, D_TYPE_NUM = D_TYPE_NUM, dist_func = dist_func,
               CRIT_TYPE_NUM = CRIT_TYPE_NUM,
               dSupp = dSupp, nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper, minWt = minWt,
-              N_PAIR = N_PAIR, MODEL_PAIR = MODEL_PAIR, dParas = dParas, paras = paras, varParasLoc0 = varParasLoc0, parasInit = parasInit,
+              N_PAIR = N_PAIR, MODEL_PAIR = MODEL_PAIR, WT_PAIR = WT_PAIR, dParas = dParas, paras = paras, varParasLoc0 = varParasLoc0, parasInit = parasInit,
               parasUpper = parasUpper, parasLower = parasLower, parasBdd = parasBdd,
               MaxMinStdVals = MaxMinStdVals))
 }

@@ -12,6 +12,8 @@ designCriterion(
   dsUpper,
   crit_type = "pair_fixed_true",
   MaxMinStdVals = NULL,
+  MODEL_PAIR = NULL,
+  WT_PAIR = NULL,
   PSO_INFO = NULL,
   LBFGS_INFO = NULL,
   environment,

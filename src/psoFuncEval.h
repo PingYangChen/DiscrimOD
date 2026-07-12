@@ -15,8 +15,8 @@ void psoFuncEval(const bool IF_PARALLEL, const int LOOPID, PSO_OPTIONS PSO_OPTS[
 			for (iParallel = 0; iParallel < nSwarm; iParallel++) {
 				rowvec PARTICLE = conv_to<rowvec>::from(swarm.row(iParallel));
 				// Optimal Design Criteria
-				arma::mat R_PARA;
-				fSwarm(iParallel) = DesignCriterion(LOOPID, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, PSO_EXT, PARTICLE, R_PARA);
+				arma::mat T_PARA, R_PARA;
+				fSwarm(iParallel) = DesignCriterion(LOOPID, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, PSO_EXT, PARTICLE, T_PARA, R_PARA);
 			}
 			#pragma omp barrier
 		}
@@ -25,8 +25,8 @@ void psoFuncEval(const bool IF_PARALLEL, const int LOOPID, PSO_OPTIONS PSO_OPTS[
 		for (int iSwarm = 0; iSwarm < nSwarm; iSwarm++) {
 			rowvec PARTICLE = arma::conv_to<rowvec>::from(swarm.row(iSwarm));
 			// Optimal Design Criteria
-			arma::mat R_PARA;
-			fSwarm(iSwarm) = DesignCriterion(LOOPID, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, PSO_EXT, PARTICLE, R_PARA);
+			arma::mat T_PARA, R_PARA;
+			fSwarm(iSwarm) = DesignCriterion(LOOPID, PSO_OPTS, LBFGS_OPTION, OBJ, MODEL_COLLECTOR, PSO_EXT, PARTICLE, T_PARA, R_PARA);
 		}
   //}
 }

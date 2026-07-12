@@ -145,6 +145,7 @@ typedef struct {
   // Competing Models
   int N_PAIR;
   arma::imat MODEL_PAIR;
+  arma::rowvec WT_PAIR;
   arma::irowvec dParas, varParasLoc0;
   arma::mat paras, parasInit, parasUpper, parasLower, parasBdd;
   // Max-min Discrimination Design
@@ -179,6 +180,8 @@ typedef struct lbfgs_eval {
 typedef struct best_alpha_info {
   double CRIT_VAL;
   arma::mat DESIGN;
+  arma::mat T_PARA;
+  arma::mat R_PARA;
 } best_alpha_info, *Ptr_best_alpha_info;
 
 typedef struct inner_pso_info {
@@ -360,6 +363,10 @@ void getInfoStruct(OBJ_INFO &OBJ, const Rcpp::List OBJ_INFO_LIST)
   Rcpp::IntegerMatrix MODEL_PAIR_Tmp   = as<IntegerMatrix>(OBJ_INFO_LIST["MODEL_PAIR"]);
   arma::imat MODEL_PAIR(MODEL_PAIR_Tmp.begin(), MODEL_PAIR_Tmp.nrow(), MODEL_PAIR_Tmp.ncol(), false);
   OBJ.MODEL_PAIR  = MODEL_PAIR;
+
+  Rcpp::NumericVector WT_PAIR_Tmp = as<NumericVector>(OBJ_INFO_LIST["WT_PAIR"]);
+  arma::rowvec WT_PAIR(WT_PAIR_Tmp.begin(), WT_PAIR_Tmp.size(), false);
+  OBJ.WT_PAIR = WT_PAIR;
 
   Rcpp::IntegerVector dParas_Tmp  = as<IntegerVector>(OBJ_INFO_LIST["dParas"]);
   arma::irowvec dParas(dParas_Tmp.begin(), dParas_Tmp.size(), false);

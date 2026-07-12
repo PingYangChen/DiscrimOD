@@ -50,8 +50,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // cppEquivalence
-Rcpp::List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MEAN_LIST, Rcpp::List DISP_LIST, const double GBEST_VAL, const arma::mat PARA_SET, const arma::rowvec alpha, const SEXP env, const int nGrid);
-RcppExport SEXP _DiscrimOD_cppEquivalence(SEXP OBJ_INFO_LISTSEXP, SEXP MEAN_LISTSEXP, SEXP DISP_LISTSEXP, SEXP GBEST_VALSEXP, SEXP PARA_SETSEXP, SEXP alphaSEXP, SEXP envSEXP, SEXP nGridSEXP) {
+Rcpp::List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MEAN_LIST, Rcpp::List DISP_LIST, const double GBEST_VAL, const arma::mat T_PARA, const arma::mat R_PARA, const arma::rowvec alpha, const SEXP env, const int nGrid);
+RcppExport SEXP _DiscrimOD_cppEquivalence(SEXP OBJ_INFO_LISTSEXP, SEXP MEAN_LISTSEXP, SEXP DISP_LISTSEXP, SEXP GBEST_VALSEXP, SEXP T_PARASEXP, SEXP R_PARASEXP, SEXP alphaSEXP, SEXP envSEXP, SEXP nGridSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -59,11 +59,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type MEAN_LIST(MEAN_LISTSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type DISP_LIST(DISP_LISTSEXP);
     Rcpp::traits::input_parameter< const double >::type GBEST_VAL(GBEST_VALSEXP);
-    Rcpp::traits::input_parameter< const arma::mat >::type PARA_SET(PARA_SETSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type T_PARA(T_PARASEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type R_PARA(R_PARASEXP);
     Rcpp::traits::input_parameter< const arma::rowvec >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< const SEXP >::type env(envSEXP);
     Rcpp::traits::input_parameter< const int >::type nGrid(nGridSEXP);
-    rcpp_result_gen = Rcpp::wrap(cppEquivalence(OBJ_INFO_LIST, MEAN_LIST, DISP_LIST, GBEST_VAL, PARA_SET, alpha, env, nGrid));
+    rcpp_result_gen = Rcpp::wrap(cppEquivalence(OBJ_INFO_LIST, MEAN_LIST, DISP_LIST, GBEST_VAL, T_PARA, R_PARA, alpha, env, nGrid));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -105,7 +106,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_DiscrimOD_cppPSO", (DL_FUNC) &_DiscrimOD_cppPSO, 10},
     {"_DiscrimOD_cppDesignCriterion", (DL_FUNC) &_DiscrimOD_cppDesignCriterion, 8},
-    {"_DiscrimOD_cppEquivalence", (DL_FUNC) &_DiscrimOD_cppEquivalence, 8},
+    {"_DiscrimOD_cppEquivalence", (DL_FUNC) &_DiscrimOD_cppEquivalence, 9},
     {"_DiscrimOD_cppFedorovWynn", (DL_FUNC) &_DiscrimOD_cppFedorovWynn, 7},
     {"_DiscrimOD_cppUnifApprox", (DL_FUNC) &_DiscrimOD_cppUnifApprox, 7},
     {NULL, NULL, 0}

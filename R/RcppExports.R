@@ -9,8 +9,8 @@ cppDesignCriterion <- function(PSO_INFO_LIST, LBFGS_INFO_LIST, OBJ_INFO_LIST, ME
     .Call('_DiscrimOD_cppDesignCriterion', PACKAGE = 'DiscrimOD', PSO_INFO_LIST, LBFGS_INFO_LIST, OBJ_INFO_LIST, MEAN_LIST, DISP_LIST, EXTERNAL_LIST, env, DESIGN)
 }
 
-cppEquivalence <- function(OBJ_INFO_LIST, MEAN_LIST, DISP_LIST, GBEST_VAL, PARA_SET, alpha, env, nGrid) {
-    .Call('_DiscrimOD_cppEquivalence', PACKAGE = 'DiscrimOD', OBJ_INFO_LIST, MEAN_LIST, DISP_LIST, GBEST_VAL, PARA_SET, alpha, env, nGrid)
+cppEquivalence <- function(OBJ_INFO_LIST, MEAN_LIST, DISP_LIST, GBEST_VAL, T_PARA, R_PARA, alpha, env, nGrid) {
+    .Call('_DiscrimOD_cppEquivalence', PACKAGE = 'DiscrimOD', OBJ_INFO_LIST, MEAN_LIST, DISP_LIST, GBEST_VAL, T_PARA, R_PARA, alpha, env, nGrid)
 }
 
 cppFedorovWynn <- function(FED_INFO_LIST, LBFGS_INFO_LIST, OBJ_INFO_LIST, MEAN_LIST, DISP_LIST, env, VERBOSE) {

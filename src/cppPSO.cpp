@@ -110,15 +110,17 @@ Rcpp::List cppDesignCriterion(Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_INFO_LI
   PSO_OPTIONS PSO_OPT[N_PSO_OPTS]; getAlgStruct(PSO_OPT, PSO_INFO_LIST);
   LBFGS_PARAM LBFGS_OPTION; getNewtonStruct(LBFGS_OPTION, LBFGS_INFO_LIST);
 
-  arma::mat R_PARA;
-  double val = DesignCriterion(0, PSO_OPT, LBFGS_OPTION, OBJ, model_diff_ptr, NULL, DESIGN, R_PARA);
+  arma::mat T_PARA, R_PARA;
+  double val = DesignCriterion(0, PSO_OPT, LBFGS_OPTION, OBJ, model_diff_ptr, NULL, DESIGN, T_PARA, R_PARA);
   return List::create(Named("val") = wrap(val),
+                      Named("theta1") = wrap(T_PARA),
                       Named("theta2") = wrap(R_PARA));
 }
 
 //[[Rcpp::export]]
 Rcpp::List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MEAN_LIST, Rcpp::List DISP_LIST,
-                          const double GBEST_VAL, const arma::mat PARA_SET, const arma::rowvec alpha, const SEXP env, const int nGrid)
+                          const double GBEST_VAL, const arma::mat T_PARA, const arma::mat R_PARA, 
+                          const arma::rowvec alpha, const SEXP env, const int nGrid)
 {
   OBJ_INFO OBJ; getInfoStruct(OBJ, OBJ_INFO_LIST);
   int N_PAIR = OBJ.N_PAIR;
@@ -136,7 +138,7 @@ Rcpp::List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MEAN_LIST, Rcpp::
   int dSupp = OBJ.dSupp;
   if (dSupp == 1) {
     arma::mat dsGrid(nGrid, 1); dsGrid.col(0) = xLine_1;
-    arma::rowvec DIV = directionalDerivative(OBJ, dsGrid, PARA_SET, alpha, model_diff_ptr);
+    arma::rowvec DIV = directionalDerivative(OBJ, dsGrid, T_PARA, R_PARA, alpha, model_diff_ptr);
     DISPVALS.set_size(1, nGrid);
     DISPVALS.row(0) = DIV - GBEST_VAL;
   } else if (dSupp == 2) {
@@ -144,7 +146,7 @@ Rcpp::List cppEquivalence(Rcpp::List OBJ_INFO_LIST, Rcpp::List MEAN_LIST, Rcpp::
     DISPVALS.set_size(nGrid, nGrid);
     for (int i = 0; i < nGrid; i++) {
       arma::mat dsGrid(nGrid, 2); dsGrid.col(0).fill(xLine_1(i)); dsGrid.col(1) = xLine_2;
-      arma::rowvec DIV = directionalDerivative(OBJ, dsGrid, PARA_SET, alpha, model_diff_ptr);
+      arma::rowvec DIV = directionalDerivative(OBJ, dsGrid, T_PARA, R_PARA, alpha, model_diff_ptr);
       DISPVALS.row(i) = DIV - GBEST_VAL;
     }
   }
