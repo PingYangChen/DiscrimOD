@@ -54,9 +54,9 @@ mean_af1975_1 <- c(4.5, -1.5, -2)
 disp_af1975_1 <- c(1.0)
 # Create a model list as the input of our PSO-QN algorithm
 model_af1975b <- list(
-  list(mean = af1975b_1, disp = af1975_disp, meanPara = mean_af1975_1, dispPara = disp_af1975_1),
-  list(mean = af1975b_2, disp = af1975_disp, meanParaLower = rep(-10, 3), meanParaUpper = rep(10, 3), dispParaLower = c(1), dispParaUpper = c(1)),
-  list(mean = af1975b_3, disp = af1975_disp, meanParaLower = rep(-10, 4), meanParaUpper = rep(10, 4), dispParaLower = c(1), dispParaUpper = c(1))
+  list(mean = af1975b_1, disp = af1975b_disp, meanPara = mean_af1975_1, dispPara = disp_af1975_1),
+  list(mean = af1975b_2, disp = af1975b_disp, meanParaLower = rep(-10, 3), meanParaUpper = rep(10, 3), dispParaLower = c(1), dispParaUpper = c(1)),
+  list(mean = af1975b_3, disp = af1975b_disp, meanParaLower = rep(-10, 4), meanParaUpper = rep(10, 4), dispParaLower = c(1), dispParaUpper = c(1))
 )
 
 
