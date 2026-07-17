@@ -267,8 +267,8 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 	DISP_LIST <- lapply(1:length(MODEL_INFO), function(k) MODEL_INFO[[k]]$disp)
 
 	if (is.null(MaxMinStdVals)) MaxMinStdVals <- 0
-	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
-                          crit_type = crit_type, MaxMinStdVals = MaxMinStdVals, minWt = .0,
+	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, MODEL_PAIR = MODEL_PAIR, WT_PAIR = WT_PAIR,
+	                        dist_func = DISTANCE, crit_type = crit_type, MaxMinStdVals = MaxMinStdVals, minWt = .0,
                           dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
 
 	if (is.null(PSO_INFO)) { PSO_INFO <- getPSOInfo(nSwarm = c(32, 32), maxIter = c(100, 100)) }
@@ -352,8 +352,8 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	if (!hasArg(environment)) environment <- new.env()
 
 	if (is.null(MaxMinStdVals)) MaxMinStdVals <- 0
-	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
-                          crit_type = crit_type, MaxMinStdVals = MaxMinStdVals, minWt = .0,
+	D_INFO <- getDesignInfo(D_TYPE = "approx", MODEL_INFO = MODEL_INFO, MODEL_PAIR = MODEL_PAIR, WT_PAIR = WT_PAIR,
+	                        dist_func = DISTANCE, crit_type = crit_type, MaxMinStdVals = MaxMinStdVals, minWt = .0,
                           dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
 
 	if (is.null(PSO_INFO)) { PSO_INFO <- getPSOInfo(nSwarm = c(32, 32), maxIter = c(100, 100)) }
@@ -393,8 +393,8 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	if (crit_type == "maxmin_fixed_true") {
 		#message("Looking for best weight...")
 		# Find the weight vector first
-		ALPHA_INFO <- getDesignInfo(D_TYPE = "maxmin_eqv_wt", MODEL_INFO = MODEL_INFO, dist_func = DISTANCE,
-                          	 		crit_type = crit_type, MaxMinStdVals = MaxMinStdVals, minWt = .0,
+		ALPHA_INFO <- getDesignInfo(D_TYPE = "maxmin_eqv_wt", MODEL_INFO = MODEL_INFO, MODEL_PAIR = MODEL_PAIR, WT_PAIR = WT_PAIR,
+		                            dist_func = DISTANCE, crit_type = crit_type, MaxMinStdVals = MaxMinStdVals, minWt = .0,
                              		dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
 		# ALPHA_INFO$paras <- PARA_SET
 		if (is.null(ALPHA_PSO_INFO)) { ALPHA_PSO_INFO <- getPSOInfo(nSwarm = 64, maxIter = 200) }
