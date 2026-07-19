@@ -262,51 +262,13 @@ getDesignInfo <- function(D_TYPE = "approx", MODEL_INFO = NULL, MODEL_PAIR = NUL
     }
   }
 
-  # # Before Tp-optimal
-  # dParas <- sapply(1:length(MODEL_INFO), function(k) {
-  #   if (k == 1) {
-  #     length(MODEL_INFO[[k]]$meanPara) + length(MODEL_INFO[[k]]$dispPara)
-  #   } else {
-  #     length(MODEL_INFO[[k]]$meanParaUpper) + length(MODEL_INFO[[k]]$dispParaUpper)
-  #   }
-  # })
-  # paras <- parasInit <- parasUpper <- parasLower <- parasBdd <- matrix(0, length(MODEL_INFO), max(dParas))
-  # varParasLoc0 <- numeric(length(MODEL_INFO))
-  # for (k in 1:length(MODEL_INFO)) {
-  #   if (k == 1) {
-  #     paras[k,] <- c(MODEL_INFO[[k]]$meanPara, MODEL_INFO[[k]]$dispPara, rep(0, max(dParas) - dParas[k]))
-  #     varParasLoc0[k] <- length(MODEL_INFO[[k]]$meanPara)
-  #   } else {
-  #     parasUpper[k,] <- c(
-  #       ifelse(is.finite(MODEL_INFO[[k]]$meanParaUpper), MODEL_INFO[[k]]$meanParaUpper, 0),
-  #       ifelse(is.finite(MODEL_INFO[[k]]$dispParaUpper), MODEL_INFO[[k]]$dispParaUpper, 0),
-  #       rep(0, max(dParas) - dParas[k])
-  #     )
-  #     parasLower[k,] <- c(
-  #       ifelse(is.finite(MODEL_INFO[[k]]$meanParaLower), MODEL_INFO[[k]]$meanParaLower, 0),
-  #       ifelse(is.finite(MODEL_INFO[[k]]$dispParaLower), MODEL_INFO[[k]]$dispParaLower, 0),
-  #       rep(0, max(dParas) - dParas[k])
-  #     )
-  #     tmp <- is.finite(c(MODEL_INFO[[k]]$meanParaLower, MODEL_INFO[[k]]$dispParaLower)) + 10*is.finite(c(MODEL_INFO[[k]]$meanParaUpper, MODEL_INFO[[k]]$dispParaUpper))
-  #     tmp2 <- ifelse(tmp == 0, 0, ifelse(tmp == 1, 1, ifelse(tmp == 10, 3, 2)))
-  #     parasBdd[k,] <- c(tmp2, rep(0, max(dParas) - dParas[k]))
-  #     parasInit[k,] <- runif(max(dParas), as.vector(parasLower[k,]), as.vector(parasUpper[k,]))
-  #     varParasLoc0[k] <- length(MODEL_INFO[[k]]$meanParaUpper)
-  #   }
-  # }
-
   CRIT_TYPE_NUM <- ifelse(crit_type == "pair_fixed_true", 0,
                       ifelse(crit_type == "maxmin_fixed_true", 1,
                          ifelse(crit_type == "pair_multi_true", 2, 3)))
 
   if (D_TYPE == "maxmin_eqv_wt") { D_TYPE_NUM <- 1001 } else { D_TYPE_NUM <- 1 }
 
-  # # Before Tp-optimal
-  # N_PAIR <- length(MODEL_INFO) - 1
-  # MODEL_PAIR <- cbind(0, 1:N_PAIR)
-
-  return(list(D_TYPE = D_TYPE, D_TYPE_NUM = D_TYPE_NUM, dist_func = dist_func,
-              CRIT_TYPE_NUM = CRIT_TYPE_NUM,
+  return(list(D_TYPE = D_TYPE, D_TYPE_NUM = D_TYPE_NUM, dist_func = dist_func, CRIT_TYPE_NUM = CRIT_TYPE_NUM,
               dSupp = dSupp, nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper, minWt = minWt,
               N_PAIR = N_PAIR, MODEL_PAIR = MODEL_PAIR, WT_PAIR = WT_PAIR, dParas = dParas, paras = paras, varParasLoc0 = varParasLoc0, parasInit = parasInit,
               parasUpper = parasUpper, parasLower = parasLower, parasBdd = parasBdd,

@@ -79,6 +79,8 @@ Rcpp::List cppPSO(const int LOOPID, Rcpp::List PSO_INFO_LIST, Rcpp::List LBFGS_I
   if (OBJ.d_type == 1001) {
     external.DESIGN = as<arma::mat>(EXTERNAL_LIST["DESIGN"]);
     external.CRIT_VAL = as<double>(EXTERNAL_LIST["CRIT_VAL"]);
+    external.T_PARA = as<arma::mat>(EXTERNAL_LIST["T_PARA"]);
+    external.R_PARA = as<arma::mat>(EXTERNAL_LIST["R_PARA"]);
   }
 
   PSO_Result Result;

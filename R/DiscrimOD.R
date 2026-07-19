@@ -300,8 +300,8 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 	# Compute the criterion value
 	DESIGN1_M <- designV2M(DESIGN1, D_INFO)
 	cri_1 <- cppDesignCriterion(PSO_INFO, LBFGS_INFO, D_INFO, MEAN_LIST, DISP_LIST, 0, environment, DESIGN1_M)
-	rownames(cri_1$theta1) <- paste0("model_", MODEL_PAIR[,1])
-	rownames(cri_1$theta2) <- paste0("model_", MODEL_PAIR[,2])
+	rownames(cri_1$theta1) <- paste0("model_", D_INFO$MODEL_PAIR[,1] + 1)
+	rownames(cri_1$theta2) <- paste0("model_", D_INFO$MODEL_PAIR[,2] + 1)
 
   return(list(cri_val = -cri_1$val, theta1 = cri_1$theta1, theta2 = cri_1$theta2))
 }
@@ -386,8 +386,8 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	T_PARA <- CRIT_VAL$theta1
 	R_PARA <- CRIT_VAL$theta2
 	# PARA_SET <- CRIT_VAL$theta2
-	rownames(CRIT_VAL$theta1) <- paste0("model_", MODEL_PAIR[,1])
-	rownames(CRIT_VAL$theta2) <- paste0("model_", MODEL_PAIR[,2])
+	rownames(CRIT_VAL$theta1) <- paste0("model_", D_INFO$MODEL_PAIR[,1] + 1)
+	rownames(CRIT_VAL$theta2) <- paste0("model_", D_INFO$MODEL_PAIR[,2] + 1)
 
 	ALPHA <- 0
 	if (crit_type == "maxmin_fixed_true") {
@@ -405,7 +405,6 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 
 		dimnames(DESIGN) <- NULL
 		EXTERNAL_LIST <- list(DESIGN = as.matrix(DESIGN[,-ncol(DESIGN)], nSupp, dSupp), CRIT_VAL = -CRIT_VAL$val, T_PARA = T_PARA, R_PARA = R_PARA)
-
 		tmp <- getLBFGSInfo()
 		psoOut <- cppPSO(0, ALPHA_PSO_INFO, tmp, ALPHA_INFO, MEAN_LIST, DISP_LIST, EXTERNAL_LIST, environment, FALSE, FALSE)
 		ALPHA <- designM2V(psoOut$GBest, ALPHA_INFO)
@@ -415,7 +414,7 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 
 	if (crit_type == "maxmin_fixed_true") { equiv$alpha <- ALPHA }
 
-	return(list(eqv = equiv, crit = CRIT_VAL))
+	return(list(eqv = equiv, crit = list(cri_val = -CRIT_VAL$val, theta1 = CRIT_VAL$theta1, theta2 = CRIT_VAL$theta2)))
 }
 
 #' Create An Empty Model List

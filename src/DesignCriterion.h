@@ -10,7 +10,7 @@ double criterionList(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PARAM
                      const arma::mat DESIGN, const arma::rowvec WT, arma::mat &T_PARA, arma::mat &R_PARA);
 double minDistCalc(const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_diff_func *MODEL_COLLECTOR[], const int PAIRID,
                    const arma::mat DESIGN, const arma::rowvec WT, arma::rowvec &R_PARA_OUT);
-arma::rowvec directionalDerivative(const OBJ_INFO OBJ, const arma::mat dsGrid, const arma::mat T_PARA, const arma::mat R_PARA, 
+arma::rowvec directionalDerivative(const OBJ_INFO OBJ, const arma::mat dsGrid, const arma::mat T_PARA, const arma::mat R_PARA,
                                    const arma::rowvec alpha, model_diff_func *MODEL_COLLECTOR[]);
 arma::rowvec distCalc(const OBJ_INFO OBJ, const arma::mat x, const arma::mat T_PARA, const arma::mat R_PARA,
                       model_diff_func *MODEL_COLLECTOR[], const int PAIRID);
@@ -69,7 +69,6 @@ double DesignCriterion(const int LOOPID, PSO_OPTIONS PSO_OPTS[], const LBFGS_PAR
         double CRIT_VAL = EXT.CRIT_VAL;
         arma::mat T_PARA = EXT.T_PARA;
         arma::mat R_PARA = EXT.R_PARA;
-
         int n_model = (int)swarm.n_elem;
         arma::rowvec alpha(n_model + 1, fill::zeros);
         arma::rowvec ang = swarm;
@@ -349,7 +348,7 @@ double minDistCalc(const LBFGS_PARAM LBFGS_OPTION, const OBJ_INFO OBJ, model_dif
 }
 
 // Equivalence Theorem
-arma::rowvec directionalDerivative(const OBJ_INFO OBJ, const arma::mat dsGrid, const arma::mat T_PARA, const arma::mat R_PARA, 
+arma::rowvec directionalDerivative(const OBJ_INFO OBJ, const arma::mat dsGrid, const arma::mat T_PARA, const arma::mat R_PARA,
                                    const arma::rowvec alpha, model_diff_func *MODEL_COLLECTOR[])
 {
   int crit_type = OBJ.crit_type;
@@ -394,12 +393,10 @@ arma::rowvec distCalc(const OBJ_INFO OBJ, const arma::mat x, const arma::mat T_P
   arma::imat MODEL_PAIR = OBJ.MODEL_PAIR;
   int tmID = MODEL_PAIR(PAIRID, 0);
   int rmID = MODEL_PAIR(PAIRID, 1);
-
   arma::rowvec T_PARA_M = T_PARA.submat(PAIRID, 0, PAIRID, OBJ.varParasLoc0(tmID) - 1);
   arma::rowvec T_PARA_V = T_PARA.submat(PAIRID, OBJ.varParasLoc0(tmID), PAIRID, OBJ.dParas(tmID) - 1);
   arma::rowvec R_PARA_M = R_PARA.submat(PAIRID, 0, PAIRID, OBJ.varParasLoc0(rmID) - 1);
   arma::rowvec R_PARA_V = R_PARA.submat(PAIRID, OBJ.varParasLoc0(rmID), PAIRID, OBJ.dParas(rmID) - 1);
-
   Shield<SEXP> DESIGN_SEXP(Rcpp::wrap(x));
   Shield<SEXP> T_PARA_M_SEXP(Rcpp::wrap(T_PARA_M));
   Shield<SEXP> T_PARA_V_SEXP(Rcpp::wrap(T_PARA_V));
