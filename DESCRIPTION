@@ -1,15 +1,15 @@
 Package: DiscrimOD
 Type: Package
 Title: DiscrimOD: Finding Optimal Discrimination Designs by Hybridizing Particle Swarm and L-BFGS Algorithms
-Version: 2.0.1
-Date: 2025-02-01
+Version: 3.0.1
+Date: 2026-07-19
 Authors@R: person("Ping-Yang", "Chen", , "pychen.ping@gmail.com", c("aut", "cre"))
 Author: Ping-Yang Chen [aut, cre]
 Maintainer: Ping-Yang Chen <pychen.ping@gmail.com>
 Description: The **DiscrimOD** package adopts a hybrid algorithm
   to search for the optimal discrimination designs
   when there are two or more than two competing models
-  under normal or non-normal error assumption.
+  under normal or non-normal error assumption. Criteria include T-, KL-, max-min T-, max-min KL-, Tp- and KLp-optimal criteria.
   This hybrid algorithm is chosen to efficiently solve the maximin design criteria
   in the optimal discrimination design problem which is usually a challenging task.
   It combines the particle swarm optimization (PSO) algorithm and the L-BFGS algorithm
