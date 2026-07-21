@@ -19,6 +19,7 @@ equivalence(
   WT_PAIR = NULL,
   PSO_INFO = NULL,
   LBFGS_INFO = NULL,
+  ALPHA = NULL,
   ALPHA_PSO_INFO = NULL,
   environment,
   ...

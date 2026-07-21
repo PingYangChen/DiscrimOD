@@ -336,7 +336,7 @@ designCriterion <- function(DESIGN1, MODEL_INFO, DISTANCE, dsLower, dsUpper, cri
 equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = FALSE,
 												MODEL_INFO, DISTANCE, dsLower, dsUpper, crit_type = "pair_fixed_true",
 												MaxMinStdVals = NULL, MODEL_PAIR = NULL, WT_PAIR = NULL, PSO_INFO = NULL, LBFGS_INFO = NULL,
-												ALPHA_PSO_INFO = NULL, environment, ...) {
+												ALPHA = NULL, ALPHA_PSO_INFO = NULL, environment, ...) {
 
 	stopifnot(all(is.finite(dsLower)), all(is.finite(dsUpper)),
             length(dsLower) == length(dsUpper), all(dsUpper > dsLower))
@@ -389,30 +389,35 @@ equivalence <- function(DESIGN = NULL, PSO_RESULT = NULL, ngrid = 100, IFPLOT = 
 	rownames(CRIT_VAL$theta1) <- paste0("model_", D_INFO$MODEL_PAIR[,1] + 1)
 	rownames(CRIT_VAL$theta2) <- paste0("model_", D_INFO$MODEL_PAIR[,2] + 1)
 
-	ALPHA <- 0
+	#ALPHA <- 0
 	if (crit_type == "maxmin_fixed_true") {
 		#message("Looking for best weight...")
-		# Find the weight vector first
-		ALPHA_INFO <- getDesignInfo(D_TYPE = "maxmin_eqv_wt", MODEL_INFO = MODEL_INFO, MODEL_PAIR = MODEL_PAIR, WT_PAIR = WT_PAIR,
-		                            dist_func = DISTANCE, crit_type = crit_type, MaxMinStdVals = MaxMinStdVals, minWt = .0,
-                             		dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
-		# ALPHA_INFO$paras <- PARA_SET
-		if (is.null(ALPHA_PSO_INFO)) { ALPHA_PSO_INFO <- getPSOInfo(nSwarm = 64, maxIter = 200) }
-		swarmSetting <- algInfoUpdate(ALPHA_INFO)
-		ALPHA_PSO_INFO$varUpper <- matrix(swarmSetting$UB, length(ALPHA_PSO_INFO$nSwarm), ncol(swarmSetting$UB), byrow = TRUE)
-		ALPHA_PSO_INFO$varLower <- matrix(swarmSetting$LB, length(ALPHA_PSO_INFO$nSwarm), ncol(swarmSetting$UB), byrow = TRUE)
-		ALPHA_PSO_INFO$dSwarm <- rep(ncol(swarmSetting$UB), length(ALPHA_PSO_INFO$nSwarm))
+	  if (is.null(ALPHA)) {
+	    # Find the weight vector first
+	    ALPHA_INFO <- getDesignInfo(D_TYPE = "maxmin_eqv_wt", MODEL_INFO = MODEL_INFO, MODEL_PAIR = MODEL_PAIR, WT_PAIR = WT_PAIR,
+	                                dist_func = DISTANCE, crit_type = crit_type, MaxMinStdVals = MaxMinStdVals, minWt = .0,
+	                                dSupp = length(dsLower), nSupp = nSupp, dsLower = dsLower, dsUpper = dsUpper)
+	    # ALPHA_INFO$paras <- PARA_SET
+	    if (is.null(ALPHA_PSO_INFO)) { ALPHA_PSO_INFO <- getPSOInfo(nSwarm = 64, maxIter = 200) }
+	    swarmSetting <- algInfoUpdate(ALPHA_INFO)
+	    ALPHA_PSO_INFO$varUpper <- matrix(swarmSetting$UB, length(ALPHA_PSO_INFO$nSwarm), ncol(swarmSetting$UB), byrow = TRUE)
+	    ALPHA_PSO_INFO$varLower <- matrix(swarmSetting$LB, length(ALPHA_PSO_INFO$nSwarm), ncol(swarmSetting$UB), byrow = TRUE)
+	    ALPHA_PSO_INFO$dSwarm <- rep(ncol(swarmSetting$UB), length(ALPHA_PSO_INFO$nSwarm))
 
-		dimnames(DESIGN) <- NULL
-		EXTERNAL_LIST <- list(DESIGN = as.matrix(DESIGN[,-ncol(DESIGN)], nSupp, dSupp), CRIT_VAL = -CRIT_VAL$val, T_PARA = T_PARA, R_PARA = R_PARA)
-		tmp <- getLBFGSInfo()
-		psoOut <- cppPSO(0, ALPHA_PSO_INFO, tmp, ALPHA_INFO, MEAN_LIST, DISP_LIST, EXTERNAL_LIST, environment, FALSE, FALSE)
-		ALPHA <- designM2V(psoOut$GBest, ALPHA_INFO)
+	    dimnames(DESIGN) <- NULL
+	    EXTERNAL_LIST <- list(DESIGN = as.matrix(DESIGN[,-ncol(DESIGN)], nSupp, dSupp), CRIT_VAL = -CRIT_VAL$val, T_PARA = T_PARA, R_PARA = R_PARA)
+	    tmp <- getLBFGSInfo()
+	    psoOut <- cppPSO(0, ALPHA_PSO_INFO, tmp, ALPHA_INFO, MEAN_LIST, DISP_LIST, EXTERNAL_LIST, environment, FALSE, FALSE)
+	    ALPHA <- designM2V(psoOut$GBest, ALPHA_INFO)
+	  } else {
+	    stopifnot(length(ALPHA) == nrow(MODEL_PAIR))
+	  }
+	} else {
+	  ALPHA <- 0
 	}
 
 	equiv <- cppEquivalence(D_INFO, MEAN_LIST, DISP_LIST, -CRIT_VAL$val, T_PARA, R_PARA, ALPHA, environment, ngrid)
-
-	if (crit_type == "maxmin_fixed_true") { equiv$alpha <- ALPHA }
+	equiv$alpha <- ALPHA
 
 	return(list(eqv = equiv, crit = list(cri_val = -CRIT_VAL$val, theta1 = CRIT_VAL$theta1, theta2 = CRIT_VAL$theta2)))
 }
