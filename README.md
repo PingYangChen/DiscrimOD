@@ -12,8 +12,8 @@ Installation
 Please install the latest development version from github with the following R codes.
 
 ``` r
-install.packages("devtools")
-devtools::install_github("PingYangChen/DiscrimOD")
+install.packages("remotes")
+remotes::install_github("PingYangChen/DiscrimOD")
 ```
 
 Examples (V2)
@@ -78,7 +78,7 @@ af_eqv_12 <- equivalence(ngrid = 100, PSO_RESULT = af_res_12, MODEL_INFO = af_in
                          PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
 
 # Draw the directional derivative curve
-plot(af_eqv_12$Grid_1, af_eqv_12$DirDeriv, type = "l", col = "blue",
+plot(af_eqv_12$eqv$Grid_1, af_eqv_12$eqv$DirDeriv, type = "l", col = "blue",
      main = "af_res_12", xlab = "x", ylab = "Directional Derivative"); abline(h = 0)
 points(af_res_12$BESTDESIGN[,1], rep(0, nrow(af_res_12$BESTDESIGN)), pch = 16)
 ```
