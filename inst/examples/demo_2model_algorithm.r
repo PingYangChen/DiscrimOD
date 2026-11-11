@@ -32,10 +32,17 @@ af1975_2 <- cppFunction('
       eta(i) = p(0) + p(1)*x(i,0) + p(2)*x(i,0)*x(i,0); }
     return eta;
 }')
+af1975_disp <- cppFunction('
+  Rcpp::NumericVector af1975_disp(Rcpp::NumericMatrix x, Rcpp::NumericVector p) {
+    Rcpp::NumericVector eta(x.nrow());
+    for (int i = 0; i < x.nrow(); i++) eta(i) = p(0);
+    return eta;
+}')
 
 # Or, create competing models using R codes
 #af1975_1 <- function(x, p) p[1] + p[2]*exp(x) + p[3]*exp(-x)
 #af1975_2 <- function(x, p) p[1] + p[2]*x + p[3]*x^2
+#af1975_disp <- function(x, p) rep(p[1], length(x))
 
 
 # ----------------------------------------------------------------------------
@@ -43,17 +50,19 @@ af1975_2 <- cppFunction('
 # ----------------------------------------------------------------------------
 # The true model is 'af1975_1' and we set the nominal values
 para_af1975_1 <- c(4.5, -1.5, -2)
+disp_af1975_1 <- c(1.0)
 # Create a model list as the input of our PSO-QN algorithm
 model_af1975_12 <- list(
   # The fitst object should always be the true model
   # Input the model function to the label 'model'
   # Input the nominal values to the labal 'para'
-  list(model = af1975_1, para = para_af1975_1),
+  list(mean = af1975_1, disp = af1975_disp, meanPara = para_af1975_1, dispPara = disp_af1975_1),
   # Starting from the second object, specify the rival models
   # Input the model function to the label 'model'
   # Input the lower and upper bounds for the rival parameters to the labal
   # 'paraLower' and 'paraUpper' (based on experiences)
-  list(model = af1975_2, paraLower = rep(-10, 3), paraUpper = rep(10, 3))
+  list(mean = af1975_2, disp = af1975_disp, meanParaLower = rep(-10, 3), meanParaUpper = rep(10, 3),
+       dispParaLower = c(1), dispParaUpper = c(1))
 )
 
 
@@ -62,7 +71,7 @@ model_af1975_12 <- list(
 # ----------------------------------------------------------------------------
 # Squared difference between two models
 sq_diff <- cppFunction('
-  Rcpp::NumericVector gamma_diff(Rcpp::NumericVector xt, Rcpp::NumericVector xr) {
+  Rcpp::NumericVector gamma_diff(Rcpp::NumericVector xt, Rcpp::NumericVector xr, Rcpp::NumericVector st, Rcpp::NumericVector sr) {
     Rcpp::NumericVector div(xt.size()); double diff;
     for (int i = 0; i < xt.size(); i++) {
       diff = xt(i) - xr(i); div(i) = diff*diff;
@@ -71,7 +80,7 @@ sq_diff <- cppFunction('
 }')
 
 # Or, create distance function using R codes
-#sq_diff <- function(xt, xr) (xt - xr)^2
+#sq_diff <- function(xt, xr, st, sr) (xt - xr)^2
 
 
 # ----------------------------------------------------------------------------
@@ -82,9 +91,12 @@ sq_diff <- cppFunction('
 PSO_INFO <- getPSOInfo(nSwarm = 32, maxIter = 200)
 # Set L-BFGS algorithm options
 LBFGS_INFO <- getLBFGSInfo(LBFGS_RETRY = 4)
+#
+MODEL_PAIR <- rbind(c(1, 2))
 # Run PSO-QN algorithm
 PSOQN_af1975_12 <- DiscrimOD(MODEL_INFO = model_af1975_12, DISTANCE = sq_diff, nSupp = 4,
                              dsLower = -1, dsUpper = 1, crit_type = "pair_fixed_true",
+                             MODEL_PAIR = MODEL_PAIR,
                              PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO,
                              seed = 10, verbose = TRUE)
 
@@ -106,6 +118,7 @@ LBFGS_NOTRUN <- getLBFGSInfo(IF_INNER_LBFGS = FALSE)
 # Run PSO-QN algorithm
 NestedPSO_af1975_12 <- DiscrimOD(MODEL_INFO = model_af1975_12, DISTANCE = sq_diff, nSupp = 4,
                                  dsLower = -1, dsUpper = 1, crit_type = "pair_fixed_true",
+                                 MODEL_PAIR = MODEL_PAIR,
                                  PSO_INFO = NESTEDPSO_INFO, LBFGS_INFO = LBFGS_NOTRUN,
                                  seed = 10, verbose = TRUE)
 
@@ -218,7 +231,7 @@ eqv_PSOQN <- equivalence(ngrid = 100, PSO_RESULT = PSOQN_af1975_12,
                          PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
 
 # Draw the curve of directional derivative function
-plot(eqv_PSOQN$Grid_1, eqv_PSOQN$DirDeriv, type = "l", col = "black",
+plot(eqv_PSOQN$eqv$Grid_1, eqv_PSOQN$eqv$DirDeriv, type = "l", col = "black",
      xlab = "x", ylab = "Directional Derivative",
      main = "PSO-QN result for case af1975_2 vs. af1975_1")
 abline(h = 0, col = "grey50", lty = 2)
@@ -231,7 +244,7 @@ eqv_NestedPSO <- equivalence(ngrid = 100, PSO_RESULT = NestedPSO_af1975_12,
                              PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
 
 # Draw the curve of directional derivative function
-plot(eqv_NestedPSO$Grid_1, eqv_NestedPSO$DirDeriv, type = "l", col = "black",
+plot(eqv_NestedPSO$eqv$Grid_1, eqv_NestedPSO$eqv$DirDeriv, type = "l", col = "black",
      xlab = "x", ylab = "Directional Derivative",
      main = "NestedPSO result for case af1975_2 vs. af1975_1")
 abline(h = 0, col = "grey50", lty = 2)
@@ -244,7 +257,7 @@ eqv_FedWynn <- equivalence(ngrid = 100, DESIGN = FedWynn_af1975_12$BESTDESIGN,
                            PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
 
 # Draw the curve of directional derivative function
-plot(eqv_FedWynn$Grid_1, eqv_FedWynn$DirDeriv, type = "l", col = "black",
+plot(eqv_FedWynn$eqv$Grid_1, eqv_FedWynn$eqv$DirDeriv, type = "l", col = "black",
      xlab = "x", ylab = "Directional Derivative",
      main = "Fedorov-Wynn result for case af1975_2 vs. af1975_1")
 abline(h = 0, col = "grey50", lty = 2)
@@ -261,7 +274,7 @@ if (is.character(Remes_af1975_12$BESTVAL)) {
                            PSO_INFO = PSO_INFO, LBFGS_INFO = LBFGS_INFO)
 
   # Draw the curve of directional derivative function
-  plot(eqv_Remes$Grid_1, eqv_Remes$DirDeriv, type = "l", col = "black",
+  plot(eqv_Remes$eqv$Grid_1, eqv_Remes$eqv$DirDeriv, type = "l", col = "black",
        xlab = "x", ylab = "Directional Derivative",
        main = "Remes result for case af1975_2 vs. af1975_1")
   abline(h = 0, col = "grey50", lty = 2)
